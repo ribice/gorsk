@@ -1,0 +1,9 @@
+db:
+  log: true
+  createSchema: false
+
+server:
+  port: 8080
+
+jwt:
+  timeout: 10800
