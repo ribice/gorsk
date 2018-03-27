@@ -6,6 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/gin-gonic/gin"
 	"github.com/ribice/gorsk/internal/errors"
 	validator "gopkg.in/go-playground/validator.v8"
@@ -89,15 +91,9 @@ func TestResponse(t *testing.T) {
 				tt.args.err = validate.Struct(tt.vld)
 			}
 			apperr.Response(c, tt.args.err)
-			if tt.wantStatus != w.Code {
-				t.Errorf("Expected status %v, received %v", tt.wantStatus, w.Code)
-			}
-			if tt.wantResp != "" && tt.wantResp != w.Body.String() {
-				t.Errorf("Expected response %v, received %v", tt.wantResp, w.Body.String())
-			}
-			if !c.IsAborted() {
-				t.Error("Expected context to be aborted, but was not")
-			}
+			assert.Equal(t, tt.wantStatus, w.Code)
+			assert.Equal(t, tt.wantResp, w.Body.String())
+			assert.Equal(t, c.IsAborted(), true)
 		})
 	}
 }

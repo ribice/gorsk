@@ -2,11 +2,11 @@ package user_test
 
 import (
 	"context"
-	"reflect"
 	"testing"
 
 	"github.com/gin-gonic/gin"
 	"github.com/ribice/gorsk/internal/errors"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/ribice/gorsk/internal"
 	"github.com/ribice/gorsk/internal/mock"
@@ -75,12 +75,8 @@ func TestView(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			s := user.New(tt.udb, tt.rbac, nil)
 			usr, err := s.View(tt.args.c, tt.args.id)
-			if !reflect.DeepEqual(tt.wantData, usr) {
-				t.Errorf("Expected and returned data does not match")
-			}
-			if err != tt.wantErr {
-				t.Errorf("Expected error %v, received %v", tt.wantErr, err)
-			}
+			assert.Equal(t, tt.wantData, usr)
+			assert.Equal(t, tt.wantErr, err)
 		})
 	}
 }
@@ -185,12 +181,8 @@ func TestList(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			s := user.New(tt.udb, nil, tt.auth)
 			usrs, err := s.List(tt.args.c, tt.args.pgn)
-			if !reflect.DeepEqual(tt.wantData, usrs) {
-				t.Errorf("Expected and returned data does not match")
-			}
-			if tt.wantErr != (err != nil) {
-				t.Errorf("Expected error %v, received %v", tt.wantErr, err)
-			}
+			assert.Equal(t, tt.wantData, usrs)
+			assert.Equal(t, tt.wantErr, err != nil)
 		})
 	}
 
@@ -392,12 +384,8 @@ func TestUpdate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			s := user.New(tt.udb, tt.rbac, nil)
 			usr, err := s.Update(tt.args.c, tt.args.upd)
-			if !reflect.DeepEqual(tt.wantData, usr) {
-				t.Errorf("Expected and returned data does not match")
-			}
-			if err != tt.wantErr {
-				t.Errorf("Expected error %v, received %v", tt.wantErr, err)
-			}
+			assert.Equal(t, tt.wantData, usr)
+			assert.Equal(t, tt.wantErr, err)
 		})
 	}
 }

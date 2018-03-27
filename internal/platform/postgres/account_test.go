@@ -1,11 +1,11 @@
 package pgsql_test
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/ribice/gorsk/internal/mock"
 	"github.com/ribice/gorsk/internal/platform/postgres"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/ribice/gorsk/internal"
 
@@ -101,16 +101,12 @@ func testAccountCreate(t *testing.T, db *pgsql.AccountDB, c *pg.DB) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			err := db.Create(nil, tt.usr)
-			if tt.wantErr != (err != nil) {
-				t.Error("WantErr and err!=nil are not equal")
-			}
+			assert.Equal(t, tt.wantErr, err != nil)
 			if tt.wantData != nil {
 				userDB := queryUser(t, c, tt.usr.Base.ID)
 				tt.wantData.CreatedAt = userDB.CreatedAt
 				tt.wantData.UpdatedAt = userDB.UpdatedAt
-				if !reflect.DeepEqual(tt.wantData, userDB) {
-					t.Errorf("Expected %v - received %v", tt.wantData, userDB)
-				}
+				assert.Equal(t, tt.wantData, userDB)
 			}
 		})
 	}
@@ -156,19 +152,13 @@ func testChangePassword(t *testing.T, db *pgsql.AccountDB, c *pg.DB) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			err := db.ChangePassword(nil, tt.usr)
-			if tt.wantErr != (err != nil) {
-				t.Error("WantErr and err!=nil are not equal")
-			}
+			assert.Equal(t, tt.wantErr, err != nil)
 			if tt.wantData != nil {
 				userDB := queryUser(t, c, tt.usr.Base.ID)
-				if tt.usr.UpdatedAt == userDB.UpdatedAt {
-					t.Error("Expected updated_at to be changed, but was not")
-				}
+				assert.NotEqual(t, tt.usr.UpdatedAt, userDB.UpdatedAt)
 				tt.wantData.UpdatedAt = userDB.UpdatedAt
 				tt.wantData.CreatedAt = userDB.CreatedAt
-				if !reflect.DeepEqual(tt.wantData, userDB) {
-					t.Errorf("Expected %v - received %v", tt.wantData, userDB)
-				}
+				assert.Equal(t, tt.wantData, userDB)
 			}
 		})
 	}

@@ -2,12 +2,12 @@ package auth_test
 
 import (
 	"context"
-	"reflect"
 	"testing"
 	"time"
 
 	"github.com/ribice/gorsk/internal"
 	"github.com/ribice/gorsk/internal/errors"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/ribice/gorsk/internal/mock/mockdb"
 
@@ -137,12 +137,8 @@ func TestAuthenticate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			s := auth.New(tt.udb, tt.jwt)
 			token, err := s.Authenticate(tt.args.c, tt.args.user, tt.args.pass)
-			if !reflect.DeepEqual(tt.wantData, token) {
-				t.Errorf("Expected and returned data does not match")
-			}
-			if tt.wantErr != (err != nil) {
-				t.Errorf("Expected err = %v, but received %v", tt.wantErr, err != nil)
-			}
+			assert.Equal(t, tt.wantData, token)
+			assert.Equal(t, tt.wantErr, err != nil)
 		})
 	}
 }
@@ -160,9 +156,7 @@ func TestUser(t *testing.T) {
 		Role:       model.SuperAdminRole,
 	}
 	rbacSvc := auth.New(nil, nil)
-	if !reflect.DeepEqual(wantUser, rbacSvc.User(ctx)) {
-		t.Error("Expected and received data does not match")
-	}
+	assert.Equal(t, wantUser, rbacSvc.User(ctx))
 }
 
 func TestHashPassowrd(t *testing.T) {
