@@ -56,7 +56,7 @@ import (
 func main() {
 
 	r := gin.Default()
-	mw.Add(r, cors.Default())
+	mw.Add(r, cors.Default(), mw.SecureHeaders())
 
 	cfg, err := config.Load("dev")
 	checkErr(err)
