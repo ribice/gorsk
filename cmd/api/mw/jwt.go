@@ -2,6 +2,7 @@ package mw
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/ribice/gorsk/internal/errors"
@@ -77,7 +78,12 @@ func (j *JWT) ParseToken(c *gin.Context) (*jwt.Token, error) {
 	if token == "" {
 		return nil, apperr.Generic
 	}
-	return jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+	parts := strings.SplitN(token, " ", 2)
+	if !(len(parts) == 2 && parts[0] == "Bearer") {
+		return nil, apperr.Generic
+	}
+
+	return jwt.Parse(parts[1], func(token *jwt.Token) (interface{}, error) {
 		if jwt.GetSigningMethod(j.Algo) != token.Method {
 			return nil, apperr.Generic
 		}
