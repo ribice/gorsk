@@ -17,22 +17,18 @@ import (
 	"github.com/ribice/gorsk/cmd/api/mw"
 )
 
-func TestAdd(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-	r := gin.New()
-	mw.Add(r, gin.Logger())
-}
-
 func hwHandler(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"text": "Hello World.",
 	})
 }
 
-func ginHandler(jwt *mw.JWT) *gin.Engine {
+func ginHandler(mw ...gin.HandlerFunc) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	r.Use(jwt.MWFunc())
+	for _, v := range mw {
+		r.Use(v)
+	}
 	r.GET("/hello", hwHandler)
 	return r
 }
@@ -64,7 +60,8 @@ func TestMWFunc(t *testing.T) {
 		},
 	}
 	jwtCfg := &config.JWTConfig{Realm: "testRealm", Secret: "jwtsecret", Timeout: 60, SigningAlgorithm: "HS256"}
-	ts := httptest.NewServer(ginHandler(mw.NewJWT(jwtCfg)))
+	jwtMW := mw.NewJWT(jwtCfg)
+	ts := httptest.NewServer(ginHandler(jwtMW.MWFunc()))
 	defer ts.Close()
 	path := ts.URL + "/hello"
 	client := &http.Client{}
