@@ -23,7 +23,7 @@ func NewAccount(svc *account.Service, r *gin.RouterGroup) {
 	a := Account{svc: svc}
 	ar := r.Group("/users")
 	// swagger:route POST /users users accCreate
-	// Creates a new user account.s
+	// Creates new user account.
 	// responses:
 	//  200: userResp
 	//  400: errMsg
