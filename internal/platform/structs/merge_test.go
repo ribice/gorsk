@@ -1,10 +1,10 @@
 package structs_test
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/ribice/gorsk/internal/platform/structs"
+	"github.com/stretchr/testify/assert"
 )
 
 type carID int64
@@ -287,9 +287,7 @@ func TestMerge(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			cmd := c.cmd()
 			structs.Merge(&c.mstruct, &cmd)
-			if !reflect.DeepEqual(c.mstruct, c.mergedStruct) {
-				t.Errorf("Wanted struct %v, but merged into %v", c.mstruct, c.mergedStruct)
-			}
+			assert.Equal(t, c.mstruct, c.mergedStruct)
 		})
 	}
 }

@@ -1,12 +1,12 @@
 package query_test
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/ribice/gorsk/internal"
 	"github.com/ribice/gorsk/internal/errors"
 	"github.com/ribice/gorsk/internal/platform/query"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestList(t *testing.T) {
@@ -57,12 +57,8 @@ func TestList(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			q, err := query.List(tt.args.user)
-			if !reflect.DeepEqual(tt.wantData, q) {
-				t.Errorf("Expected and returned data does not match")
-			}
-			if err != tt.wantErr {
-				t.Errorf("Expected error %v, received %v", tt.wantErr, err)
-			}
+			assert.Equal(t, tt.wantData, q)
+			assert.Equal(t, tt.wantErr, err)
 		})
 	}
 }

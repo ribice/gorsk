@@ -6,10 +6,10 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
 
 	"github.com/ribice/gorsk/internal/errors"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/ribice/gorsk/internal/user"
 
@@ -171,13 +171,9 @@ func TestListUsers(t *testing.T) {
 				if err := json.NewDecoder(res.Body).Decode(response); err != nil {
 					t.Fatal(err)
 				}
-				if !reflect.DeepEqual(response, tt.wantResp) {
-					t.Errorf("Expected response %#v, received %#v", tt.wantResp, response)
-				}
+				assert.Equal(t, tt.wantResp, response)
 			}
-			if res.StatusCode != tt.wantStatus {
-				t.Errorf("Expected status %v, received %v", tt.wantStatus, res.StatusCode)
-			}
+			assert.Equal(t, tt.wantStatus, res.StatusCode)
 		})
 	}
 }
@@ -262,13 +258,9 @@ func TestViewUser(t *testing.T) {
 				if err := json.NewDecoder(res.Body).Decode(response); err != nil {
 					t.Fatal(err)
 				}
-				if !reflect.DeepEqual(response, tt.wantResp) {
-					t.Errorf("Expected response %#v, received %#v", tt.wantResp, response)
-				}
+				assert.Equal(t, tt.wantResp, response)
 			}
-			if res.StatusCode != tt.wantStatus {
-				t.Errorf("Expected status %v, received %v", tt.wantStatus, res.StatusCode)
-			}
+			assert.Equal(t, tt.wantStatus, res.StatusCode)
 		})
 	}
 }
@@ -368,13 +360,9 @@ func TestUpdateUser(t *testing.T) {
 				if err := json.NewDecoder(res.Body).Decode(response); err != nil {
 					t.Fatal(err)
 				}
-				if !reflect.DeepEqual(response, tt.wantResp) {
-					t.Errorf("Expected response %#v, received %#v", tt.wantResp, response)
-				}
+				assert.Equal(t, tt.wantResp, response)
 			}
-			if res.StatusCode != tt.wantStatus {
-				t.Errorf("Expected status %v, received %v", tt.wantStatus, res.StatusCode)
-			}
+			assert.Equal(t, tt.wantStatus, res.StatusCode)
 		})
 	}
 }
@@ -452,9 +440,7 @@ func TestDeleteUser(t *testing.T) {
 				t.Fatal(err)
 			}
 			defer res.Body.Close()
-			if res.StatusCode != tt.wantStatus {
-				t.Errorf("Expected status %v, received %v", tt.wantStatus, res.StatusCode)
-			}
+			assert.Equal(t, tt.wantStatus, res.StatusCode)
 		})
 	}
 }

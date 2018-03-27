@@ -2,10 +2,10 @@ package account_test
 
 import (
 	"context"
-	"reflect"
 	"testing"
 
 	"github.com/ribice/gorsk/internal/mock"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/gin-gonic/gin"
 
@@ -78,17 +78,12 @@ func TestCreate(t *testing.T) {
 			}}}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-
 			s := account.New(tt.adb, tt.udb, tt.rbac)
 			err := s.Create(tt.args.c, tt.args.req)
-			if tt.wantErr != (err != nil) {
-				t.Errorf("WantErr differs from error response")
-			}
+			assert.Equal(t, tt.wantErr, err != nil)
 			if tt.wantData != nil {
 				tt.args.req.Password = tt.wantData.Password
-				if !reflect.DeepEqual(tt.wantData, tt.args.req) {
-					t.Errorf("WantData differs from response")
-				}
+				assert.Equal(t, tt.wantData, tt.args.req)
 			}
 		})
 	}
@@ -177,9 +172,7 @@ func TestChangePassword(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			s := account.New(tt.adb, tt.udb, tt.rbac)
 			err := s.ChangePassword(tt.args.c, tt.args.oldpass, tt.args.newpass, tt.args.id)
-			if tt.wantErr != (err != nil) {
-				t.Errorf("Test case did not expect an error, but returned error: %v", err)
-			}
+			assert.Equal(t, tt.wantErr, err != nil)
 		})
 	}
 }

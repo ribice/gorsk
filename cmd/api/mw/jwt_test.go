@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/ribice/gorsk/internal"
 
 	"github.com/ribice/gorsk/cmd/api/config"
@@ -68,12 +70,9 @@ func TestMWFunc(t *testing.T) {
 			req.Header.Set("Authorization", tt.header)
 			res, err := client.Do(req)
 			if err != nil {
-				t.Fatal("Failed creating request")
+				t.Fatal("Cannot create http request")
 			}
-			defer res.Body.Close()
-			if res.StatusCode != tt.wantStatus {
-				t.Errorf("expected status %v; got %v", tt.wantStatus, res.StatusCode)
-			}
+			assert.Equal(t, tt.wantStatus, res.StatusCode)
 		})
 	}
 }
@@ -107,13 +106,8 @@ func TestGenerateToken(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			jwt := mw.NewJWT(jwtCfg)
 			str, _, err := jwt.GenerateToken(tt.req)
-			if err != nil {
-				t.Error("Didn't expect error but received one.")
-			}
-			if strings.Split(str, ".")[0] != tt.wantToken {
-				t.Error("Expected and received token do not match.")
-			}
-
+			assert.Nil(t, err)
+			assert.Equal(t, tt.wantToken, strings.Split(str, ".")[0])
 		})
 	}
 }

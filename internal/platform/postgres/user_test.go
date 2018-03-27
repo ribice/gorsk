@@ -1,10 +1,10 @@
 package pgsql_test
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/ribice/gorsk/internal/platform/postgres"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/go-pg/pg"
 	"github.com/ribice/gorsk/internal"
@@ -89,15 +89,11 @@ func testUserView(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			user, err := db.View(nil, tt.id)
-			if tt.wantErr != (err != nil) {
-				t.Error("WantErr and err!=nil are not equal")
-			}
+			assert.Equal(t, tt.wantErr, err != nil)
 			if tt.wantData != nil {
 				tt.wantData.CreatedAt = user.CreatedAt
 				tt.wantData.UpdatedAt = user.UpdatedAt
-				if !reflect.DeepEqual(tt.wantData, user) {
-					t.Errorf("Expected %v, received %v", tt.wantData, user)
-				}
+				assert.Equal(t, tt.wantData, user)
 			}
 		})
 	}
@@ -141,15 +137,13 @@ func testUserFindByUsername(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			user, err := db.FindByUsername(nil, tt.username)
-			if tt.wantErr != (err != nil) {
-				t.Error("WantErr and err!=nil are not equal")
-			}
+			assert.Equal(t, tt.wantErr, err != nil)
+
 			if tt.wantData != nil {
 				tt.wantData.CreatedAt = user.CreatedAt
 				tt.wantData.UpdatedAt = user.UpdatedAt
-				if !reflect.DeepEqual(tt.wantData, user) {
-					t.Errorf("Expected %v, received %v", tt.wantData, user)
-				}
+				assert.Equal(t, tt.wantData, user)
+
 			}
 		})
 	}
@@ -223,17 +217,13 @@ func testUserList(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			users, err := db.List(nil, tt.qp, tt.pg)
-			if tt.wantErr != (err != nil) {
-				t.Error("WantErr and err!=nil are not equal")
-			}
+			assert.Equal(t, tt.wantErr, err != nil)
 			if tt.wantData != nil {
 				for i, v := range users {
 					tt.wantData[i].CreatedAt = v.CreatedAt
 					tt.wantData[i].UpdatedAt = v.UpdatedAt
 				}
-				if !reflect.DeepEqual(tt.wantData, users) {
-					t.Errorf("Expected %v, received %v", tt.wantData, users)
-				}
+				assert.Equal(t, tt.wantData, users)
 			}
 		})
 	}
@@ -283,18 +273,13 @@ func testUserUpdateLastLogin(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
 				userBefore = queryUser(t, c, tt.usr.Base.ID)
 			}
 			err := db.UpdateLastLogin(nil, tt.usr)
-			if tt.wantErr != (err != nil) {
-				t.Error("WantErr and err!=nil are not equal")
-			}
+			assert.Equal(t, tt.wantErr, err != nil)
+
 			if tt.wantData != nil {
-				if tt.usr.LastLogin == userBefore.LastLogin {
-					t.Errorf("Expected last login to be changed, but was not.")
-				}
+				assert.NotEqual(t, tt.usr.LastLogin, userBefore.LastLogin)
 				tt.wantData.UpdatedAt = userBefore.UpdatedAt
 				tt.wantData.CreatedAt = userBefore.CreatedAt
-				if !reflect.DeepEqual(tt.wantData, userBefore) {
-					t.Errorf("Expected %v - received %v", tt.wantData, userBefore)
-				}
+				assert.Equal(t, tt.wantData, userBefore)
 			}
 		})
 	}
@@ -343,19 +328,14 @@ func testUserDelete(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
 				userBefore = queryUser(t, c, tt.usr.Base.ID)
 			}
 			err := db.Delete(nil, tt.usr)
-			if tt.wantErr != (err != nil) {
-				t.Error("WantErr and err!=nil are not equal")
-			}
+			assert.Equal(t, tt.wantErr, err != nil)
+
 			if tt.wantData != nil {
-				if tt.usr.DeletedAt == userBefore.DeletedAt {
-					t.Errorf("Expected deletedAt to be changed, but was not.")
-				}
+				assert.NotEqual(t, tt.usr.DeletedAt, userBefore.DeletedAt)
 				tt.wantData.UpdatedAt = userBefore.UpdatedAt
 				tt.wantData.CreatedAt = userBefore.CreatedAt
 				tt.wantData.LastLogin = userBefore.LastLogin
-				if !reflect.DeepEqual(tt.wantData, userBefore) {
-					t.Errorf("Expected %#v - received %#v", tt.wantData, userBefore)
-				}
+				assert.Equal(t, tt.wantData, userBefore)
 			}
 		})
 	}
@@ -420,17 +400,13 @@ func testUserUpdate(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			resp, err := db.Update(nil, tt.usr)
-			if tt.wantErr != (err != nil) {
-				t.Error("WantErr and err!=nil are not equal")
-			}
+			assert.Equal(t, tt.wantErr, err != nil)
 			if tt.wantData != nil {
 				tt.wantData.UpdatedAt = resp.UpdatedAt
 				tt.wantData.CreatedAt = resp.CreatedAt
 				tt.wantData.LastLogin = resp.LastLogin
 				tt.wantData.DeletedAt = resp.DeletedAt
-				if !reflect.DeepEqual(tt.wantData, resp) {
-					t.Errorf("Expected %#v - received %#v", tt.wantData, resp)
-				}
+				assert.Equal(t, tt.wantData, resp)
 			}
 		})
 	}

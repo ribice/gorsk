@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
 
 	"github.com/gin-gonic/gin"
 	"github.com/ribice/gorsk/cmd/api/request"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestLogin(t *testing.T) {
@@ -49,22 +49,12 @@ func TestLogin(t *testing.T) {
 			c.Request, _ = http.NewRequest("POST", "", bytes.NewBufferString(tt.req))
 			resp, err := request.Login(c)
 			if tt.e != nil {
-				if tt.e.wantStatus != w.Code {
-					t.Errorf("Expected status %v, received %v", tt.e.wantStatus, w.Code)
-				}
-				if tt.e.wantResp != "" && tt.e.wantResp != w.Body.String() {
-					t.Errorf("Expected response %v, received %v", tt.e.wantResp, w.Body.String())
-				}
+				assert.Equal(t, tt.e.wantStatus, w.Code)
+				assert.Equal(t, tt.e.wantResp, w.Body.String())
 			}
-			if !reflect.DeepEqual(tt.wantData, resp) {
-				t.Errorf("Expected %v, received %v", tt.wantData, resp)
-			}
-			if tt.wantErr != (err != nil) {
-				t.Errorf("Expected err = %v, but was %v", tt.wantErr, err != nil)
-			}
-			if tt.wantErr != c.IsAborted() {
-				t.Error("Expected context to be aborted but was not")
-			}
+			assert.Equal(t, tt.wantData, resp)
+			assert.Equal(t, tt.wantErr, err != nil)
+			assert.Equal(t, tt.wantErr, c.IsAborted())
 		})
 	}
 }

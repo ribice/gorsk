@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/ribice/gorsk/internal"
 	"github.com/ribice/gorsk/internal/mock"
@@ -42,9 +43,7 @@ func TestEnforceRole(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			rbacSvc := rbac.New(nil)
 			res := rbacSvc.EnforceRole(tt.args.ctx, tt.args.role)
-			if res != tt.want {
-				t.Errorf("Expected %v, received %v", tt.want, res)
-			}
+			assert.Equal(t, tt.want, res)
 		})
 	}
 }
@@ -79,9 +78,7 @@ func TestEnforceUser(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			rbacSvc := rbac.New(nil)
 			res := rbacSvc.EnforceUser(tt.args.ctx, tt.args.id)
-			if res != tt.want {
-				t.Errorf("Expected %v, received %v", tt.want, res)
-			}
+			assert.Equal(t, tt.want, res)
 		})
 	}
 }
@@ -121,9 +118,7 @@ func TestEnforceCompany(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			rbacSvc := rbac.New(nil)
 			res := rbacSvc.EnforceCompany(tt.args.ctx, tt.args.id)
-			if res != tt.want {
-				t.Errorf("Expected %v, received %v", tt.want, res)
-			}
+			assert.Equal(t, tt.want, res)
 		})
 	}
 }
@@ -158,9 +153,7 @@ func TestEnforceLocation(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			rbacSvc := rbac.New(nil)
 			res := rbacSvc.EnforceLocation(tt.args.ctx, tt.args.id)
-			if res != tt.want {
-				t.Errorf("Expected %v, received %v", tt.want, res)
-			}
+			assert.Equal(t, tt.want, res)
 		})
 	}
 }
@@ -207,9 +200,7 @@ func TestAccountCreate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			rbacSvc := rbac.New(nil)
 			res := rbacSvc.AccountCreate(tt.args.ctx, tt.args.roleID, tt.args.company_id, tt.args.location_id)
-			if res != tt.want {
-				t.Errorf("Expected %v, received %v", tt.want, res)
-			}
+			assert.Equal(t, tt.want, res)
 		})
 	}
 }
