@@ -24,8 +24,7 @@ func NewUser(svc *user.Service, r *gin.RouterGroup) {
 	// swagger:operation GET /users users listUsers
 	// ---
 	// summary: Returns list of users.
-	// description: Returns list of users. Depending on the user role requesting it, it may return all users for
-	// SuperAdmin/Admin users, all company/location users for Company/Location admins, and an error for non-admin users.
+	// description: Returns list of users. Depending on the user role requesting it, it may return all users for SuperAdmin/Admin users, all company/location users for Company/Location admins, and an error for non-admin users.
 	// parameters:
 	// - name: limit
 	//   in: query
@@ -76,7 +75,7 @@ func NewUser(svc *user.Service, r *gin.RouterGroup) {
 	// swagger:operation PATCH /users/{id} users userUpdate
 	// ---
 	// summary: Updates user's contact information
-	// description: Updates user's contact information: first name, last name, mobile, phone, address
+	// description: Updates user's contact information -> first name, last name, mobile, phone, address.
 	// parameters:
 	// - name: id
 	//   in: path
