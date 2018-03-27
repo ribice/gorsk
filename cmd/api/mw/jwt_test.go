@@ -48,6 +48,11 @@ func TestMWFunc(t *testing.T) {
 			wantStatus: http.StatusUnauthorized,
 		},
 		{
+			name:       "Header not containing Bearer",
+			header:     "notBearer",
+			wantStatus: http.StatusUnauthorized,
+		},
+		{
 			name:       "Invalid header",
 			header:     mock.HeaderInvalid(),
 			wantStatus: http.StatusUnauthorized,
