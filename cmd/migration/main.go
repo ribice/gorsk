@@ -5,6 +5,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/go-pg/pg/orm"
+
 	"github.com/ribice/gorsk/internal"
 
 	"github.com/go-pg/pg"
@@ -20,7 +22,6 @@ func main() {
 	INSERT INTO public.roles VALUES (4, 4, 'LOCATION_ADMIN');
 	INSERT INTO public.roles VALUES (5, 5, 'USER');`
 	var psn = ``
-
 	queries := strings.Split(dbInsert, ";")
 
 	u, err := pg.ParseURL(psn)
@@ -47,6 +48,8 @@ func checkErr(err error) {
 
 func createSchema(db *pg.DB, models ...interface{}) {
 	for _, model := range models {
-		checkErr(db.CreateTable(model, nil))
+		checkErr(db.CreateTable(model, &orm.CreateTableOptions{
+			FKConstraints: true,
+		}))
 	}
 }
