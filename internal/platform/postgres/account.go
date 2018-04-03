@@ -44,7 +44,7 @@ func (a *AccountDB) Create(c context.Context, usr *model.User) error {
 
 // ChangePassword changes user's password
 func (a *AccountDB) ChangePassword(c context.Context, usr *model.User) error {
-	_, err := a.cl.Model(usr).Column("password", "updated_at").Update()
+	_, err := a.cl.Model(usr).Column("password", "updated_at").WherePK().Update()
 	if err != nil {
 		a.log.Warn("AccountDB Error: ", zap.Error(err))
 	}

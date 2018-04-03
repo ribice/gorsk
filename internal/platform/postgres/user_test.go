@@ -27,6 +27,10 @@ func testUserDB(t *testing.T, c *pg.DB, l *zap.Logger) {
 			fn:   testUserFindByUsername,
 		},
 		{
+			name: "findByToken",
+			fn:   testUserFindByToken,
+		},
+		{
 			name: "userList",
 			fn:   testUserList,
 		},
@@ -137,6 +141,57 @@ func testUserFindByUsername(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			user, err := db.FindByUsername(nil, tt.username)
+			assert.Equal(t, tt.wantErr, err != nil)
+
+			if tt.wantData != nil {
+				tt.wantData.CreatedAt = user.CreatedAt
+				tt.wantData.UpdatedAt = user.UpdatedAt
+				assert.Equal(t, tt.wantData, user)
+
+			}
+		})
+	}
+}
+
+func testUserFindByToken(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
+	cases := []struct {
+		name     string
+		wantErr  bool
+		token    string
+		wantData *model.User
+	}{
+		{
+			name:    "User does not exist",
+			wantErr: true,
+			token:   "notExists",
+		},
+		{
+			name:  "Success",
+			token: "loginrefresh",
+			wantData: &model.User{
+				Email:      "johndoe@mail.com",
+				FirstName:  "John",
+				LastName:   "Doe",
+				Username:   "johndoe",
+				RoleID:     1,
+				CompanyID:  1,
+				LocationID: 1,
+				Password:   "hunter2",
+				Base: model.Base{
+					ID: 1,
+				},
+				Role: &model.Role{
+					ID:          1,
+					AccessLevel: 1,
+					Name:        "SUPER_ADMIN",
+				},
+				Token: "loginrefresh",
+			},
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			user, err := db.FindByToken(nil, tt.token)
 			assert.Equal(t, tt.wantErr, err != nil)
 
 			if tt.wantData != nil {
