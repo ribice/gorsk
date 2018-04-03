@@ -53,7 +53,8 @@ func (s *Service) Authenticate(c context.Context, user, pass string) (*model.Aut
 	}
 
 	u.UpdateLastLogin()
-	u.Token = strings.Replace(uuid.NewV4().String(), "-", "", -1)
+	refreshToken, _ := uuid.NewV4()
+	u.Token = strings.Replace(refreshToken.String(), "-", "", -1)
 	if err := s.udb.UpdateLogin(c, u); err != nil {
 		return nil, err
 	}
