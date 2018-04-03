@@ -80,8 +80,8 @@ func TestAuthenticate(t *testing.T) {
 				},
 			},
 			jwt: &mock.JWT{
-				GenerateTokenFn: func(u *model.User) (string, time.Time, error) {
-					return "", mock.TestTime(1), apperr.Generic
+				GenerateTokenFn: func(u *model.User) (string, string, error) {
+					return "", "", apperr.Generic
 				},
 			},
 		},
@@ -97,13 +97,13 @@ func TestAuthenticate(t *testing.T) {
 						Active:   true,
 					}, nil
 				},
-				UpdateLastLoginFn: func(c context.Context, u *model.User) error {
+				UpdateLoginFn: func(c context.Context, u *model.User) error {
 					return apperr.DB
 				},
 			},
 			jwt: &mock.JWT{
-				GenerateTokenFn: func(u *model.User) (string, time.Time, error) {
-					return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9", mock.TestTime(2000), nil
+				GenerateTokenFn: func(u *model.User) (string, string, error) {
+					return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9", mock.TestTime(2000).Format(time.RFC3339), nil
 				},
 			},
 		},
@@ -118,13 +118,13 @@ func TestAuthenticate(t *testing.T) {
 						Active:   true,
 					}, nil
 				},
-				UpdateLastLoginFn: func(c context.Context, u *model.User) error {
+				UpdateLoginFn: func(c context.Context, u *model.User) error {
 					return nil
 				},
 			},
 			jwt: &mock.JWT{
-				GenerateTokenFn: func(u *model.User) (string, time.Time, error) {
-					return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9", mock.TestTime(2000), nil
+				GenerateTokenFn: func(u *model.User) (string, string, error) {
+					return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9", mock.TestTime(2000).Format(time.RFC3339), nil
 				},
 			},
 			wantData: &model.AuthToken{
@@ -137,15 +137,93 @@ func TestAuthenticate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			s := auth.New(tt.udb, tt.jwt)
 			token, err := s.Authenticate(tt.args.c, tt.args.user, tt.args.pass)
+			if tt.wantData != nil {
+				tt.wantData.RefreshToken = token.RefreshToken
+				assert.Equal(t, tt.wantData, token)
+			}
+			assert.Equal(t, tt.wantErr, err != nil)
+		})
+	}
+}
+func TestRefresh(t *testing.T) {
+	type args struct {
+		c     context.Context
+		token string
+	}
+	cases := []struct {
+		name     string
+		args     args
+		wantData *model.RefreshToken
+		wantErr  bool
+		udb      *mockdb.User
+		jwt      *mock.JWT
+	}{
+		{
+			name:    "Fail on finding token",
+			args:    args{token: "refreshtoken"},
+			wantErr: true,
+			udb: &mockdb.User{
+				FindByTokenFn: func(c context.Context, token string) (*model.User, error) {
+					return nil, apperr.DB
+				},
+			},
+		},
+		{
+			name:    "Fail on token generation",
+			args:    args{token: "refreshtoken"},
+			wantErr: true,
+			udb: &mockdb.User{
+				FindByTokenFn: func(c context.Context, token string) (*model.User, error) {
+					return &model.User{
+						Username: "username",
+						Password: "password",
+						Active:   true,
+						Token:    token,
+					}, nil
+				},
+			},
+			jwt: &mock.JWT{
+				GenerateTokenFn: func(u *model.User) (string, string, error) {
+					return "", "", apperr.Generic
+				},
+			},
+		},
+		{
+			name: "Success",
+			args: args{token: "refreshtoken"},
+			udb: &mockdb.User{
+				FindByTokenFn: func(c context.Context, token string) (*model.User, error) {
+					return &model.User{
+						Username: "username",
+						Password: "password",
+						Active:   true,
+						Token:    token,
+					}, nil
+				},
+			},
+			jwt: &mock.JWT{
+				GenerateTokenFn: func(u *model.User) (string, string, error) {
+					return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9", mock.TestTime(2000).Format(time.RFC3339), nil
+				},
+			},
+			wantData: &model.RefreshToken{
+				Token:   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
+				Expires: mock.TestTime(2000).Format(time.RFC3339),
+			},
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			s := auth.New(tt.udb, tt.jwt)
+			token, err := s.Refresh(tt.args.c, tt.args.token)
 			assert.Equal(t, tt.wantData, token)
 			assert.Equal(t, tt.wantErr, err != nil)
 		})
 	}
 }
-
 func TestUser(t *testing.T) {
 	ctx := mock.GinCtxWithKeys([]string{
-		"id", "company_id", "location_id", "user", "email", "role"},
+		"id", "company_id", "location_id", "username", "email", "role"},
 		9, 15, 52, "ribice", "ribice@gmail.com", int8(1))
 	wantUser := &model.AuthUser{
 		ID:         9,

@@ -52,8 +52,44 @@
           "401": {
             "$ref": "#/responses/errMsg"
           },
+          "403": {
+            "$ref": "#/responses/err"
+          },
           "404": {
             "$ref": "#/responses/errMsg"
+          },
+          "500": {
+            "$ref": "#/responses/err"
+          }
+        }
+      }
+    },
+    "/refresh/{token}": {
+      "get": {
+        "description": "Refreshes jwt token by checking at database whether refresh token exists.",
+        "tags": [
+          "auth"
+        ],
+        "summary": "Refreshes jwt token.",
+        "operationId": "refresh",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "refresh token",
+            "name": "token",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/refreshResp"
+          },
+          "400": {
+            "$ref": "#/responses/errMsg"
+          },
+          "401": {
+            "$ref": "#/responses/err"
           },
           "500": {
             "$ref": "#/responses/err"
@@ -97,7 +133,7 @@
             "$ref": "#/responses/err"
           },
           "500": {
-            "$ref": "#/responses/errS"
+            "$ref": "#/responses/err"
           }
         }
       },
@@ -517,6 +553,10 @@
             "type": "string",
             "x-go-name": "Expires"
           },
+          "refresh_token": {
+            "type": "string",
+            "x-go-name": "RefreshToken"
+          },
           "token": {
             "type": "string",
             "x-go-name": "Token"
@@ -526,6 +566,22 @@
     },
     "ok": {
       "description": "Success response"
+    },
+    "refreshResp": {
+      "description": "Token refresh response",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "expires": {
+            "type": "string",
+            "x-go-name": "Expires"
+          },
+          "token": {
+            "type": "string",
+            "x-go-name": "Token"
+          }
+        }
+      }
     },
     "userListResp": {
       "description": "Users model response",

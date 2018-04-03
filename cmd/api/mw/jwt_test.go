@@ -59,7 +59,7 @@ func TestMWFunc(t *testing.T) {
 			wantStatus: http.StatusOK,
 		},
 	}
-	jwtCfg := &config.JWTConfig{Realm: "testRealm", Secret: "jwtsecret", Timeout: 60, SigningAlgorithm: "HS256"}
+	jwtCfg := &config.JWTConfig{Realm: "testRealm", Secret: "jwtsecret", Duration: 60, SigningAlgorithm: "HS256"}
 	jwtMW := mw.NewJWT(jwtCfg)
 	ts := httptest.NewServer(ginHandler(jwtMW.MWFunc()))
 	defer ts.Close()
@@ -102,7 +102,7 @@ func TestGenerateToken(t *testing.T) {
 			wantToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
 		},
 	}
-	jwtCfg := &config.JWTConfig{Realm: "testRealm", Secret: "jwtsecret", Timeout: 60, SigningAlgorithm: "HS256"}
+	jwtCfg := &config.JWTConfig{Realm: "testRealm", Secret: "jwtsecret", Duration: 60, SigningAlgorithm: "HS256"}
 
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {

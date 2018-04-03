@@ -91,7 +91,7 @@ INSERT INTO roles VALUES (2, 2, 'ADMIN');
 INSERT INTO roles VALUES (3, 3, 'COMPANY_ADMIN');
 INSERT INTO roles VALUES (4, 4, 'LOCATION_ADMIN');
 INSERT INTO roles VALUES (5, 5, 'USER');
-INSERT INTO users VALUES (1, now(),now(), NULL, 'John', 'Doe', 'johndoe', 'hunter2', 'johndoe@mail.com', NULL, NULL, NULL, NULL, NULL, 1, 1, 1);`
+INSERT INTO users VALUES (1, now(),now(), NULL, 'John', 'Doe', 'johndoe', 'hunter2', 'johndoe@mail.com', NULL, NULL, NULL, NULL, NULL, 'loginrefresh',1, 1, 1);`
 
 	queries := strings.Split(dbInsert, ";")
 	for _, v := range queries[0 : len(queries)-1] {

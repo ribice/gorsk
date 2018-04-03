@@ -50,6 +50,20 @@ func (u *UserDB) FindByUsername(c context.Context, uname string) (*model.User, e
 	return user, nil
 }
 
+// FindByToken queries for single user by token
+func (u *UserDB) FindByToken(c context.Context, token string) (*model.User, error) {
+	var user = new(model.User)
+	sql := `SELECT "user".*, "role"."id" AS "role__id", "role"."access_level" AS "role__access_level", "role"."name" AS "role__name" 
+	FROM "users" AS "user" LEFT JOIN "roles" AS "role" ON "role"."id" = "user"."role_id" 
+	WHERE ("user"."token" = ? and deleted_at is null)`
+	_, err := u.cl.QueryOne(user, sql, token)
+	if err != nil {
+		u.log.Warn("UserDB Error", zap.String("Error:", err.Error()))
+		return nil, apperr.NotFound
+	}
+	return user, nil
+}
+
 // List returns list of all users retreivable for the current user, depending on role
 func (u *UserDB) List(c context.Context, qp *model.ListQuery, p *model.Pagination) ([]model.User, error) {
 	var users []model.User
@@ -64,9 +78,9 @@ func (u *UserDB) List(c context.Context, qp *model.ListQuery, p *model.Paginatio
 	return users, nil
 }
 
-// UpdateLastLogin updates last login date for user
-func (u *UserDB) UpdateLastLogin(c context.Context, user *model.User) error {
-	_, err := u.cl.Model(user).Column("last_login").Update()
+// UpdateLogin updates last login and refresh token for user
+func (u *UserDB) UpdateLogin(c context.Context, user *model.User) error {
+	_, err := u.cl.Model(user).Column("last_login", "token").Update()
 	if err != nil {
 		u.log.Warn("UserDB Error", zap.Error(err))
 	}

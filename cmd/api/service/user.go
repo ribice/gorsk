@@ -46,7 +46,7 @@ func NewUser(svc *user.Service, r *gin.RouterGroup) {
 	//   "403":
 	//     "$ref": "#/responses/err"
 	//   "500":
-	//     "$ref": "#/responses/errS"
+	//     "$ref": "#/responses/err"
 	ur.GET("", u.list)
 	// swagger:operation GET /users/{id} users getUser
 	// ---

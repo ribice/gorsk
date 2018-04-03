@@ -48,6 +48,8 @@ type ServerConfig struct {
 type JWTConfig struct {
 	Realm            string
 	Secret           string
-	Timeout          int
+	Duration         int
+	RefreshDuration  int
+	MaxRefresh       int
 	SigningAlgorithm string
 }

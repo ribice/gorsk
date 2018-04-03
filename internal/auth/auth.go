@@ -3,7 +3,9 @@ package auth
 import (
 	"context"
 	"net/http"
-	"time"
+	"strings"
+
+	"github.com/satori/go.uuid"
 
 	"github.com/ribice/gorsk/internal"
 
@@ -29,7 +31,7 @@ type Service struct {
 
 // JWT represents jwt interface
 type JWT interface {
-	GenerateToken(*model.User) (string, time.Time, error)
+	GenerateToken(*model.User) (string, string, error)
 }
 
 // Authenticate tries to authenticate the user provided by username and password
@@ -43,28 +45,41 @@ func (s *Service) Authenticate(c context.Context, user, pass string) (*model.Aut
 	}
 
 	if !u.Active {
-		return nil, apperr.New(http.StatusUnauthorized, "User is not active")
+		return nil, apperr.Unauthorized
 	}
-
 	token, expire, err := s.jwt.GenerateToken(u)
 	if err != nil {
-		return nil, apperr.Forbidden
+		return nil, apperr.Unauthorized
 	}
 
 	u.UpdateLastLogin()
-	if err := s.udb.UpdateLastLogin(c, u); err != nil {
+	u.Token = strings.Replace(uuid.NewV4().String(), "-", "", -1)
+	if err := s.udb.UpdateLogin(c, u); err != nil {
 		return nil, err
 	}
 
-	return &model.AuthToken{Token: token, Expires: expire.Format(time.RFC3339)}, nil
+	return &model.AuthToken{Token: token, Expires: expire, RefreshToken: u.Token}, nil
+}
+
+// Refresh refreshes jwt token and puts new claims inside
+func (s *Service) Refresh(c context.Context, token string) (*model.RefreshToken, error) {
+	user, err := s.udb.FindByToken(c, token)
+	if err != nil {
+		return nil, err
+	}
+	token, expire, err := s.jwt.GenerateToken(user)
+	if err != nil {
+		return nil, apperr.Generic
+	}
+	return &model.RefreshToken{Token: token, Expires: expire}, nil
 }
 
 // User returns user data stored in jwt token
-func (s Service) User(c *gin.Context) *model.AuthUser {
+func (s *Service) User(c *gin.Context) *model.AuthUser {
 	id := c.GetInt("id")
 	companyID := c.GetInt("company_id")
 	locationID := c.GetInt("location_id")
-	user := c.GetString("user")
+	user := c.GetString("username")
 	email := c.GetString("email")
 	role := c.MustGet("role").(int8)
 	return &model.AuthUser{
