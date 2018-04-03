@@ -34,6 +34,7 @@ The following dependencies are used in this project (generated using [Glice](htt
 | github.com/gin-gonic/gin            | https://github.com/gin-gonic/gin           | MIT          |
 | github.com/go-pg/pg                 | https://github.com/go-pg/pg                | bsd-2-clause |
 | github.com/dgrijalva/jwt-go         | https://github.com/dgrijalva/jwt-go        | MIT          |
+| github.com/satori/go.uuid           | https://github.com/satori/go.uuid          | MIT          |
 | golang.org/x/crypto/bcrypt          | https://github.com/golang/crypto           |              |
 | github.com/gin-contrib/cors         | https://github.com/gin-contrib/cors        | MIT          |
 | go.uber.org/zap                     | https://github.com/uber-go/zap             | MIT          |
@@ -41,19 +42,22 @@ The following dependencies are used in this project (generated using [Glice](htt
 | gopkg.in/go-playground/validator.v8 | https://github.com/go-playground/validator | MIT          |
 | github.com/lib/pq                   | https://github.com/lib/pq                  | Other        |
 | github.com/fortytw2/dockertest      | https://github.com/fortytw2/dockertest     | MIT          |
+| github.com/stretchr/testify         | https://github.com/stretchr/testify        | Other        |
 |-------------------------------------|--------------------------------------------|--------------|
 ```
 
 1. Gin - HTTP 'framework'.
 2. Go-Pg - PostgreSQL ORM
 3. JWT-Go - JWT Authentication
-4. Bcrypt - Password hashing
-5. Cors - CORS middleware handler for Gin
-6. Zap - Logging
-7. Yaml - Unmarshalling YAML config file
-8. Validator - Request validation.
-9. lib/pq - Postgres driver
-10. DockerTest - Testing database queries
+4. UUID - Generating refresh tokens
+5. Bcrypt - Password hashing
+6. Cors - CORS middleware handler for Gin
+7. Zap - Logging
+8. Yaml - Unmarshalling YAML config file
+9. Validator - Request validation.
+10. lib/pq - Postgres driver
+11. DockerTest - Testing database queries
+12. Testify/Assert - Asserting test results
 
 Most of these can easily be replaced with your own choices since their usage is abstracted and localized.
 
@@ -77,7 +81,8 @@ go run cmd/api/server.go
 
 The application runs as an HTTP server at port 8080. It provides the following RESTful endpoints:
 
-* `POST /login`: accepts username/passwords and returns jwt token
+* `POST /login`: accepts username/passwords and returns jwt token and refresh token
+* `GET /refresh/:token`: refreshes sessions and returns jwt token
 * `GET /v1/swagger`: returns swagger.json with detailed api documentation
 * `GET /v1/users`: returns list of users
 * `GET /v1/users/:id`: returns single user

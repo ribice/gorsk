@@ -40,7 +40,7 @@ func TestLoad(t *testing.T) {
 					Port: 8080,
 				},
 				JWT: &config.JWTConfig{
-					Timeout: 10800,
+					Duration: 10800,
 				},
 			},
 		},

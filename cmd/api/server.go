@@ -86,7 +86,7 @@ func addV1Services(cfg *config.Configuration, r *gin.Engine, db *pg.DB, log *zap
 	accDB := pgsql.NewAccountDB(db, log)
 	service.NewAccount(account.New(accDB, userDB, rbacSvc), v1Router)
 
-	service.NewUser(user.New(userDB, rbacSvc, *authSvc), v1Router)
+	service.NewUser(user.New(userDB, rbacSvc, authSvc), v1Router)
 }
 
 func docHandler(c *gin.Context) {

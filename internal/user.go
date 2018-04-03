@@ -18,6 +18,7 @@ type User struct {
 	Address   string     `json:"address,omitempty"`
 	LastLogin *time.Time `json:"last_login,omitempty"`
 	Active    bool       `json:"active"`
+	Token     string     `json:"-"`
 
 	Role *Role `json:"role,omitempty"`
 
@@ -52,7 +53,8 @@ type AccountDB interface {
 type UserDB interface {
 	View(context.Context, int) (*User, error)
 	FindByUsername(context.Context, string) (*User, error)
-	UpdateLastLogin(context.Context, *User) error
+	FindByToken(context.Context, string) (*User, error)
+	UpdateLogin(context.Context, *User) error
 	List(context.Context, *ListQuery, *Pagination) ([]User, error)
 	Delete(context.Context, *User) error
 	Update(context.Context, *User) (*User, error)

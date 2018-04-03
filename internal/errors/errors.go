@@ -27,6 +27,8 @@ var (
 	BadRequest = NewStatus(http.StatusBadRequest)
 	// NotFound represents errors for not found resources
 	NotFound = NewStatus(http.StatusNotFound)
+	// Unauthorized represents errors for unauthorized requests
+	Unauthorized = NewStatus(http.StatusUnauthorized)
 )
 
 // NewStatus generates new error containing only http status code

@@ -27,12 +27,16 @@ func testUserDB(t *testing.T, c *pg.DB, l *zap.Logger) {
 			fn:   testUserFindByUsername,
 		},
 		{
+			name: "findByToken",
+			fn:   testUserFindByToken,
+		},
+		{
 			name: "userList",
 			fn:   testUserList,
 		},
 		{
-			name: "updateLastLogin",
-			fn:   testUserUpdateLastLogin,
+			name: "updateLogin",
+			fn:   testUserUpdateLogin,
 		},
 		{
 			name: "delete",
@@ -149,6 +153,57 @@ func testUserFindByUsername(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
 	}
 }
 
+func testUserFindByToken(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
+	cases := []struct {
+		name     string
+		wantErr  bool
+		token    string
+		wantData *model.User
+	}{
+		{
+			name:    "User does not exist",
+			wantErr: true,
+			token:   "notExists",
+		},
+		{
+			name:  "Success",
+			token: "loginrefresh",
+			wantData: &model.User{
+				Email:      "johndoe@mail.com",
+				FirstName:  "John",
+				LastName:   "Doe",
+				Username:   "johndoe",
+				RoleID:     1,
+				CompanyID:  1,
+				LocationID: 1,
+				Password:   "hunter2",
+				Base: model.Base{
+					ID: 1,
+				},
+				Role: &model.Role{
+					ID:          1,
+					AccessLevel: 1,
+					Name:        "SUPER_ADMIN",
+				},
+				Token: "loginrefresh",
+			},
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			user, err := db.FindByToken(nil, tt.token)
+			assert.Equal(t, tt.wantErr, err != nil)
+
+			if tt.wantData != nil {
+				tt.wantData.CreatedAt = user.CreatedAt
+				tt.wantData.UpdatedAt = user.UpdatedAt
+				assert.Equal(t, tt.wantData, user)
+
+			}
+		})
+	}
+}
+
 func testUserList(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
 	cases := []struct {
 		name     string
@@ -210,6 +265,7 @@ func testUserList(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
 						AccessLevel: 1,
 						Name:        "SUPER_ADMIN",
 					},
+					Token: "loginrefresh",
 				},
 			},
 		},
@@ -229,7 +285,7 @@ func testUserList(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
 	}
 }
 
-func testUserUpdateLastLogin(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
+func testUserUpdateLogin(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
 	cases := []struct {
 		name     string
 		wantErr  bool
@@ -250,6 +306,7 @@ func testUserUpdateLastLogin(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
 					UpdatedAt: mock.TestTime(2000),
 				},
 				LastLogin: mock.TestTimePtr(2018),
+				Token:     "refreshtoken",
 			},
 			wantData: &model.User{
 				Email:      "tomjones@mail.com",
@@ -272,11 +329,12 @@ func testUserUpdateLastLogin(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
 			if tt.wantData != nil {
 				userBefore = queryUser(t, c, tt.usr.Base.ID)
 			}
-			err := db.UpdateLastLogin(nil, tt.usr)
+			err := db.UpdateLogin(nil, tt.usr)
 			assert.Equal(t, tt.wantErr, err != nil)
 
 			if tt.wantData != nil {
 				assert.NotEqual(t, tt.usr.LastLogin, userBefore.LastLogin)
+				assert.NotEqual(t, tt.usr.Token, userBefore.Token)
 				tt.wantData.UpdatedAt = userBefore.UpdatedAt
 				tt.wantData.CreatedAt = userBefore.CreatedAt
 				assert.Equal(t, tt.wantData, userBefore)
@@ -318,6 +376,7 @@ func testUserDelete(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
 				Base: model.Base{
 					ID: 2,
 				},
+				Token: "refreshtoken",
 			},
 		},
 	}

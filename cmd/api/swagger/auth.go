@@ -20,3 +20,12 @@ type swaggLoginResp struct {
 		*model.AuthToken
 	}
 }
+
+// Token refresh response
+// swagger:response refreshResp
+type swaggRefreshResp struct {
+	// in:body
+	Body struct {
+		*model.RefreshToken
+	}
+}

@@ -1,7 +1,7 @@
 db:
   psn: ""
   log: true
-  createSchema: false
+  createschema: false
 
 server:
   port: 8080
@@ -9,5 +9,5 @@ server:
 jwt:
   realm: "jwtrealm" # Change this value
   secret: "jwtsecret" # Change this value
-  timeout: 10800
+  duration: 15
   signingalgorithm: "HS256"
