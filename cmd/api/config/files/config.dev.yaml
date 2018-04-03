@@ -1,5 +1,5 @@
 db:
-  psn: "postgres://biadpozi:3_Czbl7jSjkUEWk--VP8QXMke-mFnczq@horton.elephantsql.com:5432/biadpozi"
+  psn: ""
   log: true
   createschema: false
 
