@@ -3,9 +3,8 @@ package auth
 import (
 	"context"
 	"net/http"
-	"strings"
 
-	"github.com/satori/go.uuid"
+	"github.com/rs/xid"
 
 	"github.com/ribice/gorsk/internal"
 
@@ -53,8 +52,7 @@ func (s *Service) Authenticate(c context.Context, user, pass string) (*model.Aut
 	}
 
 	u.UpdateLastLogin()
-	refreshToken, _ := uuid.NewV4()
-	u.Token = strings.Replace(refreshToken.String(), "-", "", -1)
+	u.Token = xid.New().String()
 	if err := s.udb.UpdateLogin(c, u); err != nil {
 		return nil, err
 	}

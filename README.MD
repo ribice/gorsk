@@ -34,7 +34,7 @@ The following dependencies are used in this project (generated using [Glice](htt
 | github.com/gin-gonic/gin            | https://github.com/gin-gonic/gin           | MIT          |
 | github.com/go-pg/pg                 | https://github.com/go-pg/pg                | bsd-2-clause |
 | github.com/dgrijalva/jwt-go         | https://github.com/dgrijalva/jwt-go        | MIT          |
-| github.com/satori/go.uuid           | https://github.com/satori/go.uuid          | MIT          |
+| github.com/rs/xid                   | https://github.com/rs/xid                  | MIT          |
 | golang.org/x/crypto/bcrypt          | https://github.com/golang/crypto           |              |
 | github.com/gin-contrib/cors         | https://github.com/gin-contrib/cors        | MIT          |
 | go.uber.org/zap                     | https://github.com/uber-go/zap             | MIT          |
@@ -49,7 +49,7 @@ The following dependencies are used in this project (generated using [Glice](htt
 1. Gin - HTTP 'framework'.
 2. Go-Pg - PostgreSQL ORM
 3. JWT-Go - JWT Authentication
-4. UUID - Generating refresh tokens
+4. XID - Generating refresh tokens
 5. Bcrypt - Password hashing
 6. Cors - CORS middleware handler for Gin
 7. Zap - Logging
