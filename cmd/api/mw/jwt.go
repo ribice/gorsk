@@ -16,7 +16,7 @@ import (
 )
 
 // NewJWT generates new JWT variable necessery for auth middleware
-func NewJWT(c *config.JWTConfig) *JWT {
+func NewJWT(c *config.JWT) *JWT {
 	return &JWT{
 		Realm:    c.Realm,
 		Key:      []byte(c.Secret),

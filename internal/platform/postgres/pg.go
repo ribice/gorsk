@@ -16,7 +16,7 @@ const notDeleted = "deleted_at is null"
 
 // New creates new database connection to a postgres database
 // Function panics if it can't connect to database
-func New(cfg *config.DBConfig) (*pg.DB, error) {
+func New(cfg *config.Database) (*pg.DB, error) {
 	u, err := pg.ParseURL(cfg.PSN)
 	if err != nil {
 		return nil, err

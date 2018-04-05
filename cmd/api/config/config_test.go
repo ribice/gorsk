@@ -32,14 +32,14 @@ func TestLoad(t *testing.T) {
 			name: "Success",
 			args: args{configName: "testdata"},
 			wantData: &config.Configuration{
-				DB: &config.DBConfig{
+				DB: &config.Database{
 					Log:          true,
 					CreateSchema: false,
 				},
-				Server: &config.ServerConfig{
+				Server: &config.Server{
 					Port: 8080,
 				},
-				JWT: &config.JWTConfig{
+				JWT: &config.JWT{
 					Duration: 10800,
 				},
 			},

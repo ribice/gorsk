@@ -27,25 +27,25 @@ func Load(env string) (*Configuration, error) {
 
 // Configuration holds data necessery for configuring application
 type Configuration struct {
-	Server *ServerConfig
-	DB     *DBConfig
-	JWT    *JWTConfig
+	Server *Server
+	DB     *Database
+	JWT    *JWT
 }
 
-// DBConfig holds data necessery for database configuration
-type DBConfig struct {
+// Database holds data necessery for database configuration
+type Database struct {
 	PSN          string
 	Log          bool
 	CreateSchema bool
 }
 
-// ServerConfig holds data necessery for server configuration
-type ServerConfig struct {
+// Server holds data necessery for server configuration
+type Server struct {
 	Port int
 }
 
-// JWTConfig holds data necessery for JWT configuration
-type JWTConfig struct {
+// JWT holds data necessery for JWT configuration
+type JWT struct {
 	Realm            string
 	Secret           string
 	Duration         int
