@@ -29,23 +29,23 @@ func TestNew(t *testing.T) {
 		t.Fatalf("could not start postgres, %s", err)
 	}
 
-	_, err = pgsql.New(&config.DBConfig{PSN: "PSN"})
+	_, err = pgsql.New(&config.Database{PSN: "PSN"})
 	if err == nil {
 		t.Error("Expected error")
 	}
 
-	_, err = pgsql.New(&config.DBConfig{PSN: "postgres://postgres:postgres@localhost:1234/postgres?sslmode=disable"})
+	_, err = pgsql.New(&config.Database{PSN: "postgres://postgres:postgres@localhost:1234/postgres?sslmode=disable"})
 	if err == nil {
 		t.Error("Expected error")
 	}
 
-	dbLogTest, err := pgsql.New(&config.DBConfig{PSN: "postgres://postgres:postgres@" + container.Addr + "/postgres?sslmode=disable", Log: true})
+	dbLogTest, err := pgsql.New(&config.Database{PSN: "postgres://postgres:postgres@" + container.Addr + "/postgres?sslmode=disable", Log: true})
 	if err != nil {
 		t.Fatalf("Error establishing connection %v", err)
 	}
 	dbLogTest.Close()
 
-	dbCfg := &config.DBConfig{PSN: "postgres://postgres:postgres@" + container.Addr + "/postgres?sslmode=disable", CreateSchema: true}
+	dbCfg := &config.Database{PSN: "postgres://postgres:postgres@" + container.Addr + "/postgres?sslmode=disable", CreateSchema: true}
 
 	db, err := pgsql.New(dbCfg)
 	if err != nil {

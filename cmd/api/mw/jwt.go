@@ -45,7 +45,7 @@ func (j *JWT) MWFunc() gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 		token, err := j.ParseToken(c)
-		if err != nil {
+		if err != nil || !token.Valid {
 			c.Header("WWW-Authenticate", "JWT realm="+j.Realm)
 			c.AbortWithStatus(http.StatusUnauthorized)
 			return
