@@ -27,5 +27,5 @@ func UserUpdate(c *gin.Context) (*UpdateUser, error) {
 		return nil, err
 	}
 	u.ID = id
-	return &u, err
+	return &u, nil
 }
