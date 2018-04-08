@@ -21,7 +21,7 @@ type User struct {
 func NewUser(svc *user.Service, r *gin.RouterGroup) {
 	u := User{svc: svc}
 	ur := r.Group("/users")
-	// swagger:operation GET /users users listUsers
+	// swagger:operation GET /v1/users users listUsers
 	// ---
 	// summary: Returns list of users.
 	// description: Returns list of users. Depending on the user role requesting it, it may return all users for SuperAdmin/Admin users, all company/location users for Company/Location admins, and an error for non-admin users.
@@ -48,7 +48,7 @@ func NewUser(svc *user.Service, r *gin.RouterGroup) {
 	//   "500":
 	//     "$ref": "#/responses/err"
 	ur.GET("", u.list)
-	// swagger:operation GET /users/{id} users getUser
+	// swagger:operation GET /v1/users/{id} users getUser
 	// ---
 	// summary: Returns a single user.
 	// description: Returns a single user by its ID.
@@ -72,7 +72,7 @@ func NewUser(svc *user.Service, r *gin.RouterGroup) {
 	//   "500":
 	//     "$ref": "#/responses/err"
 	ur.GET("/:id", u.view)
-	// swagger:operation PATCH /users/{id} users userUpdate
+	// swagger:operation PATCH /v1/users/{id} users userUpdate
 	// ---
 	// summary: Updates user's contact information
 	// description: Updates user's contact information -> first name, last name, mobile, phone, address.
@@ -94,7 +94,7 @@ func NewUser(svc *user.Service, r *gin.RouterGroup) {
 	//   "500":
 	//     "$ref": "#/responses/err"
 	ur.PATCH("/:id", u.update)
-	// swagger:operation DELETE /users/{id} users userDelete
+	// swagger:operation DELETE /v1/users/{id} users userDelete
 	// ---
 	// summary: Deletes a user
 	// description: Deletes a user with requested ID.

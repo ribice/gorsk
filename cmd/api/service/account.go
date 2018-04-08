@@ -22,7 +22,7 @@ type Account struct {
 func NewAccount(svc *account.Service, r *gin.RouterGroup) {
 	a := Account{svc: svc}
 	ar := r.Group("/users")
-	// swagger:route POST /users users accCreate
+	// swagger:route POST /v1/users users accCreate
 	// Creates new user account.
 	// responses:
 	//  200: userResp
@@ -31,7 +31,7 @@ func NewAccount(svc *account.Service, r *gin.RouterGroup) {
 	//  403: errMsg
 	//  500: err
 	ar.POST("", a.create)
-	// swagger:operation PATCH /users/{id}/password users pwChange
+	// swagger:operation PATCH /v1/users/{id}/password users pwChange
 	// ---
 	// summary: Changes user's password.
 	// description: If user's old passowrd is correct, it will be replaced with new password.

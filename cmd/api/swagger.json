@@ -23,8 +23,7 @@
     },
     "version": "1.0.0"
   },
-  "host": "localhost:8001",
-  "basePath": "/v1",
+  "host": "localhost:8080",
   "paths": {
     "/login": {
       "post": {
@@ -97,7 +96,7 @@
         }
       }
     },
-    "/users": {
+    "/v1/users": {
       "get": {
         "description": "Returns list of users. Depending on the user role requesting it, it may return all users for SuperAdmin/Admin users, all company/location users for Company/Location admins, and an error for non-admin users.",
         "tags": [
@@ -171,7 +170,7 @@
         }
       }
     },
-    "/users/{id}": {
+    "/v1/users/{id}": {
       "get": {
         "description": "Returns a single user by its ID.",
         "tags": [
@@ -281,7 +280,7 @@
         }
       }
     },
-    "/users/{id}/password": {
+    "/v1/users/{id}/password": {
       "patch": {
         "description": "If user's old passowrd is correct, it will be replaced with new password.",
         "tags": [

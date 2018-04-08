@@ -8,11 +8,10 @@
 //
 // 	 Terms Of Service:  N/A
 //     Schemes: http
-//     BasePath: /v1
 //     Version: 1.0.0
 //     License: MIT http://opensource.org/licenses/MIT
 //     Contact: Emir Ribic <ribice@gmail.com> https://ribice.ba
-//     Host: localhost:8001
+//     Host: localhost:8080
 //
 //     Consumes:
 //     - application/json
@@ -91,7 +90,7 @@ func addV1Services(cfg *config.Configuration, r *gin.Engine, db *pg.DB, log *zap
 
 func docHandler(c *gin.Context) {
 	c.Header("Content-Type", "application/json")
-	data, _ := ioutil.ReadFile("swagger.json")
+	data, _ := ioutil.ReadFile("./cmd/api/swagger.json")
 	c.Writer.Write(data)
 }
 
