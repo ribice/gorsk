@@ -34,6 +34,7 @@ package main
 import (
 	"io/ioutil"
 	"log"
+	"time"
 
 	"github.com/gin-contrib/cors"
 
@@ -55,7 +56,13 @@ import (
 func main() {
 
 	r := gin.Default()
-	mw.Add(r, cors.Default(), mw.SecureHeaders())
+	mw.Add(r, cors.New(cors.Config{
+		AllowAllOrigins:  true,
+		AllowMethods:     []string{"GET", "POST", "PUT", "HEAD", "PATCH", "DELETE"},
+		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}), mw.SecureHeaders())
 
 	cfg, err := config.Load("dev")
 	checkErr(err)
