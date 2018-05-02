@@ -219,10 +219,10 @@ func TestAccountCreate(t *testing.T) {
 func TestIsLowerRole(t *testing.T) {
 	ctx := mock.EchoCtxWithKeys([]string{"role"}, int8(3))
 	rbacSvc := rbac.New(nil)
-	if rbacSvc.IsLowerRole(ctx, model.AccessRole(4)) == nil {
+	if rbacSvc.IsLowerRole(ctx, model.AccessRole(4)) != nil {
 		t.Error("The requested user is higher role than the user requesting it")
 	}
-	if rbacSvc.IsLowerRole(ctx, model.AccessRole(2)) != nil {
+	if rbacSvc.IsLowerRole(ctx, model.AccessRole(2)) == nil {
 		t.Error("The requested user is lower role than the user requesting it")
 	}
 }
