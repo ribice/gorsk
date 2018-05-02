@@ -3,8 +3,10 @@ package query_test
 import (
 	"testing"
 
+	"github.com/labstack/echo"
+
 	"github.com/ribice/gorsk/internal"
-	"github.com/ribice/gorsk/internal/errors"
+
 	"github.com/ribice/gorsk/internal/platform/query"
 	"github.com/stretchr/testify/assert"
 )
@@ -51,7 +53,7 @@ func TestList(t *testing.T) {
 			args: args{user: &model.AuthUser{
 				Role: model.UserRole,
 			}},
-			wantErr: apperr.Forbidden,
+			wantErr: echo.ErrForbidden,
 		},
 	}
 	for _, tt := range cases {

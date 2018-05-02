@@ -41,7 +41,8 @@ type Database struct {
 
 // Server holds data necessery for server configuration
 type Server struct {
-	Port int
+	Port  string
+	Debug bool
 }
 
 // JWT holds data necessery for JWT configuration

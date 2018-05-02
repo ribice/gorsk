@@ -3,69 +3,60 @@ package request
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo"
 	"github.com/ribice/gorsk/internal"
-
-	"github.com/ribice/gorsk/internal/errors"
 )
 
 // Register contains registration request
 type Register struct {
-	FirstName       string `json:"first_name" binding:"required"`
-	LastName        string `json:"last_name" binding:"required"`
-	Username        string `json:"username" binding:"required,min=3,alphanum"`
-	Password        string `json:"password" binding:"required,min=8"`
-	PasswordConfirm string `json:"password_confirm" binding:"required"`
-	Email           string `json:"email" binding:"required,email"`
+	FirstName       string `json:"first_name" validate:"required"`
+	LastName        string `json:"last_name" validate:"required"`
+	Username        string `json:"username" validate:"required,min=3,alphanum"`
+	Password        string `json:"password" validate:"required,min=8"`
+	PasswordConfirm string `json:"password_confirm" validate:"required"`
+	Email           string `json:"email" validate:"required,email"`
 
-	CompanyID  int `json:"company_id" binding:"required"`
-	LocationID int `json:"location_id" binding:"required"`
-	RoleID     int `json:"role_id" binding:"required"`
+	CompanyID  int `json:"company_id" validate:"required"`
+	LocationID int `json:"location_id" validate:"required"`
+	RoleID     int `json:"role_id" validate:"required"`
 }
 
 // AccountCreate validates account creation request
-func AccountCreate(c *gin.Context) (*Register, error) {
-	var r Register
-	if err := c.ShouldBindJSON(&r); err != nil {
-		apperr.Response(c, err)
+func AccountCreate(c echo.Context) (*Register, error) {
+	r := new(Register)
+	if err := c.Bind(r); err != nil {
 		return nil, err
 	}
 	if r.Password != r.PasswordConfirm {
-		err := apperr.New(http.StatusBadRequest, "passwords do not match")
-		c.AbortWithStatusJSON(http.StatusBadRequest, err)
-		return nil, err
+		return nil, echo.NewHTTPError(http.StatusBadRequest, "passwords do not match")
 	}
 	if r.RoleID < int(model.SuperAdminRole) || r.RoleID > int(model.UserRole) {
-		c.AbortWithStatus(http.StatusBadRequest)
-		return nil, apperr.BadRequest
+		return nil, echo.NewHTTPError(http.StatusBadRequest)
 	}
-	return &r, nil
+	return r, nil
 }
 
 // Password contains password change request
 type Password struct {
 	ID                 int    `json:"-"`
-	OldPassword        string `json:"old_password" binding:"required,min=8"`
-	NewPassword        string `json:"new_password" binding:"required,min=8"`
-	NewPasswordConfirm string `json:"new_password_confirm" binding:"required"`
+	OldPassword        string `json:"old_password" validate:"required,min=8"`
+	NewPassword        string `json:"new_password" validate:"required,min=8"`
+	NewPasswordConfirm string `json:"new_password_confirm" validate:"required"`
 }
 
 // PasswordChange validates password change request
-func PasswordChange(c *gin.Context) (*Password, error) {
-	var p Password
+func PasswordChange(c echo.Context) (*Password, error) {
 	id, err := ID(c)
 	if err != nil {
 		return nil, err
 	}
-	if err := c.ShouldBindJSON(&p); err != nil {
-		apperr.Response(c, err)
+	p := new(Password)
+	if err := c.Bind(p); err != nil {
 		return nil, err
 	}
 	if p.NewPassword != p.NewPasswordConfirm {
-		err := apperr.New(http.StatusBadRequest, "passwords do not match")
-		apperr.Response(c, err)
-		return nil, err
+		return nil, echo.NewHTTPError(http.StatusBadRequest, "passwords do not match")
 	}
 	p.ID = id
-	return &p, nil
+	return p, nil
 }

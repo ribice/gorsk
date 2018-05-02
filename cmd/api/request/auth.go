@@ -1,22 +1,21 @@
 package request
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/ribice/gorsk/internal/errors"
+	"github.com/labstack/echo"
 )
 
 // Credentials contains login request
 type Credentials struct {
-	Username string `json:"username" binding:"required"`
-	Password string `json:"password" binding:"required"`
+	Username string `json:"username" validate:"required"`
+	Password string `json:"password" validate:"required"`
 }
 
 // Login validates login request
-func Login(c *gin.Context) (*Credentials, error) {
+func Login(c echo.Context) (*Credentials, error) {
 	cred := new(Credentials)
-	if err := c.ShouldBindJSON(cred); err != nil {
-		apperr.Response(c, err)
+	if err := c.Bind(cred); err != nil {
 		return nil, err
+
 	}
 	return cred, nil
 }

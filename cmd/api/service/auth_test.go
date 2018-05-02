@@ -2,7 +2,6 @@ package service_test
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -12,9 +11,7 @@ import (
 	"github.com/ribice/gorsk/internal"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/ribice/gorsk/internal/errors"
-
-	"github.com/gin-gonic/gin"
+	"github.com/ribice/gorsk/cmd/api/server"
 	"github.com/ribice/gorsk/cmd/api/service"
 	"github.com/ribice/gorsk/internal/auth"
 	"github.com/ribice/gorsk/internal/mock"
@@ -40,8 +37,8 @@ func TestLogin(t *testing.T) {
 			req:        `{"username":"juzernejm","password":"hunter123"}`,
 			wantStatus: http.StatusInternalServerError,
 			udb: &mockdb.User{
-				FindByUsernameFn: func(context.Context, string) (*model.User, error) {
-					return nil, apperr.DB
+				FindByUsernameFn: func(string) (*model.User, error) {
+					return nil, model.ErrGeneric
 				},
 			},
 		},
@@ -50,14 +47,14 @@ func TestLogin(t *testing.T) {
 			req:        `{"username":"juzernejm","password":"hunter123"}`,
 			wantStatus: http.StatusOK,
 			udb: &mockdb.User{
-				FindByUsernameFn: func(context.Context, string) (*model.User, error) {
+				FindByUsernameFn: func(string) (*model.User, error) {
 					return &model.User{
 						Password: auth.HashPassword("hunter123"),
 						Active:   true,
 					}, nil
 				},
-				UpdateLoginFn: func(context.Context, *model.User) error {
-					return nil
+				UpdateFn: func(u *model.User) (*model.User, error) {
+					return u, nil
 				},
 			},
 			jwt: &mock.JWT{
@@ -68,11 +65,10 @@ func TestLogin(t *testing.T) {
 			wantResp: &model.AuthToken{Token: "jwttokenstring", Expires: mock.TestTime(2018).Format(time.RFC3339)},
 		},
 	}
-	gin.SetMode(gin.TestMode)
 
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			r := gin.New()
+			r := server.New()
 			service.NewAuth(auth.New(tt.udb, tt.jwt), r)
 			ts := httptest.NewServer(r)
 			defer ts.Close()
@@ -109,8 +105,8 @@ func TestRefresh(t *testing.T) {
 			req:        "refreshtoken",
 			wantStatus: http.StatusInternalServerError,
 			udb: &mockdb.User{
-				FindByTokenFn: func(context.Context, string) (*model.User, error) {
-					return nil, apperr.DB
+				FindByTokenFn: func(string) (*model.User, error) {
+					return nil, model.ErrGeneric
 				},
 			},
 		},
@@ -119,7 +115,7 @@ func TestRefresh(t *testing.T) {
 			req:        "refreshtoken",
 			wantStatus: http.StatusOK,
 			udb: &mockdb.User{
-				FindByTokenFn: func(context.Context, string) (*model.User, error) {
+				FindByTokenFn: func(string) (*model.User, error) {
 					return &model.User{
 						Username: "johndoe",
 						Active:   true,
@@ -134,11 +130,10 @@ func TestRefresh(t *testing.T) {
 			wantResp: &model.RefreshToken{Token: "jwttokenstring", Expires: mock.TestTime(2018).Format(time.RFC3339)},
 		},
 	}
-	gin.SetMode(gin.TestMode)
 
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			r := gin.New()
+			r := server.New()
 			service.NewAuth(auth.New(tt.udb, tt.jwt), r)
 			ts := httptest.NewServer(r)
 			defer ts.Close()

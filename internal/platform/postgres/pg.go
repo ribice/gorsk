@@ -21,7 +21,7 @@ func New(cfg *config.Database) (*pg.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	db := pg.Connect(u)
+	db := pg.Connect(u).WithTimeout(time.Second * 5)
 	_, err = db.Exec("SELECT 1")
 	if err != nil {
 		return nil, err

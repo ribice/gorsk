@@ -2,9 +2,9 @@
 package user
 
 import (
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo"
 	"github.com/ribice/gorsk/internal"
-	"github.com/ribice/gorsk/internal/errors"
+
 	"github.com/ribice/gorsk/internal/platform/query"
 	"github.com/ribice/gorsk/internal/platform/structs"
 )
@@ -22,34 +22,33 @@ type Service struct {
 }
 
 // List returns list of users
-func (s *Service) List(c *gin.Context, p *model.Pagination) ([]model.User, error) {
+func (s *Service) List(c echo.Context, p *model.Pagination) ([]model.User, error) {
 	u := s.auth.User(c)
 	q, err := query.List(u)
 	if err != nil {
 		return nil, err
 	}
-	return s.udb.List(c, q, p)
+	return s.udb.List(q, p)
 }
 
 // View returns single user
-func (s *Service) View(c *gin.Context, id int) (*model.User, error) {
-	if !s.rbac.EnforceUser(c, id) {
-		return nil, apperr.Forbidden
+func (s *Service) View(c echo.Context, id int) (*model.User, error) {
+	if err := s.rbac.EnforceUser(c, id); err != nil {
+		return nil, err
 	}
-	return s.udb.View(c, id)
+	return s.udb.View(id)
 }
 
 // Delete deletes a user
-func (s *Service) Delete(c *gin.Context, id int) error {
-	u, err := s.udb.View(c, id)
+func (s *Service) Delete(c echo.Context, id int) error {
+	u, err := s.udb.View(id)
 	if err != nil {
 		return err
 	}
-	if !s.rbac.IsLowerRole(c, u.Role.AccessLevel) {
-		return apperr.Forbidden
+	if err := s.rbac.IsLowerRole(c, u.Role.AccessLevel); err != nil {
+		return err
 	}
-	u.Delete()
-	return s.udb.Delete(c, u)
+	return s.udb.Delete(u)
 }
 
 // Update contains user's information used for updating
@@ -63,14 +62,14 @@ type Update struct {
 }
 
 // Update updates user's contact information
-func (s *Service) Update(c *gin.Context, u *Update) (*model.User, error) {
-	if !s.rbac.EnforceUser(c, u.ID) {
-		return nil, apperr.Forbidden
+func (s *Service) Update(c echo.Context, u *Update) (*model.User, error) {
+	if err := s.rbac.EnforceUser(c, u.ID); err != nil {
+		return nil, err
 	}
-	usr, err := s.udb.View(c, u.ID)
+	usr, err := s.udb.View(u.ID)
 	if err != nil {
 		return nil, err
 	}
 	structs.Merge(usr, u)
-	return s.udb.Update(c, usr)
+	return s.udb.Update(usr)
 }

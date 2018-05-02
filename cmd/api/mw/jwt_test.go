@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/labstack/echo"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ribice/gorsk/internal"
@@ -13,24 +14,20 @@ import (
 	"github.com/ribice/gorsk/cmd/api/config"
 	"github.com/ribice/gorsk/internal/mock"
 
-	"github.com/gin-gonic/gin"
 	"github.com/ribice/gorsk/cmd/api/mw"
 )
 
-func hwHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"text": "Hello World.",
-	})
+func hwHandler(c echo.Context) error {
+	return c.String(200, "Hello World")
 }
 
-func ginHandler(mw ...gin.HandlerFunc) *gin.Engine {
-	gin.SetMode(gin.TestMode)
-	r := gin.New()
+func echoHandler(mw ...echo.MiddlewareFunc) *echo.Echo {
+	e := echo.New()
 	for _, v := range mw {
-		r.Use(v)
+		e.Use(v)
 	}
-	r.GET("/hello", hwHandler)
-	return r
+	e.GET("/hello", hwHandler)
+	return e
 }
 
 func TestMWFunc(t *testing.T) {
@@ -61,7 +58,7 @@ func TestMWFunc(t *testing.T) {
 	}
 	jwtCfg := &config.JWT{Realm: "testRealm", Secret: "jwtsecret", Duration: 60, SigningAlgorithm: "HS256"}
 	jwtMW := mw.NewJWT(jwtCfg)
-	ts := httptest.NewServer(ginHandler(jwtMW.MWFunc()))
+	ts := httptest.NewServer(echoHandler(jwtMW.MWFunc()))
 	defer ts.Close()
 	path := ts.URL + "/hello"
 	client := &http.Client{}

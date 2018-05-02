@@ -1,15 +1,12 @@
 package account_test
 
 import (
-	"context"
 	"testing"
+
+	"github.com/labstack/echo"
 
 	"github.com/ribice/gorsk/internal/mock"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/gin-gonic/gin"
-
-	"github.com/ribice/gorsk/internal/errors"
 
 	"github.com/ribice/gorsk/internal"
 	"github.com/ribice/gorsk/internal/account"
@@ -18,8 +15,8 @@ import (
 
 func TestCreate(t *testing.T) {
 	type args struct {
-		c   *gin.Context
-		req *model.User
+		c   echo.Context
+		req model.User
 	}
 	cases := []struct {
 		name     string
@@ -32,11 +29,11 @@ func TestCreate(t *testing.T) {
 	}{{
 		name: "Fail on is lower role",
 		rbac: &mock.RBAC{
-			AccountCreateFn: func(*gin.Context, int, int, int) bool {
-				return false
+			AccountCreateFn: func(echo.Context, int, int, int) error {
+				return model.ErrGeneric
 			}},
 		wantErr: true,
-		args: args{req: &model.User{
+		args: args{req: model.User{
 			FirstName: "John",
 			LastName:  "Doe",
 			Username:  "JohnDoe",
@@ -46,7 +43,7 @@ func TestCreate(t *testing.T) {
 	},
 		{
 			name: "Success",
-			args: args{req: &model.User{
+			args: args{req: model.User{
 				FirstName: "John",
 				LastName:  "Doe",
 				Username:  "JohnDoe",
@@ -54,16 +51,16 @@ func TestCreate(t *testing.T) {
 				Password:  "Thranduil8822",
 			}},
 			adb: &mockdb.Account{
-				CreateFn: func(ctx context.Context, u *model.User) error {
+				CreateFn: func(u model.User) (*model.User, error) {
 					u.CreatedAt = mock.TestTime(2000)
 					u.UpdatedAt = mock.TestTime(2000)
 					u.Base.ID = 1
-					return nil
+					return &u, nil
 				},
 			},
 			rbac: &mock.RBAC{
-				AccountCreateFn: func(*gin.Context, int, int, int) bool {
-					return true
+				AccountCreateFn: func(echo.Context, int, int, int) error {
+					return nil
 				}},
 			wantData: &model.User{
 				Base: model.Base{
@@ -79,11 +76,11 @@ func TestCreate(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			s := account.New(tt.adb, tt.udb, tt.rbac)
-			err := s.Create(tt.args.c, tt.args.req)
+			usr, err := s.Create(tt.args.c, tt.args.req)
 			assert.Equal(t, tt.wantErr, err != nil)
 			if tt.wantData != nil {
-				tt.args.req.Password = tt.wantData.Password
-				assert.Equal(t, tt.wantData, tt.args.req)
+				tt.wantData.Password = usr.Password
+				assert.Equal(t, tt.wantData, usr)
 			}
 		})
 	}
@@ -91,7 +88,7 @@ func TestCreate(t *testing.T) {
 
 func TestChangePassword(t *testing.T) {
 	type args struct {
-		c       *gin.Context
+		c       echo.Context
 		oldpass string
 		newpass string
 		id      int
@@ -108,8 +105,8 @@ func TestChangePassword(t *testing.T) {
 			name: "Fail on EnforceUser",
 			args: args{id: 1},
 			rbac: &mock.RBAC{
-				EnforceUserFn: func(c *gin.Context, id int) bool {
-					return id != 1
+				EnforceUserFn: func(c echo.Context, id int) error {
+					return model.ErrGeneric
 				}},
 			wantErr: true,
 		},
@@ -118,15 +115,15 @@ func TestChangePassword(t *testing.T) {
 			args:    args{id: 1},
 			wantErr: true,
 			rbac: &mock.RBAC{
-				EnforceUserFn: func(c *gin.Context, id int) bool {
-					return true
+				EnforceUserFn: func(c echo.Context, id int) error {
+					return nil
 				}},
 			udb: &mockdb.User{
-				ViewFn: func(c context.Context, id int) (*model.User, error) {
+				ViewFn: func(id int) (*model.User, error) {
 					if id != 1 {
 						return nil, nil
 					}
-					return nil, apperr.DB
+					return nil, model.ErrGeneric
 				},
 			},
 		},
@@ -134,12 +131,12 @@ func TestChangePassword(t *testing.T) {
 			name: "Fail on PasswordMatch",
 			args: args{id: 1, oldpass: "hunter123"},
 			rbac: &mock.RBAC{
-				EnforceUserFn: func(c *gin.Context, id int) bool {
-					return true
+				EnforceUserFn: func(c echo.Context, id int) error {
+					return nil
 				}},
 			wantErr: true,
 			udb: &mockdb.User{
-				ViewFn: func(c context.Context, id int) (*model.User, error) {
+				ViewFn: func(id int) (*model.User, error) {
 					return &model.User{
 						Password: "IncorrectHashedPassword",
 					}, nil
@@ -150,11 +147,11 @@ func TestChangePassword(t *testing.T) {
 			name: "Success",
 			args: args{id: 1, oldpass: "hunter123", newpass: "password"},
 			rbac: &mock.RBAC{
-				EnforceUserFn: func(c *gin.Context, id int) bool {
-					return true
+				EnforceUserFn: func(c echo.Context, id int) error {
+					return nil
 				}},
 			udb: &mockdb.User{
-				ViewFn: func(c context.Context, id int) (*model.User, error) {
+				ViewFn: func(id int) (*model.User, error) {
 					return &model.User{
 						Password: "$2a$10$udRBroNGBeOYwSWCVzf6Lulg98uAoRCIi4t75VZg84xgw6EJbFNsG",
 					}, nil
@@ -162,7 +159,7 @@ func TestChangePassword(t *testing.T) {
 			},
 			adb: &mockdb.Account{
 				// Check whether password was hashed correctly
-				ChangePasswordFn: func(c context.Context, usr *model.User) error {
+				ChangePasswordFn: func(usr *model.User) error {
 					return nil
 				},
 			},

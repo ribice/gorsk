@@ -1,17 +1,15 @@
 package auth
 
 import (
-	"context"
 	"net/http"
+
+	"github.com/labstack/echo"
 
 	"github.com/rs/xid"
 
 	"github.com/ribice/gorsk/internal"
 
-	"github.com/ribice/gorsk/internal/errors"
 	"golang.org/x/crypto/bcrypt"
-
-	"github.com/gin-gonic/gin"
 )
 
 // New creates new auth service
@@ -34,26 +32,27 @@ type JWT interface {
 }
 
 // Authenticate tries to authenticate the user provided by username and password
-func (s *Service) Authenticate(c context.Context, user, pass string) (*model.AuthToken, error) {
-	u, err := s.udb.FindByUsername(c, user)
+func (s *Service) Authenticate(c echo.Context, user, pass string) (*model.AuthToken, error) {
+	u, err := s.udb.FindByUsername(user)
 	if err != nil {
 		return nil, err
 	}
 	if !HashMatchesPassword(u.Password, pass) {
-		return nil, apperr.New(http.StatusNotFound, "Username or password does not exist")
+		return nil, echo.NewHTTPError(http.StatusUnauthorized, "Username or password does not exist")
 	}
 
 	if !u.Active {
-		return nil, apperr.Unauthorized
+		return nil, echo.NewHTTPError(http.StatusUnauthorized)
 	}
 	token, expire, err := s.jwt.GenerateToken(u)
 	if err != nil {
-		return nil, apperr.Unauthorized
+		return nil, echo.NewHTTPError(http.StatusUnauthorized)
 	}
 
 	u.UpdateLastLogin()
 	u.Token = xid.New().String()
-	if err := s.udb.UpdateLogin(c, u); err != nil {
+	_, err = s.udb.Update(u)
+	if err != nil {
 		return nil, err
 	}
 
@@ -61,26 +60,26 @@ func (s *Service) Authenticate(c context.Context, user, pass string) (*model.Aut
 }
 
 // Refresh refreshes jwt token and puts new claims inside
-func (s *Service) Refresh(c context.Context, token string) (*model.RefreshToken, error) {
-	user, err := s.udb.FindByToken(c, token)
+func (s *Service) Refresh(c echo.Context, token string) (*model.RefreshToken, error) {
+	user, err := s.udb.FindByToken(token)
 	if err != nil {
 		return nil, err
 	}
 	token, expire, err := s.jwt.GenerateToken(user)
 	if err != nil {
-		return nil, apperr.Generic
+		return nil, model.ErrGeneric
 	}
 	return &model.RefreshToken{Token: token, Expires: expire}, nil
 }
 
 // User returns user data stored in jwt token
-func (s *Service) User(c *gin.Context) *model.AuthUser {
-	id := c.GetInt("id")
-	companyID := c.GetInt("company_id")
-	locationID := c.GetInt("location_id")
-	user := c.GetString("username")
-	email := c.GetString("email")
-	role := c.MustGet("role").(int8)
+func (s *Service) User(c echo.Context) *model.AuthUser {
+	id := c.Get("id").(int)
+	companyID := c.Get("company_id").(int)
+	locationID := c.Get("location_id").(int)
+	user := c.Get("username").(string)
+	email := c.Get("email").(string)
+	role := c.Get("role").(int8)
 	return &model.AuthUser{
 		ID:         id,
 		Username:   user,

@@ -1,10 +1,13 @@
 package mock
 
 import (
+	"net/http"
 	"net/http/httptest"
 	"time"
 
-	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator"
+	"github.com/labstack/echo"
+	"github.com/ribice/gorsk/cmd/api/server"
 )
 
 // TestTime is used for testing time fields
@@ -23,15 +26,24 @@ func Str2Ptr(s string) *string {
 	return &s
 }
 
-// GinCtxWithKeys returns new gin context with keys
-func GinCtxWithKeys(keys []string, values ...interface{}) *gin.Context {
+// EchoCtxWithKeys returns new Echo context with keys
+func EchoCtxWithKeys(keys []string, values ...interface{}) echo.Context {
+	e := echo.New()
 	w := httptest.NewRecorder()
-	gin.SetMode(gin.TestMode)
-	c, _ := gin.CreateTestContext(w)
+	c := e.NewContext(nil, w)
 	for i, k := range keys {
 		c.Set(k, values[i])
 	}
 	return c
+}
+
+// EchoCtx returns new Echo context, with validator and content type set
+func EchoCtx(r *http.Request, w http.ResponseWriter) echo.Context {
+	r.Header.Set("Content-Type", "application/json")
+	e := echo.New()
+	e.Validator = &server.CustomValidator{V: validator.New()}
+	e.Binder = &server.CustomBinder{}
+	return e.NewContext(r, w)
 }
 
 // HeaderValid is used for jwt testing

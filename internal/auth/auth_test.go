@@ -1,12 +1,12 @@
 package auth_test
 
 import (
-	"context"
 	"testing"
 	"time"
 
+	"github.com/labstack/echo"
 	"github.com/ribice/gorsk/internal"
-	"github.com/ribice/gorsk/internal/errors"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ribice/gorsk/internal/mock/mockdb"
@@ -17,7 +17,7 @@ import (
 
 func TestAuthenticate(t *testing.T) {
 	type args struct {
-		c    context.Context
+		c    echo.Context
 		user string
 		pass string
 	}
@@ -34,8 +34,8 @@ func TestAuthenticate(t *testing.T) {
 			args:    args{user: "juzernejm"},
 			wantErr: true,
 			udb: &mockdb.User{
-				FindByUsernameFn: func(c context.Context, user string) (*model.User, error) {
-					return nil, apperr.DB
+				FindByUsernameFn: func(user string) (*model.User, error) {
+					return nil, model.ErrGeneric
 				},
 			},
 		},
@@ -44,7 +44,7 @@ func TestAuthenticate(t *testing.T) {
 			args:    args{user: "juzernejm", pass: "notHashedPassword"},
 			wantErr: true,
 			udb: &mockdb.User{
-				FindByUsernameFn: func(c context.Context, user string) (*model.User, error) {
+				FindByUsernameFn: func(user string) (*model.User, error) {
 					return &model.User{
 						Username: user,
 						Password: "HashedPassword",
@@ -57,7 +57,7 @@ func TestAuthenticate(t *testing.T) {
 			args:    args{user: "juzernejm", pass: "pass"},
 			wantErr: true,
 			udb: &mockdb.User{
-				FindByUsernameFn: func(c context.Context, user string) (*model.User, error) {
+				FindByUsernameFn: func(user string) (*model.User, error) {
 					return &model.User{
 						Username: user,
 						Password: auth.HashPassword("pass"),
@@ -71,7 +71,7 @@ func TestAuthenticate(t *testing.T) {
 			args:    args{user: "juzernejm", pass: "pass"},
 			wantErr: true,
 			udb: &mockdb.User{
-				FindByUsernameFn: func(c context.Context, user string) (*model.User, error) {
+				FindByUsernameFn: func(user string) (*model.User, error) {
 					return &model.User{
 						Username: user,
 						Password: auth.HashPassword("pass"),
@@ -81,7 +81,7 @@ func TestAuthenticate(t *testing.T) {
 			},
 			jwt: &mock.JWT{
 				GenerateTokenFn: func(u *model.User) (string, string, error) {
-					return "", "", apperr.Generic
+					return "", "", model.ErrGeneric
 				},
 			},
 		},
@@ -90,15 +90,15 @@ func TestAuthenticate(t *testing.T) {
 			args:    args{user: "juzernejm", pass: "pass"},
 			wantErr: true,
 			udb: &mockdb.User{
-				FindByUsernameFn: func(c context.Context, user string) (*model.User, error) {
+				FindByUsernameFn: func(user string) (*model.User, error) {
 					return &model.User{
 						Username: user,
 						Password: auth.HashPassword("pass"),
 						Active:   true,
 					}, nil
 				},
-				UpdateLoginFn: func(c context.Context, u *model.User) error {
-					return apperr.DB
+				UpdateFn: func(u *model.User) (*model.User, error) {
+					return nil, model.ErrGeneric
 				},
 			},
 			jwt: &mock.JWT{
@@ -111,15 +111,15 @@ func TestAuthenticate(t *testing.T) {
 			name: "Success",
 			args: args{user: "juzernejm", pass: "pass"},
 			udb: &mockdb.User{
-				FindByUsernameFn: func(c context.Context, user string) (*model.User, error) {
+				FindByUsernameFn: func(user string) (*model.User, error) {
 					return &model.User{
 						Username: user,
 						Password: auth.HashPassword("pass"),
 						Active:   true,
 					}, nil
 				},
-				UpdateLoginFn: func(c context.Context, u *model.User) error {
-					return nil
+				UpdateFn: func(u *model.User) (*model.User, error) {
+					return u, nil
 				},
 			},
 			jwt: &mock.JWT{
@@ -147,7 +147,7 @@ func TestAuthenticate(t *testing.T) {
 }
 func TestRefresh(t *testing.T) {
 	type args struct {
-		c     context.Context
+		c     echo.Context
 		token string
 	}
 	cases := []struct {
@@ -163,8 +163,8 @@ func TestRefresh(t *testing.T) {
 			args:    args{token: "refreshtoken"},
 			wantErr: true,
 			udb: &mockdb.User{
-				FindByTokenFn: func(c context.Context, token string) (*model.User, error) {
-					return nil, apperr.DB
+				FindByTokenFn: func(token string) (*model.User, error) {
+					return nil, model.ErrGeneric
 				},
 			},
 		},
@@ -173,7 +173,7 @@ func TestRefresh(t *testing.T) {
 			args:    args{token: "refreshtoken"},
 			wantErr: true,
 			udb: &mockdb.User{
-				FindByTokenFn: func(c context.Context, token string) (*model.User, error) {
+				FindByTokenFn: func(token string) (*model.User, error) {
 					return &model.User{
 						Username: "username",
 						Password: "password",
@@ -184,7 +184,7 @@ func TestRefresh(t *testing.T) {
 			},
 			jwt: &mock.JWT{
 				GenerateTokenFn: func(u *model.User) (string, string, error) {
-					return "", "", apperr.Generic
+					return "", "", model.ErrGeneric
 				},
 			},
 		},
@@ -192,7 +192,7 @@ func TestRefresh(t *testing.T) {
 			name: "Success",
 			args: args{token: "refreshtoken"},
 			udb: &mockdb.User{
-				FindByTokenFn: func(c context.Context, token string) (*model.User, error) {
+				FindByTokenFn: func(token string) (*model.User, error) {
 					return &model.User{
 						Username: "username",
 						Password: "password",
@@ -222,7 +222,7 @@ func TestRefresh(t *testing.T) {
 	}
 }
 func TestUser(t *testing.T) {
-	ctx := mock.GinCtxWithKeys([]string{
+	ctx := mock.EchoCtxWithKeys([]string{
 		"id", "company_id", "location_id", "username", "email", "role"},
 		9, 15, 52, "ribice", "ribice@gmail.com", int8(1))
 	wantUser := &model.AuthUser{

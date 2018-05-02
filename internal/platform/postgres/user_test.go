@@ -3,16 +3,16 @@ package pgsql_test
 import (
 	"testing"
 
+	"github.com/labstack/echo"
 	"github.com/ribice/gorsk/internal/platform/postgres"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/go-pg/pg"
 	"github.com/ribice/gorsk/internal"
 	"github.com/ribice/gorsk/internal/mock"
-	"go.uber.org/zap"
 )
 
-func testUserDB(t *testing.T, c *pg.DB, l *zap.Logger) {
+func testUserDB(t *testing.T, c *pg.DB, l echo.Logger) {
 	userDB := pgsql.NewUserDB(c, l)
 	cases := []struct {
 		name string
@@ -33,10 +33,6 @@ func testUserDB(t *testing.T, c *pg.DB, l *zap.Logger) {
 		{
 			name: "userList",
 			fn:   testUserList,
-		},
-		{
-			name: "updateLogin",
-			fn:   testUserUpdateLogin,
 		},
 		{
 			name: "delete",
@@ -92,7 +88,7 @@ func testUserView(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			user, err := db.View(nil, tt.id)
+			user, err := db.View(tt.id)
 			assert.Equal(t, tt.wantErr, err != nil)
 			if tt.wantData != nil {
 				tt.wantData.CreatedAt = user.CreatedAt
@@ -140,7 +136,7 @@ func testUserFindByUsername(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			user, err := db.FindByUsername(nil, tt.username)
+			user, err := db.FindByUsername(tt.username)
 			assert.Equal(t, tt.wantErr, err != nil)
 
 			if tt.wantData != nil {
@@ -191,7 +187,7 @@ func testUserFindByToken(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			user, err := db.FindByToken(nil, tt.token)
+			user, err := db.FindByToken(tt.token)
 			assert.Equal(t, tt.wantErr, err != nil)
 
 			if tt.wantData != nil {
@@ -272,7 +268,7 @@ func testUserList(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			users, err := db.List(nil, tt.qp, tt.pg)
+			users, err := db.List(tt.qp, tt.pg)
 			assert.Equal(t, tt.wantErr, err != nil)
 			if tt.wantData != nil {
 				for i, v := range users {
@@ -280,64 +276,6 @@ func testUserList(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
 					tt.wantData[i].UpdatedAt = v.UpdatedAt
 				}
 				assert.Equal(t, tt.wantData, users)
-			}
-		})
-	}
-}
-
-func testUserUpdateLogin(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
-	cases := []struct {
-		name     string
-		wantErr  bool
-		usr      *model.User
-		wantData *model.User
-	}{
-		// Does not fail on this test, but should
-		// {
-		// 	name:    "User does not exist",
-		// 	wantErr: true,
-		// 	usr:     &model.User{},
-		// },
-		{
-			name: "Success",
-			usr: &model.User{
-				Base: model.Base{
-					ID:        2,
-					UpdatedAt: mock.TestTime(2000),
-				},
-				LastLogin: mock.TestTimePtr(2018),
-				Token:     "refreshtoken",
-			},
-			wantData: &model.User{
-				Email:      "tomjones@mail.com",
-				FirstName:  "Tom",
-				LastName:   "Jones",
-				Username:   "tomjones",
-				RoleID:     1,
-				CompanyID:  1,
-				LocationID: 1,
-				Password:   "newPass",
-				Base: model.Base{
-					ID: 2,
-				},
-			},
-		},
-	}
-	for _, tt := range cases {
-		t.Run(tt.name, func(t *testing.T) {
-			userBefore := &model.User{}
-			if tt.wantData != nil {
-				userBefore = queryUser(t, c, tt.usr.Base.ID)
-			}
-			err := db.UpdateLogin(nil, tt.usr)
-			assert.Equal(t, tt.wantErr, err != nil)
-
-			if tt.wantData != nil {
-				assert.NotEqual(t, tt.usr.LastLogin, userBefore.LastLogin)
-				assert.NotEqual(t, tt.usr.Token, userBefore.Token)
-				tt.wantData.UpdatedAt = userBefore.UpdatedAt
-				tt.wantData.CreatedAt = userBefore.CreatedAt
-				assert.Equal(t, tt.wantData, userBefore)
 			}
 		})
 	}
@@ -376,7 +314,6 @@ func testUserDelete(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
 				Base: model.Base{
 					ID: 2,
 				},
-				Token: "refreshtoken",
 			},
 		},
 	}
@@ -386,7 +323,7 @@ func testUserDelete(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
 			if tt.wantData != nil {
 				userBefore = queryUser(t, c, tt.usr.Base.ID)
 			}
-			err := db.Delete(nil, tt.usr)
+			err := db.Delete(tt.usr)
 			assert.Equal(t, tt.wantErr, err != nil)
 
 			if tt.wantData != nil {
@@ -458,7 +395,7 @@ func testUserUpdate(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			resp, err := db.Update(nil, tt.usr)
+			resp, err := db.Update(tt.usr)
 			assert.Equal(t, tt.wantErr, err != nil)
 			if tt.wantData != nil {
 				tt.wantData.UpdatedAt = resp.UpdatedAt

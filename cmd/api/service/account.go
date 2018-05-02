@@ -3,14 +3,12 @@ package service
 import (
 	"net/http"
 
+	"github.com/labstack/echo"
 	"github.com/ribice/gorsk/internal"
 
 	"github.com/ribice/gorsk/internal/account"
-	"github.com/ribice/gorsk/internal/errors"
 
 	"github.com/ribice/gorsk/cmd/api/request"
-
-	"github.com/gin-gonic/gin"
 )
 
 // Account represents account http
@@ -19,9 +17,9 @@ type Account struct {
 }
 
 // NewAccount creates new account http service
-func NewAccount(svc *account.Service, r *gin.RouterGroup) {
+func NewAccount(svc *account.Service, e *echo.Group) {
 	a := Account{svc: svc}
-	ar := r.Group("/users")
+	ar := e.Group("/users")
 	// swagger:route POST /v1/users users accCreate
 	// Creates new user account.
 	// responses:
@@ -55,12 +53,12 @@ func NewAccount(svc *account.Service, r *gin.RouterGroup) {
 	ar.PATCH("/:id/password", a.changePassword)
 }
 
-func (a *Account) create(c *gin.Context) {
+func (a *Account) create(c echo.Context) error {
 	r, err := request.AccountCreate(c)
 	if err != nil {
-		return
+		return err
 	}
-	user := &model.User{
+	usr, err := a.svc.Create(c, model.User{
 		Username:   r.Username,
 		Password:   r.Password,
 		Email:      r.Email,
@@ -69,23 +67,20 @@ func (a *Account) create(c *gin.Context) {
 		CompanyID:  r.CompanyID,
 		LocationID: r.LocationID,
 		RoleID:     r.RoleID,
+	})
+	if err != nil {
+		return err
 	}
-	if err := a.svc.Create(c, user); err != nil {
-		apperr.Response(c, err)
-		return
-	}
-
-	c.JSON(http.StatusOK, user)
+	return c.JSON(http.StatusOK, usr)
 }
 
-func (a *Account) changePassword(c *gin.Context) {
+func (a *Account) changePassword(c echo.Context) error {
 	p, err := request.PasswordChange(c)
 	if err != nil {
-		return
+		return err
 	}
 	if err := a.svc.ChangePassword(c, p.OldPassword, p.NewPassword, p.ID); err != nil {
-		apperr.Response(c, err)
-		return
+		return err
 	}
-	c.Status(http.StatusOK)
+	return c.NoContent(http.StatusOK)
 }

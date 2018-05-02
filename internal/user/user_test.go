@@ -1,11 +1,10 @@
 package user_test
 
 import (
-	"context"
 	"testing"
 
-	"github.com/gin-gonic/gin"
-	"github.com/ribice/gorsk/internal/errors"
+	"github.com/labstack/echo"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ribice/gorsk/internal"
@@ -16,7 +15,7 @@ import (
 
 func TestView(t *testing.T) {
 	type args struct {
-		c  *gin.Context
+		c  echo.Context
 		id int
 	}
 	cases := []struct {
@@ -31,10 +30,10 @@ func TestView(t *testing.T) {
 			name: "Fail on RBAC",
 			args: args{id: 5},
 			rbac: &mock.RBAC{
-				EnforceUserFn: func(c *gin.Context, id int) bool {
-					return id == 1
+				EnforceUserFn: func(c echo.Context, id int) error {
+					return model.ErrGeneric
 				}},
-			wantErr: apperr.Forbidden,
+			wantErr: model.ErrGeneric,
 		},
 		{
 			name: "Success",
@@ -50,11 +49,11 @@ func TestView(t *testing.T) {
 				Username:  "JohnDoe",
 			},
 			rbac: &mock.RBAC{
-				EnforceUserFn: func(c *gin.Context, id int) bool {
-					return true
+				EnforceUserFn: func(c echo.Context, id int) error {
+					return nil
 				}},
 			udb: &mockdb.User{
-				ViewFn: func(ctx context.Context, id int) (*model.User, error) {
+				ViewFn: func(id int) (*model.User, error) {
 					if id == 1 {
 						return &model.User{
 							Base: model.Base{
@@ -83,7 +82,7 @@ func TestView(t *testing.T) {
 
 func TestList(t *testing.T) {
 	type args struct {
-		c   *gin.Context
+		c   echo.Context
 		pgn *model.Pagination
 	}
 	cases := []struct {
@@ -96,13 +95,13 @@ func TestList(t *testing.T) {
 	}{
 		{
 			name: "Fail on query List",
-			args: args{c: &gin.Context{}, pgn: &model.Pagination{
+			args: args{c: nil, pgn: &model.Pagination{
 				Limit:  100,
 				Offset: 200,
 			}},
 			wantErr: true,
 			auth: &mock.Auth{
-				UserFn: func(c *gin.Context) *model.AuthUser {
+				UserFn: func(c echo.Context) *model.AuthUser {
 					return &model.AuthUser{
 						ID:         1,
 						CompanyID:  2,
@@ -112,12 +111,12 @@ func TestList(t *testing.T) {
 				}}},
 		{
 			name: "Success",
-			args: args{c: &gin.Context{}, pgn: &model.Pagination{
+			args: args{c: nil, pgn: &model.Pagination{
 				Limit:  100,
 				Offset: 200,
 			}},
 			auth: &mock.Auth{
-				UserFn: func(c *gin.Context) *model.AuthUser {
+				UserFn: func(c echo.Context) *model.AuthUser {
 					return &model.AuthUser{
 						ID:         1,
 						CompanyID:  2,
@@ -126,7 +125,7 @@ func TestList(t *testing.T) {
 					}
 				}},
 			udb: &mockdb.User{
-				ListFn: func(context.Context, *model.ListQuery, *model.Pagination) ([]model.User, error) {
+				ListFn: func(*model.ListQuery, *model.Pagination) ([]model.User, error) {
 					return []model.User{
 						{
 							Base: model.Base{
@@ -190,7 +189,7 @@ func TestList(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	type args struct {
-		c  *gin.Context
+		c  echo.Context
 		id int
 	}
 	cases := []struct {
@@ -203,13 +202,13 @@ func TestDelete(t *testing.T) {
 		{
 			name:    "Fail on ViewUser",
 			args:    args{id: 1},
-			wantErr: apperr.DB,
+			wantErr: model.ErrGeneric,
 			udb: &mockdb.User{
-				ViewFn: func(c context.Context, id int) (*model.User, error) {
+				ViewFn: func(id int) (*model.User, error) {
 					if id != 1 {
 						return nil, nil
 					}
-					return nil, apperr.DB
+					return nil, model.ErrGeneric
 				},
 			},
 		},
@@ -217,7 +216,7 @@ func TestDelete(t *testing.T) {
 			name: "Fail on RBAC",
 			args: args{id: 1},
 			udb: &mockdb.User{
-				ViewFn: func(c context.Context, id int) (*model.User, error) {
+				ViewFn: func(id int) (*model.User, error) {
 					return &model.User{
 						Base: model.Base{
 							ID:        id,
@@ -233,16 +232,16 @@ func TestDelete(t *testing.T) {
 				},
 			},
 			rbac: &mock.RBAC{
-				IsLowerRoleFn: func(*gin.Context, model.AccessRole) bool {
-					return false
+				IsLowerRoleFn: func(echo.Context, model.AccessRole) error {
+					return model.ErrGeneric
 				}},
-			wantErr: apperr.Forbidden,
+			wantErr: model.ErrGeneric,
 		},
 		{
 			name: "Success",
 			args: args{id: 1},
 			udb: &mockdb.User{
-				ViewFn: func(c context.Context, id int) (*model.User, error) {
+				ViewFn: func(id int) (*model.User, error) {
 					return &model.User{
 						Base: model.Base{
 							ID:        id,
@@ -258,13 +257,13 @@ func TestDelete(t *testing.T) {
 						},
 					}, nil
 				},
-				DeleteFn: func(c context.Context, usr *model.User) error {
+				DeleteFn: func(usr *model.User) error {
 					return nil
 				},
 			},
 			rbac: &mock.RBAC{
-				IsLowerRoleFn: func(*gin.Context, model.AccessRole) bool {
-					return true
+				IsLowerRoleFn: func(echo.Context, model.AccessRole) error {
+					return nil
 				}},
 		},
 	}
@@ -281,7 +280,7 @@ func TestDelete(t *testing.T) {
 
 func TestUpdate(t *testing.T) {
 	type args struct {
-		c   *gin.Context
+		c   echo.Context
 		upd *user.Update
 	}
 	cases := []struct {
@@ -298,10 +297,10 @@ func TestUpdate(t *testing.T) {
 				ID: 1,
 			}},
 			rbac: &mock.RBAC{
-				EnforceUserFn: func(c *gin.Context, id int) bool {
-					return false
+				EnforceUserFn: func(c echo.Context, id int) error {
+					return model.ErrGeneric
 				}},
-			wantErr: apperr.Forbidden,
+			wantErr: model.ErrGeneric,
 		},
 		{
 			name: "Fail on ViewUser",
@@ -309,16 +308,16 @@ func TestUpdate(t *testing.T) {
 				ID: 1,
 			}},
 			rbac: &mock.RBAC{
-				EnforceUserFn: func(c *gin.Context, id int) bool {
-					return true
+				EnforceUserFn: func(c echo.Context, id int) error {
+					return nil
 				}},
-			wantErr: apperr.DB,
+			wantErr: model.ErrGeneric,
 			udb: &mockdb.User{
-				ViewFn: func(c context.Context, id int) (*model.User, error) {
+				ViewFn: func(id int) (*model.User, error) {
 					if id != 1 {
 						return nil, nil
 					}
-					return nil, apperr.DB
+					return nil, model.ErrGeneric
 				},
 			},
 		},
@@ -332,8 +331,8 @@ func TestUpdate(t *testing.T) {
 				Phone:     mock.Str2Ptr("234567"),
 			}},
 			rbac: &mock.RBAC{
-				EnforceUserFn: func(c *gin.Context, id int) bool {
-					return true
+				EnforceUserFn: func(c echo.Context, id int) error {
+					return nil
 				}},
 			wantData: &model.User{
 				Base: model.Base{
@@ -352,7 +351,7 @@ func TestUpdate(t *testing.T) {
 				Email:      "golang@go.org",
 			},
 			udb: &mockdb.User{
-				ViewFn: func(c context.Context, id int) (*model.User, error) {
+				ViewFn: func(id int) (*model.User, error) {
 					if id == 1 {
 						return &model.User{
 							Base: model.Base{
@@ -371,9 +370,9 @@ func TestUpdate(t *testing.T) {
 							Email:      "golang@go.org",
 						}, nil
 					}
-					return nil, apperr.DB
+					return nil, model.ErrGeneric
 				},
-				UpdateFn: func(c context.Context, usr *model.User) (*model.User, error) {
+				UpdateFn: func(usr *model.User) (*model.User, error) {
 					usr.UpdatedAt = mock.TestTime(2000)
 					return usr, nil
 				},

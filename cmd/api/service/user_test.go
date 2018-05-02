@@ -2,20 +2,19 @@ package service_test
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ribice/gorsk/internal/errors"
+	"github.com/labstack/echo"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ribice/gorsk/internal/user"
 
 	"github.com/ribice/gorsk/internal"
 
-	"github.com/gin-gonic/gin"
+	"github.com/ribice/gorsk/cmd/api/server"
 	"github.com/ribice/gorsk/cmd/api/service"
 	"github.com/ribice/gorsk/internal/mock"
 	"github.com/ribice/gorsk/internal/mock/mockdb"
@@ -44,7 +43,7 @@ func TestListUsers(t *testing.T) {
 			name: "Fail on query list",
 			req:  `?limit=100&page=1`,
 			auth: &mock.Auth{
-				UserFn: func(c *gin.Context) *model.AuthUser {
+				UserFn: func(c echo.Context) *model.AuthUser {
 					return &model.AuthUser{
 						ID:         1,
 						CompanyID:  2,
@@ -59,7 +58,7 @@ func TestListUsers(t *testing.T) {
 			name: "Success",
 			req:  `?limit=100&page=1`,
 			auth: &mock.Auth{
-				UserFn: func(c *gin.Context) *model.AuthUser {
+				UserFn: func(c echo.Context) *model.AuthUser {
 					return &model.AuthUser{
 						ID:         1,
 						CompanyID:  2,
@@ -69,7 +68,7 @@ func TestListUsers(t *testing.T) {
 					}
 				}},
 			udb: &mockdb.User{
-				ListFn: func(c context.Context, q *model.ListQuery, p *model.Pagination) ([]model.User, error) {
+				ListFn: func(q *model.ListQuery, p *model.Pagination) ([]model.User, error) {
 					if p.Limit == 100 && p.Offset == 100 {
 						return []model.User{
 							{
@@ -108,7 +107,7 @@ func TestListUsers(t *testing.T) {
 							},
 						}, nil
 					}
-					return nil, apperr.DB
+					return nil, model.ErrGeneric
 				},
 			},
 			wantStatus: http.StatusOK,
@@ -151,11 +150,10 @@ func TestListUsers(t *testing.T) {
 				}, Page: 1},
 		},
 	}
-	gin.SetMode(gin.TestMode)
 
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			r := gin.New()
+			r := server.New()
 			rg := r.Group("/v1")
 			service.NewUser(user.New(tt.udb, tt.rbac, tt.auth), rg)
 			ts := httptest.NewServer(r)
@@ -197,8 +195,8 @@ func TestViewUser(t *testing.T) {
 			name: "Fail on RBAC",
 			req:  `1`,
 			rbac: &mock.RBAC{
-				EnforceUserFn: func(*gin.Context, int) bool {
-					return false
+				EnforceUserFn: func(echo.Context, int) error {
+					return echo.ErrForbidden
 				},
 			},
 			wantStatus: http.StatusForbidden,
@@ -207,12 +205,12 @@ func TestViewUser(t *testing.T) {
 			name: "Success",
 			req:  `1`,
 			rbac: &mock.RBAC{
-				EnforceUserFn: func(*gin.Context, int) bool {
-					return true
+				EnforceUserFn: func(echo.Context, int) error {
+					return nil
 				},
 			},
 			udb: &mockdb.User{
-				ViewFn: func(c context.Context, id int) (*model.User, error) {
+				ViewFn: func(id int) (*model.User, error) {
 					return &model.User{
 						Base: model.Base{
 							ID:        1,
@@ -238,11 +236,10 @@ func TestViewUser(t *testing.T) {
 			},
 		},
 	}
-	gin.SetMode(gin.TestMode)
 
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			r := gin.New()
+			r := server.New()
 			rg := r.Group("/v1")
 			service.NewUser(user.New(tt.udb, tt.rbac, tt.auth), rg)
 			ts := httptest.NewServer(r)
@@ -286,8 +283,8 @@ func TestUpdateUser(t *testing.T) {
 			id:   `1`,
 			req:  `{"first_name":"jj","last_name":"okocha","mobile":"123456","phone":"321321","address":"home"}`,
 			rbac: &mock.RBAC{
-				EnforceUserFn: func(*gin.Context, int) bool {
-					return false
+				EnforceUserFn: func(echo.Context, int) error {
+					return echo.ErrForbidden
 				},
 			},
 			wantStatus: http.StatusForbidden,
@@ -297,12 +294,12 @@ func TestUpdateUser(t *testing.T) {
 			id:   `1`,
 			req:  `{"first_name":"jj","last_name":"okocha","phone":"321321","address":"home"}`,
 			rbac: &mock.RBAC{
-				EnforceUserFn: func(*gin.Context, int) bool {
-					return true
+				EnforceUserFn: func(echo.Context, int) error {
+					return nil
 				},
 			},
 			udb: &mockdb.User{
-				ViewFn: func(c context.Context, id int) (*model.User, error) {
+				ViewFn: func(id int) (*model.User, error) {
 					return &model.User{
 						Base: model.Base{
 							ID:        1,
@@ -316,7 +313,7 @@ func TestUpdateUser(t *testing.T) {
 						Phone:     "332223",
 					}, nil
 				},
-				UpdateFn: func(c context.Context, usr *model.User) (*model.User, error) {
+				UpdateFn: func(usr *model.User) (*model.User, error) {
 					usr.UpdatedAt = mock.TestTime(2010)
 					usr.Mobile = "991991"
 					return usr, nil
@@ -338,18 +335,19 @@ func TestUpdateUser(t *testing.T) {
 			},
 		},
 	}
-	gin.SetMode(gin.TestMode)
+
 	client := http.Client{}
 
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			r := gin.New()
+			r := server.New()
 			rg := r.Group("/v1")
 			service.NewUser(user.New(tt.udb, tt.rbac, tt.auth), rg)
 			ts := httptest.NewServer(r)
 			defer ts.Close()
 			path := ts.URL + "/v1/users/" + tt.id
 			req, _ := http.NewRequest("PATCH", path, bytes.NewBufferString(tt.req))
+			req.Header.Set("Content-Type", "application/json")
 			res, err := client.Do(req)
 			if err != nil {
 				t.Fatal(err)
@@ -385,7 +383,7 @@ func TestDeleteUser(t *testing.T) {
 			name: "Fail on RBAC",
 			id:   `1`,
 			udb: &mockdb.User{
-				ViewFn: func(c context.Context, id int) (*model.User, error) {
+				ViewFn: func(id int) (*model.User, error) {
 					return &model.User{
 						Role: &model.Role{
 							AccessLevel: model.CompanyAdminRole,
@@ -394,8 +392,8 @@ func TestDeleteUser(t *testing.T) {
 				},
 			},
 			rbac: &mock.RBAC{
-				IsLowerRoleFn: func(*gin.Context, model.AccessRole) bool {
-					return false
+				IsLowerRoleFn: func(echo.Context, model.AccessRole) error {
+					return echo.ErrForbidden
 				},
 			},
 			wantStatus: http.StatusForbidden,
@@ -404,31 +402,31 @@ func TestDeleteUser(t *testing.T) {
 			name: "Success",
 			id:   `1`,
 			udb: &mockdb.User{
-				ViewFn: func(c context.Context, id int) (*model.User, error) {
+				ViewFn: func(id int) (*model.User, error) {
 					return &model.User{
 						Role: &model.Role{
 							AccessLevel: model.CompanyAdminRole,
 						},
 					}, nil
 				},
-				DeleteFn: func(context.Context, *model.User) error {
+				DeleteFn: func(*model.User) error {
 					return nil
 				},
 			},
 			rbac: &mock.RBAC{
-				IsLowerRoleFn: func(*gin.Context, model.AccessRole) bool {
-					return true
+				IsLowerRoleFn: func(echo.Context, model.AccessRole) error {
+					return nil
 				},
 			},
 			wantStatus: http.StatusOK,
 		},
 	}
-	gin.SetMode(gin.TestMode)
+
 	client := http.Client{}
 
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			r := gin.New()
+			r := server.New()
 			rg := r.Group("/v1")
 			service.NewUser(user.New(tt.udb, tt.rbac, tt.auth), rg)
 			ts := httptest.NewServer(r)
