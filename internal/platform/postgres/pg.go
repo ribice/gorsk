@@ -21,10 +21,13 @@ func New(cfg *config.Database) (*pg.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	db := pg.Connect(u).WithTimeout(time.Second * 5)
+	db := pg.Connect(u)
 	_, err = db.Exec("SELECT 1")
 	if err != nil {
 		return nil, err
+	}
+	if cfg.Timeout > 0 {
+		db.WithTimeout(time.Second * time.Duration(cfg.Timeout))
 	}
 	if cfg.Log {
 		db.OnQueryProcessed(func(event *pg.QueryProcessedEvent) {

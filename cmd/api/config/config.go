@@ -37,6 +37,7 @@ type Database struct {
 	PSN          string
 	Log          bool
 	CreateSchema bool
+	Timeout      int
 }
 
 // Server holds data necessery for server configuration

@@ -1,5 +1,6 @@
 db:
   log: true
+  timeout: 5 # Query timeout in seconds
   createschema: false
 
 server:
