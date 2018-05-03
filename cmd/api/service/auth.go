@@ -3,11 +3,9 @@ package service
 import (
 	"net/http"
 
-	"github.com/ribice/gorsk/internal/errors"
-
+	"github.com/labstack/echo"
 	"github.com/ribice/gorsk/cmd/api/request"
 
-	"github.com/gin-gonic/gin"
 	"github.com/ribice/gorsk/internal/auth"
 )
 
@@ -17,7 +15,7 @@ type Auth struct {
 }
 
 // NewAuth creates new auth http service
-func NewAuth(svc *auth.Service, r *gin.Engine) {
+func NewAuth(svc *auth.Service, e *echo.Echo) {
 	a := Auth{svc}
 	// swagger:route POST /login auth login
 	// Logs in user by username and password.
@@ -28,7 +26,7 @@ func NewAuth(svc *auth.Service, r *gin.Engine) {
 	// 	403: err
 	//  404: errMsg
 	//  500: err
-	r.POST("/login", a.login)
+	e.POST("/login", a.login)
 	// swagger:operation GET /refresh/{token} auth refresh
 	// ---
 	// summary: Refreshes jwt token.
@@ -48,27 +46,25 @@ func NewAuth(svc *auth.Service, r *gin.Engine) {
 	//     "$ref": "#/responses/err"
 	//   "500":
 	//     "$ref": "#/responses/err"
-	r.GET("/refresh/:token", a.refresh)
+	e.GET("/refresh/:token", a.refresh)
 }
 
-func (a *Auth) login(c *gin.Context) {
+func (a *Auth) login(c echo.Context) error {
 	cred, err := request.Login(c)
 	if err != nil {
-		return
+		return err
 	}
 	r, err := a.svc.Authenticate(c, cred.Username, cred.Password)
 	if err != nil {
-		apperr.Response(c, err)
-		return
+		return err
 	}
-	c.JSON(http.StatusOK, r)
+	return c.JSON(http.StatusOK, r)
 }
 
-func (a *Auth) refresh(c *gin.Context) {
+func (a *Auth) refresh(c echo.Context) error {
 	r, err := a.svc.Refresh(c, c.Param("token"))
 	if err != nil {
-		apperr.Response(c, err)
-		return
+		return err
 	}
-	c.JSON(http.StatusOK, r)
+	return c.JSON(http.StatusOK, r)
 }

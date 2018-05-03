@@ -1,10 +1,11 @@
 db:
-  psn: "postgres://biadpozi:3_Czbl7jSjkUEWk--VP8QXMke-mFnczq@horton.elephantsql.com:5432/biadpozi"
   log: true
+  timeout: 5 # Query timeout in seconds
   createschema: false
 
 server:
-  port: 8080
+  port: ":8080"
+  debug: true
 
 jwt:
   realm: "jwtrealm" # Change this value

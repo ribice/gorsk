@@ -4,26 +4,25 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/ribice/gorsk/internal/errors"
-
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo"
 )
 
-const defaultLimit = 100
-const maxLimit = 1000
+const (
+	defaultLimit = 100
+	maxLimit     = 1000
+)
 
 // Pagination contains pagination request
 type Pagination struct {
-	Limit  int `form:"limit"`
-	Page   int `form:"page" binding:"min=0"`
+	Limit  int `query:"limit"`
+	Page   int `query:"page" validate:"min=0"`
 	Offset int `json:"-"`
 }
 
 // Paginate validates pagination requests
-func Paginate(c *gin.Context) (*Pagination, error) {
+func Paginate(c echo.Context) (*Pagination, error) {
 	p := new(Pagination)
-	if err := c.ShouldBindQuery(p); err != nil {
-		apperr.Response(c, err)
+	if err := c.Bind(p); err != nil {
 		return nil, err
 	}
 	if p.Limit < 1 {
@@ -37,12 +36,11 @@ func Paginate(c *gin.Context) (*Pagination, error) {
 }
 
 // ID returns id url parameter.
-// In case of conversion error to int, request will be aborted with StatusBadRequest.
-func ID(c *gin.Context) (int, error) {
+// In case of conversion error to int, StatusBadRequest will be returned as err
+func ID(c echo.Context) (int, error) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.AbortWithStatus(http.StatusBadRequest)
-		return 0, apperr.BadRequest
+		return 0, echo.NewHTTPError(http.StatusBadRequest)
 	}
 	return id, nil
 }

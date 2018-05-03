@@ -2,21 +2,20 @@ package service_test
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/labstack/echo"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ribice/gorsk/internal"
 
+	"github.com/ribice/gorsk/cmd/api/server"
 	"github.com/ribice/gorsk/cmd/api/service"
 	"github.com/ribice/gorsk/internal/account"
 	"github.com/ribice/gorsk/internal/auth"
-
-	"github.com/gin-gonic/gin"
 
 	"github.com/ribice/gorsk/internal/mock"
 	"github.com/ribice/gorsk/internal/mock/mockdb"
@@ -40,8 +39,8 @@ func TestCreate(t *testing.T) {
 			name: "Fail on userSvc",
 			req:  `{"first_name":"John","last_name":"Doe","username":"juzernejm","password":"hunter123","password_confirm":"hunter123","email":"johndoe@gmail.com","company_id":1,"location_id":2,"role_id":2}`,
 			rbac: &mock.RBAC{
-				AccountCreateFn: func(c *gin.Context, roleID, companyID, locationID int) bool {
-					return false
+				AccountCreateFn: func(c echo.Context, roleID, companyID, locationID int) error {
+					return echo.ErrForbidden
 				},
 			},
 			wantStatus: http.StatusForbidden,
@@ -50,16 +49,16 @@ func TestCreate(t *testing.T) {
 			name: "Success",
 			req:  `{"first_name":"John","last_name":"Doe","username":"juzernejm","password":"hunter123","password_confirm":"hunter123","email":"johndoe@gmail.com","company_id":1,"location_id":2,"role_id":2}`,
 			rbac: &mock.RBAC{
-				AccountCreateFn: func(c *gin.Context, roleID, companyID, locationID int) bool {
-					return true
+				AccountCreateFn: func(c echo.Context, roleID, companyID, locationID int) error {
+					return nil
 				},
 			},
 			adb: &mockdb.Account{
-				CreateFn: func(c context.Context, usr *model.User) error {
+				CreateFn: func(usr model.User) (*model.User, error) {
 					usr.ID = 1
 					usr.CreatedAt = mock.TestTime(2018)
 					usr.UpdatedAt = mock.TestTime(2018)
-					return nil
+					return &usr, nil
 				},
 			},
 			wantResp: &model.User{
@@ -78,11 +77,10 @@ func TestCreate(t *testing.T) {
 			wantStatus: http.StatusOK,
 		},
 	}
-	gin.SetMode(gin.TestMode)
 
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			r := gin.New()
+			r := server.New()
 			rg := r.Group("/v1")
 			service.NewAccount(account.New(tt.adb, nil, tt.rbac), rg)
 			ts := httptest.NewServer(r)
@@ -125,8 +123,8 @@ func TestChangePassword(t *testing.T) {
 			name: "Fail on RBAC",
 			req:  `{"new_password":"newpassw","old_password":"oldpassw", "new_password_confirm":"newpassw"}`,
 			rbac: &mock.RBAC{
-				EnforceUserFn: func(c *gin.Context, id int) bool {
-					return false
+				EnforceUserFn: func(c echo.Context, id int) error {
+					return echo.ErrForbidden
 				},
 			},
 			id:         "1",
@@ -136,38 +134,39 @@ func TestChangePassword(t *testing.T) {
 			name: "Success",
 			req:  `{"new_password":"newpassw","old_password":"oldpassw", "new_password_confirm":"newpassw"}`,
 			rbac: &mock.RBAC{
-				EnforceUserFn: func(c *gin.Context, id int) bool {
-					return true
+				EnforceUserFn: func(c echo.Context, id int) error {
+					return nil
 				},
 			},
 			id: "1",
 			udb: &mockdb.User{
-				ViewFn: func(c context.Context, id int) (*model.User, error) {
+				ViewFn: func(id int) (*model.User, error) {
 					return &model.User{
 						Password: auth.HashPassword("oldpassw"),
 					}, nil
 				},
 			},
 			adb: &mockdb.Account{
-				ChangePasswordFn: func(c context.Context, usr *model.User) error {
+				ChangePasswordFn: func(usr *model.User) error {
 					return nil
 				},
 			},
 			wantStatus: http.StatusOK,
 		},
 	}
-	gin.SetMode(gin.TestMode)
+
 	client := &http.Client{}
 
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			r := gin.New()
+			r := server.New()
 			rg := r.Group("/v1")
 			service.NewAccount(account.New(tt.adb, tt.udb, tt.rbac), rg)
 			ts := httptest.NewServer(r)
 			defer ts.Close()
 			path := ts.URL + "/v1/users/" + tt.id + "/password"
 			req, err := http.NewRequest("PATCH", path, bytes.NewBufferString(tt.req))
+			req.Header.Set("Content-Type", "application/json")
 			if err != nil {
 				t.Fatal(err)
 			}

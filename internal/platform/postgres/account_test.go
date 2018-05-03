@@ -3,6 +3,7 @@ package pgsql_test
 import (
 	"testing"
 
+	"github.com/labstack/echo"
 	"github.com/ribice/gorsk/internal/mock"
 	"github.com/ribice/gorsk/internal/platform/postgres"
 	"github.com/stretchr/testify/assert"
@@ -10,10 +11,9 @@ import (
 	"github.com/ribice/gorsk/internal"
 
 	"github.com/go-pg/pg"
-	"go.uber.org/zap"
 )
 
-func testAccountDB(t *testing.T, c *pg.DB, l *zap.Logger) {
+func testAccountDB(t *testing.T, c *pg.DB, l echo.Logger) {
 	accDB := pgsql.NewAccountDB(c, l)
 	cases := []struct {
 		name string
@@ -40,13 +40,13 @@ func testAccountCreate(t *testing.T, db *pgsql.AccountDB, c *pg.DB) {
 	cases := []struct {
 		name     string
 		wantErr  bool
-		usr      *model.User
+		usr      model.User
 		wantData *model.User
 	}{
 		{
 			name:    "User already exists",
 			wantErr: true,
-			usr: &model.User{
+			usr: model.User{
 				Email:    "johndoe@mail.com",
 				Username: "johndoe",
 			},
@@ -54,7 +54,7 @@ func testAccountCreate(t *testing.T, db *pgsql.AccountDB, c *pg.DB) {
 		{
 			name:    "Fail on insert duplicate ID",
 			wantErr: true,
-			usr: &model.User{
+			usr: model.User{
 				Email:      "tomjones@mail.com",
 				FirstName:  "Tom",
 				LastName:   "Jones",
@@ -70,7 +70,7 @@ func testAccountCreate(t *testing.T, db *pgsql.AccountDB, c *pg.DB) {
 		},
 		{
 			name: "Success",
-			usr: &model.User{
+			usr: model.User{
 				Email:      "tomjones@mail.com",
 				FirstName:  "Tom",
 				LastName:   "Jones",
@@ -100,13 +100,12 @@ func testAccountCreate(t *testing.T, db *pgsql.AccountDB, c *pg.DB) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			err := db.Create(nil, tt.usr)
+			usr, err := db.Create(tt.usr)
 			assert.Equal(t, tt.wantErr, err != nil)
 			if tt.wantData != nil {
-				userDB := queryUser(t, c, tt.usr.Base.ID)
-				tt.wantData.CreatedAt = userDB.CreatedAt
-				tt.wantData.UpdatedAt = userDB.UpdatedAt
-				assert.Equal(t, tt.wantData, userDB)
+				tt.wantData.CreatedAt = usr.CreatedAt
+				tt.wantData.UpdatedAt = usr.UpdatedAt
+				assert.Equal(t, tt.wantData, usr)
 			}
 		})
 	}
@@ -151,7 +150,7 @@ func testChangePassword(t *testing.T, db *pgsql.AccountDB, c *pg.DB) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			err := db.ChangePassword(nil, tt.usr)
+			err := db.ChangePassword(tt.usr)
 			assert.Equal(t, tt.wantErr, err != nil)
 			if tt.wantData != nil {
 				userDB := queryUser(t, c, tt.usr.Base.ID)

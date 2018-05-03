@@ -37,7 +37,8 @@ func TestLoad(t *testing.T) {
 					CreateSchema: false,
 				},
 				Server: &config.Server{
-					Port: 8080,
+					Port:  ":8080",
+					Debug: true,
 				},
 				JWT: &config.JWT{
 					Duration: 10800,

@@ -26,6 +26,9 @@ func New(cfg *config.Database) (*pg.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+	if cfg.Timeout > 0 {
+		db.WithTimeout(time.Second * time.Duration(cfg.Timeout))
+	}
 	if cfg.Log {
 		db.OnQueryProcessed(func(event *pg.QueryProcessedEvent) {
 			query, err := event.FormattedQuery()

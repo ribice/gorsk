@@ -1,16 +1,17 @@
 package mock
 
 import (
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo"
+
 	"github.com/ribice/gorsk/internal"
 )
 
 // Auth mock
 type Auth struct {
-	UserFn func(*gin.Context) *model.AuthUser
+	UserFn func(echo.Context) *model.AuthUser
 }
 
 // User mock
-func (a *Auth) User(c *gin.Context) *model.AuthUser {
+func (a *Auth) User(c echo.Context) *model.AuthUser {
 	return a.UserFn(c)
 }

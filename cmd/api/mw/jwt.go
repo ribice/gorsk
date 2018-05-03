@@ -5,14 +5,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ribice/gorsk/internal/errors"
-
+	"github.com/labstack/echo"
 	"github.com/ribice/gorsk/internal"
 
 	"github.com/ribice/gorsk/cmd/api/config"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/gin-gonic/gin"
 )
 
 // NewJWT generates new JWT variable necessery for auth middleware
@@ -41,51 +39,51 @@ type JWT struct {
 }
 
 // MWFunc makes JWT implement the Middleware interface.
-func (j *JWT) MWFunc() gin.HandlerFunc {
+func (j *JWT) MWFunc() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			token, err := j.ParseToken(c)
+			if err != nil || !token.Valid {
+				c.Response().Header().Set("WWW-Authenticate", "JWT realm="+j.Realm)
+				return c.NoContent(http.StatusUnauthorized)
+			}
 
-	return func(c *gin.Context) {
-		token, err := j.ParseToken(c)
-		if err != nil || !token.Valid {
-			c.Header("WWW-Authenticate", "JWT realm="+j.Realm)
-			c.AbortWithStatus(http.StatusUnauthorized)
-			return
+			claims := token.Claims.(jwt.MapClaims)
+
+			id := int(claims["id"].(float64))
+			companyID := int(claims["c"].(float64))
+			locationID := int(claims["l"].(float64))
+			username := claims["u"].(string)
+			email := claims["e"].(string)
+			role := int8(claims["r"].(float64))
+
+			c.Set("id", id)
+			c.Set("company_id", companyID)
+			c.Set("location_id", locationID)
+			c.Set("username", username)
+			c.Set("email", email)
+			c.Set("role", role)
+
+			return next(c)
 		}
-
-		claims := token.Claims.(jwt.MapClaims)
-
-		id := int(claims["id"].(float64))
-		companyID := int(claims["c"].(float64))
-		locationID := int(claims["l"].(float64))
-		username := claims["u"].(string)
-		email := claims["e"].(string)
-		role := int8(claims["r"].(float64))
-
-		c.Set("id", id)
-		c.Set("company_id", companyID)
-		c.Set("location_id", locationID)
-		c.Set("username", username)
-		c.Set("email", email)
-		c.Set("role", role)
-
-		c.Next()
 	}
 }
 
 // ParseToken parses token from Authorization header
-func (j *JWT) ParseToken(c *gin.Context) (*jwt.Token, error) {
+func (j *JWT) ParseToken(c echo.Context) (*jwt.Token, error) {
 
-	token := c.Request.Header.Get("Authorization")
+	token := c.Request().Header.Get("Authorization")
 	if token == "" {
-		return nil, apperr.Unauthorized
+		return nil, model.ErrGeneric
 	}
 	parts := strings.SplitN(token, " ", 2)
 	if !(len(parts) == 2 && parts[0] == "Bearer") {
-		return nil, apperr.Unauthorized
+		return nil, model.ErrGeneric
 	}
 
 	return jwt.Parse(parts[1], func(token *jwt.Token) (interface{}, error) {
 		if jwt.GetSigningMethod(j.Algo) != token.Method {
-			return nil, apperr.Generic
+			return nil, model.ErrGeneric
 		}
 		return j.Key, nil
 	})

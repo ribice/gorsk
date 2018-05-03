@@ -8,47 +8,31 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/gin-gonic/gin"
 	"github.com/ribice/gorsk/cmd/api/request"
+	"github.com/ribice/gorsk/internal/mock"
 )
 
 func TestAccountCreate(t *testing.T) {
-	type errResp struct {
-		wantStatus int
-		wantResp   string
-	}
 	cases := []struct {
 		name     string
-		e        *errResp
 		req      string
 		wantErr  bool
 		wantData *request.Register
 	}{
 		{
-			name:    "Fail on binding JSON",
+			name:    "Fail on validating JSON",
 			wantErr: true,
 			req:     `{"first_name":"John","last_name":"Doe","username":"juzernejm","password":"hunter123","password_confirm":"hunter1234","email":"johndoe@gmail.com","company_id":1,"location_id":2}`,
-			e: &errResp{
-				wantStatus: http.StatusBadRequest,
-				wantResp:   `{"message":["RoleID is required, but was not received"]}`,
-			},
 		},
 		{
 			name:    "Fail on password match",
 			wantErr: true,
 			req:     `{"first_name":"John","last_name":"Doe","username":"juzernejm","password":"hunter123","password_confirm":"hunter1234","email":"johndoe@gmail.com","company_id":1,"location_id":2,"role_id":3}`,
-			e: &errResp{
-				wantStatus: http.StatusBadRequest,
-				wantResp:   `{"message":"passwords do not match"}`,
-			},
 		},
 		{
 			name:    "Fail on non-existent role_id",
 			wantErr: true,
 			req:     `{"first_name":"John","last_name":"Doe","username":"juzernejm","password":"hunter123","password_confirm":"hunter123","email":"johndoe@gmail.com","company_id":1,"location_id":2,"role_id":9}`,
-			e: &errResp{
-				wantStatus: http.StatusBadRequest,
-			},
 		},
 		{
 			name: "Success",
@@ -69,29 +53,18 @@ func TestAccountCreate(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			w := httptest.NewRecorder()
-			gin.SetMode(gin.TestMode)
-			c, _ := gin.CreateTestContext(w)
-			c.Request, _ = http.NewRequest("POST", "", bytes.NewBufferString(tt.req))
+			req, _ := http.NewRequest("POST", "", bytes.NewBufferString(tt.req))
+			c := mock.EchoCtx(req, w)
 			reg, err := request.AccountCreate(c)
-			if tt.e != nil {
-				assert.Equal(t, tt.e.wantStatus, w.Code)
-				assert.Equal(t, tt.e.wantResp, w.Body.String())
-			}
 			assert.Equal(t, tt.wantData, reg)
 			assert.Equal(t, tt.wantErr, err != nil)
-			assert.Equal(t, tt.wantErr, c.IsAborted())
 		})
 	}
 }
 
 func TestPasswordChange(t *testing.T) {
-	type errResp struct {
-		wantStatus int
-		wantResp   string
-	}
 	cases := []struct {
 		name     string
-		e        *errResp
 		id       string
 		req      string
 		wantErr  bool
@@ -101,29 +74,18 @@ func TestPasswordChange(t *testing.T) {
 			name:    "Fail on ID param",
 			wantErr: true,
 			id:      "NaN",
-			e: &errResp{
-				wantStatus: http.StatusBadRequest,
-			},
 		},
 		{
 			name:    "Fail on binding JSON",
 			wantErr: true,
 			id:      "1",
-			e: &errResp{
-				wantStatus: http.StatusBadRequest,
-				wantResp:   `{"message":["NewPasswordConfirm is required, but was not received"]}`,
-			},
-			req: `{"new_password":"new_password","old_password":"my_old_password"}`,
+			req:     `{"new_password":"new_password","old_password":"my_old_password"}`,
 		},
 		{
 			name:    "Not matching passwords",
 			wantErr: true,
 			id:      "1",
-			e: &errResp{
-				wantStatus: http.StatusBadRequest,
-				wantResp:   `{"message":"passwords do not match"}`,
-			},
-			req: `{"new_password":"new_password","old_password":"my_old_password", "new_password_confirm":"new_password_cf"}`,
+			req:     `{"new_password":"new_password","old_password":"my_old_password", "new_password_confirm":"new_password_cf"}`,
 		},
 		{
 			name: "Success",
@@ -137,23 +99,17 @@ func TestPasswordChange(t *testing.T) {
 			},
 		},
 	}
-	gin.SetMode(gin.TestMode)
+
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			w := httptest.NewRecorder()
-			c, _ := gin.CreateTestContext(w)
-			c.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
-			if tt.req != "" {
-				c.Request, _ = http.NewRequest("POST", "", bytes.NewBufferString(tt.req))
-			}
+			req, _ := http.NewRequest("POST", "/", bytes.NewBufferString(tt.req))
+			c := mock.EchoCtx(req, w)
+			c.SetParamNames("id")
+			c.SetParamValues(tt.id)
 			pw, err := request.PasswordChange(c)
-			if tt.e != nil {
-				assert.Equal(t, tt.e.wantStatus, w.Code)
-				assert.Equal(t, tt.e.wantResp, w.Body.String())
-			}
 			assert.Equal(t, tt.wantData, pw)
 			assert.Equal(t, tt.wantErr, err != nil)
-			assert.Equal(t, tt.wantErr, c.IsAborted())
 		})
 	}
 }

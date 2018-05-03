@@ -33,76 +33,69 @@ package main
 
 import (
 	"io/ioutil"
-	"log"
-	"time"
+	"net/http"
 
-	"github.com/gin-contrib/cors"
-
+	"github.com/labstack/echo"
 	"github.com/ribice/gorsk/internal/platform/postgres"
 
-	"github.com/gin-gonic/gin"
 	"github.com/go-pg/pg"
 	"github.com/ribice/gorsk/cmd/api/config"
 	"github.com/ribice/gorsk/cmd/api/mw"
+	"github.com/ribice/gorsk/cmd/api/server"
 	"github.com/ribice/gorsk/cmd/api/service"
 	_ "github.com/ribice/gorsk/cmd/api/swagger"
 	"github.com/ribice/gorsk/internal/account"
 	"github.com/ribice/gorsk/internal/auth"
 	"github.com/ribice/gorsk/internal/rbac"
 	"github.com/ribice/gorsk/internal/user"
-	"go.uber.org/zap"
 )
 
 func main() {
 
-	r := gin.Default()
-	mw.Add(r, cors.New(cors.Config{
-		AllowAllOrigins:  true,
-		AllowMethods:     []string{"GET", "POST", "PUT", "HEAD", "PATCH", "DELETE"},
-		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
-	}), mw.SecureHeaders())
-
 	cfg, err := config.Load("dev")
 	checkErr(err)
+
+	e := server.New()
 
 	db, err := pgsql.New(cfg.DB)
 	checkErr(err)
 
-	logger, _ := zap.NewDevelopment()
-	defer logger.Sync()
+	addV1Services(cfg, e, db)
 
-	addV1Services(cfg, r, db, logger)
-	r.Run()
+	server.Start(e, cfg.Server)
 }
 
-func addV1Services(cfg *config.Configuration, r *gin.Engine, db *pg.DB, log *zap.Logger) {
-	userDB := pgsql.NewUserDB(db, log)
+func addV1Services(cfg *config.Configuration, e *echo.Echo, db *pg.DB) {
+
+	// Initalize DB interfaces
+
+	userDB := pgsql.NewUserDB(db, e.Logger)
+	accDB := pgsql.NewAccountDB(db, e.Logger)
+
+	// Initalize services
+
 	jwt := mw.NewJWT(cfg.JWT)
 	authSvc := auth.New(userDB, jwt)
-	service.NewAuth(authSvc, r)
+	service.NewAuth(authSvc, e)
 
 	rbacSvc := rbac.New(userDB)
 
-	v1Router := r.Group("/v1")
+	v1Router := e.Group("/v1")
 	v1Router.GET("/swagger", docHandler)
 	v1Router.Use(jwt.MWFunc())
 
-	accDB := pgsql.NewAccountDB(db, log)
 	service.NewAccount(account.New(accDB, userDB, rbacSvc), v1Router)
 
 	service.NewUser(user.New(userDB, rbacSvc, authSvc), v1Router)
 }
 
-func docHandler(c *gin.Context) {
-	c.Header("Content-Type", "application/json")
+func docHandler(c echo.Context) error {
 	data, _ := ioutil.ReadFile("./cmd/api/swagger.json")
-	c.Writer.Write(data)
+	return c.Blob(http.StatusOK, "application/json", data)
 }
 
 func checkErr(err error) {
 	if err != nil {
-		log.Fatal(err)
+		panic(err.Error())
 	}
 }

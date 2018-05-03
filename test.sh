@@ -3,7 +3,7 @@
 set -e
 echo "" > coverage.txt
 
-for d in $(go list ./... | grep -v internal/mock); do
+for d in $(go list ./... | grep -v -e internal/mock -e cmd/api/server); do
     go test -race -coverprofile=profile.out -covermode=atomic "$d"
     if [ -f profile.out ]; then
         cat profile.out >> coverage.txt

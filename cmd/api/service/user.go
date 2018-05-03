@@ -3,12 +3,12 @@ package service
 import (
 	"net/http"
 
+	"github.com/labstack/echo"
+
 	"github.com/ribice/gorsk/internal"
 
-	"github.com/ribice/gorsk/internal/errors"
 	"github.com/ribice/gorsk/internal/user"
 
-	"github.com/gin-gonic/gin"
 	"github.com/ribice/gorsk/cmd/api/request"
 )
 
@@ -18,9 +18,9 @@ type User struct {
 }
 
 // NewUser creates new user http service
-func NewUser(svc *user.Service, r *gin.RouterGroup) {
+func NewUser(svc *user.Service, e *echo.Group) {
 	u := User{svc: svc}
-	ur := r.Group("/users")
+	ur := e.Group("/users")
 	// swagger:operation GET /v1/users users listUsers
 	// ---
 	// summary: Returns list of users.
@@ -123,62 +123,58 @@ type listResponse struct {
 	Page  int          `json:"page"`
 }
 
-func (u *User) list(c *gin.Context) {
+func (u *User) list(c echo.Context) error {
 	p, err := request.Paginate(c)
 	if err != nil {
-		return
+		return err
 	}
 	result, err := u.svc.List(c, &model.Pagination{
 		Limit: p.Limit, Offset: p.Offset,
 	})
 	if err != nil {
-		apperr.Response(c, err)
-		return
+		return err
 	}
-	c.JSON(http.StatusOK, listResponse{result, p.Page})
+	return c.JSON(http.StatusOK, listResponse{result, p.Page})
 }
 
-func (u *User) view(c *gin.Context) {
+func (u *User) view(c echo.Context) error {
 	id, err := request.ID(c)
 	if err != nil {
-		return
+		return err
 	}
 	result, err := u.svc.View(c, id)
 	if err != nil {
-		apperr.Response(c, err)
-		return
+		return err
 	}
-	c.JSON(http.StatusOK, result)
+	return c.JSON(http.StatusOK, result)
 }
 
-func (u *User) update(c *gin.Context) {
-	usr, err := request.UserUpdate(c)
+func (u *User) update(c echo.Context) error {
+	req, err := request.UserUpdate(c)
 	if err != nil {
-		return
+		return err
 	}
-	usrUpdate, err := u.svc.Update(c, &user.Update{
-		ID:        usr.ID,
-		FirstName: usr.FirstName,
-		LastName:  usr.LastName,
-		Mobile:    usr.Mobile,
-		Phone:     usr.Phone,
-		Address:   usr.Address,
+	usr, err := u.svc.Update(c, &user.Update{
+		ID:        req.ID,
+		FirstName: req.FirstName,
+		LastName:  req.LastName,
+		Mobile:    req.Mobile,
+		Phone:     req.Phone,
+		Address:   req.Address,
 	})
 	if err != nil {
-		apperr.Response(c, err)
-		return
+		return err
 	}
-	c.JSON(http.StatusOK, usrUpdate)
+	return c.JSON(http.StatusOK, usr)
 }
 
-func (u *User) delete(c *gin.Context) {
+func (u *User) delete(c echo.Context) error {
 	id, err := request.ID(c)
 	if err != nil {
-		return
+		return err
 	}
 	if err := u.svc.Delete(c, id); err != nil {
-		apperr.Response(c, err)
-		return
+		return err
 	}
-	c.Status(http.StatusOK)
+	return c.NoContent(http.StatusOK)
 }

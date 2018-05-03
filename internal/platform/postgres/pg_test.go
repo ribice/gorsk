@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/labstack/echo"
 	"github.com/ribice/gorsk/internal"
 	"github.com/ribice/gorsk/internal/platform/postgres"
-	"go.uber.org/zap"
 
 	"github.com/ribice/gorsk/cmd/api/config"
 
@@ -54,12 +54,9 @@ func TestNew(t *testing.T) {
 
 	defer db.Close()
 
-	logger, _ := zap.NewDevelopment()
-	defer logger.Sync()
-
 	cases := []struct {
 		name string
-		fn   func(t *testing.T, db *pg.DB, log *zap.Logger)
+		fn   func(t *testing.T, db *pg.DB, log echo.Logger)
 	}{
 		{
 			name: "AccountDB",
@@ -73,10 +70,12 @@ func TestNew(t *testing.T) {
 
 	seedData(t, db)
 
+	e := echo.New()
+
 	for _, tt := range cases {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			tt.fn(t, db, logger)
+			tt.fn(t, db, e.Logger)
 		})
 	}
 

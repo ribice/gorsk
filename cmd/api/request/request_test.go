@@ -5,19 +5,15 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo"
 	"github.com/ribice/gorsk/cmd/api/request"
+	"github.com/ribice/gorsk/internal/mock"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestPaginate(t *testing.T) {
-	type errResp struct {
-		wantStatus int
-		wantResp   string
-	}
 	cases := []struct {
 		name     string
-		e        *errResp
 		req      string
 		wantErr  bool
 		wantData *request.Pagination
@@ -25,22 +21,18 @@ func TestPaginate(t *testing.T) {
 		{
 			name:    "Fail on binding JSON",
 			wantErr: true,
-			req:     `?limit=50&page=-1`,
-			e: &errResp{
-				wantStatus: http.StatusBadRequest,
-				wantResp:   `{"message":["Page's value or length is less than allowed"]}`,
-			},
+			req:     `/?limit=50&page=-1`,
 		},
 		{
 			name: "Test default limit",
-			req:  `?limit=0`,
+			req:  `/?limit=0`,
 			wantData: &request.Pagination{
 				Limit: 100,
 			},
 		},
 		{
 			name: "Test max limit",
-			req:  `?limit=2222&page=2`,
+			req:  `/?limit=2222&page=2`,
 			wantData: &request.Pagination{
 				Limit:  1000,
 				Offset: 2000,
@@ -49,7 +41,7 @@ func TestPaginate(t *testing.T) {
 		},
 		{
 			name: "Test default",
-			req:  `?limit=200&page=2`,
+			req:  `/?limit=200&page=2`,
 			wantData: &request.Pagination{
 				Limit:  200,
 				Offset: 400,
@@ -57,31 +49,23 @@ func TestPaginate(t *testing.T) {
 			},
 		},
 	}
-	gin.SetMode(gin.TestMode)
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			w := httptest.NewRecorder()
-			c, _ := gin.CreateTestContext(w)
-			c.Request, _ = http.NewRequest("POST", tt.req, nil)
-			resp, err := request.Paginate(c)
-			if tt.e != nil {
-				assert.Equal(t, tt.e.wantStatus, w.Code)
-				assert.Equal(t, tt.e.wantResp, w.Body.String())
+			req, err := http.NewRequest("GET", tt.req, nil)
+			if err != nil {
+				t.Error("Could not create http request")
 			}
+			c := mock.EchoCtx(req, w)
+			resp, err := request.Paginate(c)
 			assert.Equal(t, tt.wantData, resp)
 			assert.Equal(t, tt.wantErr, err != nil)
-			assert.Equal(t, tt.wantErr, c.IsAborted())
 		})
 	}
 }
 func TestID(t *testing.T) {
-	type errResp struct {
-		wantStatus int
-		wantResp   string
-	}
 	cases := []struct {
 		name     string
-		e        *errResp
 		id       string
 		wantErr  bool
 		wantData int
@@ -89,18 +73,11 @@ func TestID(t *testing.T) {
 		{
 			name:    "EmptyID",
 			wantErr: true,
-			e: &errResp{
-				wantStatus: http.StatusBadRequest,
-			},
 		},
 		{
-			name:     "ID Not a Number",
-			id:       "NaN",
-			wantErr:  true,
-			wantData: 0,
-			e: &errResp{
-				wantStatus: http.StatusBadRequest,
-			},
+			name:    "ID Not a Number",
+			id:      "NaN",
+			wantErr: true,
 		},
 		{
 			name:     "Success",
@@ -108,20 +85,16 @@ func TestID(t *testing.T) {
 			id:       "1",
 		},
 	}
-	gin.SetMode(gin.TestMode)
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			w := httptest.NewRecorder()
-			c, _ := gin.CreateTestContext(w)
-			c.Params = gin.Params{gin.Param{Key: "id", Value: tt.id}}
+			req, _ := http.NewRequest(echo.GET, "/", nil)
+			c := mock.EchoCtx(req, w)
+			c.SetParamNames("id")
+			c.SetParamValues(tt.id)
 			resp, err := request.ID(c)
-			if tt.e != nil {
-				assert.Equal(t, tt.e.wantStatus, w.Code)
-				assert.Equal(t, tt.e.wantResp, w.Body.String())
-			}
 			assert.Equal(t, tt.wantData, resp)
 			assert.Equal(t, tt.wantErr, err != nil)
-			assert.Equal(t, tt.wantErr, c.IsAborted())
 		})
 	}
 }

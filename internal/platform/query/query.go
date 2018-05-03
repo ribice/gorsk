@@ -1,9 +1,8 @@
 package query
 
 import (
+	"github.com/labstack/echo"
 	"github.com/ribice/gorsk/internal"
-
-	"github.com/ribice/gorsk/internal/errors"
 )
 
 // List prepares data for list queries
@@ -16,6 +15,6 @@ func List(u *model.AuthUser) (*model.ListQuery, error) {
 	case u.Role == model.LocationAdminRole:
 		return &model.ListQuery{Query: "location_id = ?", ID: u.LocationID}, nil
 	default:
-		return nil, apperr.Forbidden
+		return nil, echo.ErrForbidden
 	}
 }

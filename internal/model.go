@@ -1,10 +1,14 @@
 package model
 
 import (
+	"errors"
 	"time"
 
 	"github.com/go-pg/pg/orm"
 )
+
+// ErrGeneric is used for testing purposes and for errors handled later in the callstack
+var ErrGeneric = errors.New("generic error")
 
 // Base contains common fields for all tables
 type Base struct {
@@ -29,12 +33,8 @@ type ListQuery struct {
 // BeforeInsert hooks into insert operations, setting createdAt and updatedAt to current time
 func (b *Base) BeforeInsert(_ orm.DB) error {
 	now := time.Now()
-	if b.CreatedAt.IsZero() {
-		b.CreatedAt = now
-	}
-	if b.UpdatedAt.IsZero() {
-		b.UpdatedAt = now
-	}
+	b.CreatedAt = now
+	b.UpdatedAt = now
 	return nil
 }
 

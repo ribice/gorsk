@@ -1,7 +1,6 @@
 package model
 
 import (
-	"context"
 	"time"
 )
 
@@ -45,17 +44,16 @@ func (u *User) UpdateLastLogin() {
 
 // AccountDB represents account related database interface (repository)
 type AccountDB interface {
-	Create(context.Context, *User) error
-	ChangePassword(context.Context, *User) error
+	Create(User) (*User, error)
+	ChangePassword(*User) error
 }
 
 // UserDB represents user database interface (repository)
 type UserDB interface {
-	View(context.Context, int) (*User, error)
-	FindByUsername(context.Context, string) (*User, error)
-	FindByToken(context.Context, string) (*User, error)
-	UpdateLogin(context.Context, *User) error
-	List(context.Context, *ListQuery, *Pagination) ([]User, error)
-	Delete(context.Context, *User) error
-	Update(context.Context, *User) (*User, error)
+	View(int) (*User, error)
+	FindByUsername(string) (*User, error)
+	FindByToken(string) (*User, error)
+	List(*ListQuery, *Pagination) ([]User, error)
+	Delete(*User) error
+	Update(*User) (*User, error)
 }
