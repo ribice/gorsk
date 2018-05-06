@@ -154,7 +154,7 @@ func TestListUsers(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			r := server.New()
-			rg := r.Group("/v1")
+			rg := r.Group("/v1/users")
 			service.NewUser(user.New(tt.udb, tt.rbac, tt.auth), rg)
 			ts := httptest.NewServer(r)
 			defer ts.Close()
@@ -240,7 +240,7 @@ func TestViewUser(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			r := server.New()
-			rg := r.Group("/v1")
+			rg := r.Group("/v1/users")
 			service.NewUser(user.New(tt.udb, tt.rbac, tt.auth), rg)
 			ts := httptest.NewServer(r)
 			defer ts.Close()
@@ -341,7 +341,7 @@ func TestUpdateUser(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			r := server.New()
-			rg := r.Group("/v1")
+			rg := r.Group("/v1/users")
 			service.NewUser(user.New(tt.udb, tt.rbac, tt.auth), rg)
 			ts := httptest.NewServer(r)
 			defer ts.Close()
@@ -427,7 +427,7 @@ func TestDeleteUser(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			r := server.New()
-			rg := r.Group("/v1")
+			rg := r.Group("/v1/users")
 			service.NewUser(user.New(tt.udb, tt.rbac, tt.auth), rg)
 			ts := httptest.NewServer(r)
 			defer ts.Close()

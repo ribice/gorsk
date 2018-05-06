@@ -17,9 +17,8 @@ type Account struct {
 }
 
 // NewAccount creates new account http service
-func NewAccount(svc *account.Service, e *echo.Group) {
+func NewAccount(svc *account.Service, ar *echo.Group) {
 	a := Account{svc: svc}
-	ar := e.Group("/users")
 	// swagger:route POST /v1/users users accCreate
 	// Creates new user account.
 	// responses:

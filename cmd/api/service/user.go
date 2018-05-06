@@ -18,9 +18,8 @@ type User struct {
 }
 
 // NewUser creates new user http service
-func NewUser(svc *user.Service, e *echo.Group) {
+func NewUser(svc *user.Service, ur *echo.Group) {
 	u := User{svc: svc}
-	ur := e.Group("/users")
 	// swagger:operation GET /v1/users users listUsers
 	// ---
 	// summary: Returns list of users.

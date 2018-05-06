@@ -81,7 +81,7 @@ func TestCreate(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			r := server.New()
-			rg := r.Group("/v1")
+			rg := r.Group("/v1/users")
 			service.NewAccount(account.New(tt.adb, nil, tt.rbac), rg)
 			ts := httptest.NewServer(r)
 			defer ts.Close()
@@ -160,7 +160,7 @@ func TestChangePassword(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			r := server.New()
-			rg := r.Group("/v1")
+			rg := r.Group("/v1/users")
 			service.NewAccount(account.New(tt.adb, tt.udb, tt.rbac), rg)
 			ts := httptest.NewServer(r)
 			defer ts.Close()

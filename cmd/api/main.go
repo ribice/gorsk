@@ -84,9 +84,11 @@ func addV1Services(cfg *config.Configuration, e *echo.Echo, db *pg.DB) {
 	v1Router.GET("/swagger", docHandler)
 	v1Router.Use(jwt.MWFunc())
 
-	service.NewAccount(account.New(accDB, userDB, rbacSvc), v1Router)
-
-	service.NewUser(user.New(userDB, rbacSvc, authSvc), v1Router)
+	// Workaround for Echo's issue with routing.
+	// v1Router should be passed to service normally, and then the group name created there
+	uR := v1Router.Group("/users")
+	service.NewAccount(account.New(accDB, userDB, rbacSvc), uR)
+	service.NewUser(user.New(userDB, rbacSvc, authSvc), uR)
 }
 
 func docHandler(c echo.Context) error {
