@@ -259,6 +259,15 @@
             "schema": {
               "$ref": "#/definitions/UpdateUser"
             }
+          },
+          {
+            "description": "Request body",
+            "name": "request",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserUpdate"
+            }
           }
         ],
         "responses": {

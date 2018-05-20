@@ -81,6 +81,12 @@ func NewUser(svc *user.Service, ur *echo.Group) {
 	//   description: id of user
 	//   type: int
 	//   required: true
+	// - name: request
+	//   in: body
+	//   description: Request body
+	//   required: true
+	//   schema:
+	//     "$ref": "#/definitions/UserUpdate"
 	// responses:
 	//   "200":
 	//     "$ref": "#/responses/userResp"

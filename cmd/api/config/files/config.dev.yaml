@@ -6,6 +6,8 @@ db:
 server:
   port: ":8080"
   debug: true
+  readtimeout: 10 # Request read timeout in minutes
+  writetimeout: 5 # Response write timeout in minutes
 
 jwt:
   realm: "jwtrealm" # Change this value

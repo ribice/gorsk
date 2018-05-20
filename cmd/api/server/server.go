@@ -2,6 +2,7 @@ package server
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/facebookgo/grace/gracehttp"
 	"github.com/go-playground/validator"
@@ -32,6 +33,8 @@ func healthCheck(c echo.Context) error {
 // Start starts echo server
 func Start(e *echo.Echo, cfg *config.Server) {
 	e.Server.Addr = cfg.Port
+	e.Server.ReadTimeout = time.Duration(cfg.ReadTimeout) * time.Minute
+	e.Server.WriteTimeout = time.Duration(cfg.WriteTimeout) * time.Minute
 	e.Debug = cfg.Debug
 	e.Logger.Fatal(gracehttp.Serve(e.Server))
 }
