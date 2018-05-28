@@ -75,7 +75,7 @@ Using Gorsk requires having Go 1.7 or above. Once you downloaded Gorsk (either u
 5. Run the app using:
 
 ```bash
-go run cmd/api/server.go
+go run cmd/api/main.go
 ```
 
 The application runs as an HTTP server at port 8080. It provides the following RESTful endpoints:
@@ -105,7 +105,7 @@ Let's save you have a table named 'cars' that handles employee's cars. To implem
 
 5. In `cmd/api/swagger` create car.go containing small structs to generate swagger API docs.
 
-6. In `cmd/api/server.go` wire up all the logic, by creating a CarDB instance, passing it to car service and then the service to the handler.
+6. In `cmd/api/main.go` wire up all the logic, by creating a CarDB instance, passing it to car service and then the service to the handler.
 
 ### Implementing other platforms
 
@@ -115,7 +115,7 @@ Similarly to implementing APIs relying only on a database, you can implement oth
 
 2. Rest of the procedure is same, except that in `/platform` you would create a new folder for your platform, for example, `elastic`.
 
-3. Once the new platform logic is implemented, create an instance of it in server.go (for example `elastic.client`) and pass it as an argument to car service (`car/car.go`).
+3. Once the new platform logic is implemented, create an instance of it in main.go (for example `elastic.client`) and pass it as an argument to car service (`car/car.go`).
 
 ## Project Structure
 
@@ -123,7 +123,7 @@ The project structure is explained in details in [THIS](https://medium.com/@benb
 
 1. Root package contains things not related to code directly, e.g. docker-compose, CI/CD, readme, bash scripts etc. It should also contain vendor folder, Gopkg.toml and Gopkg.lock if dep is being used.
 
-2. Main package ties together dependencies. Located in cmd/api/server.go, the main package instantiates routing, all configurations, connections etc and injects them as dependencies to services. Gorsk is structured as a monolith application but can be easily restructured to contain multiple microservices. An application may produce multiple binaries, therefore Gorsk uses the Go convention of placing main package as a subdirectory of the cmd package. As an example, scheduler application's binary would be located under cmd/cron.
+2. Main package ties together dependencies. Located in cmd/api/main.go, the main package instantiates routing, all configurations, connections etc and injects them as dependencies to services. Gorsk is structured as a monolith application but can be easily restructured to contain multiple microservices. An application may produce multiple binaries, therefore Gorsk uses the Go convention of placing main package as a subdirectory of the cmd package. As an example, scheduler application's binary would be located under cmd/cron.
 
 3. Rest of the code is located under /internal. Internal root contains domain types, e.g. User, Car, Company. This package only contains simple data types like User struct for holding user data or a UserService interface for fetching or saving user data.
 
