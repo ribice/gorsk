@@ -93,7 +93,7 @@ You can log in as admin to the application by sending a post request to localhos
 
 ### Implementing CRUD of another table
 
-Let's save you have a table named 'cars' that handles employee's cars. To implement CRUD on this table you need:
+Let's say you have a table named 'cars' that handles employee's cars. To implement CRUD on this table you need:
 
 1. In project's root location create a new file named `car.go`. Inside put your entity (struct), and methods on the struct if you need them. Create interfaces for all platforms you have, for example, database, indexing, reporting etc. An example for this is UserDB interface in user.go
 
