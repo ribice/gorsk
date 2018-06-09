@@ -15,7 +15,7 @@ type Auth struct {
 }
 
 // NewAuth creates new auth http service
-func NewAuth(svc *auth.Service, e *echo.Echo) {
+func NewAuth(svc *auth.Service, e *echo.Echo, mw echo.MiddlewareFunc) {
 	a := Auth{svc}
 	// swagger:route POST /login auth login
 	// Logs in user by username and password.
@@ -47,6 +47,13 @@ func NewAuth(svc *auth.Service, e *echo.Echo) {
 	//   "500":
 	//     "$ref": "#/responses/err"
 	e.GET("/refresh/:token", a.refresh)
+
+	// swagger:route GET /me auth meReq
+	// Gets user's info from session
+	// responses:
+	//  200: userResp
+	//  500: err
+	e.GET("/me", a.me, mw)
 }
 
 func (a *Auth) login(c echo.Context) error {
@@ -67,4 +74,12 @@ func (a *Auth) refresh(c echo.Context) error {
 		return err
 	}
 	return c.JSON(http.StatusOK, r)
+}
+
+func (a *Auth) me(c echo.Context) error {
+	user, err := a.svc.Me(c)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, user)
 }

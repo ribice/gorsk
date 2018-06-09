@@ -72,6 +72,12 @@ func (s *Service) Refresh(c echo.Context, token string) (*model.RefreshToken, er
 	return &model.RefreshToken{Token: token, Expires: expire}, nil
 }
 
+// Me returns info about currently logged user
+func (s *Service) Me(c echo.Context) (*model.User, error) {
+	au := s.User(c)
+	return s.udb.View(au.ID)
+}
+
 // User returns user data stored in jwt token
 func (s *Service) User(c echo.Context) *model.AuthUser {
 	id := c.Get("id").(int)

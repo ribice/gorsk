@@ -33,12 +33,12 @@ The following dependencies are used in this project (generated using [Glice](htt
 |-------------------------------------|--------------------------------------------|--------------|
 |             DEPENDENCY              |                  REPOURL                   |   LICENSE    |
 |-------------------------------------|--------------------------------------------|--------------|
-| github.com/labstack/echo            | https://github.com/labstack/echo           | MIT          |        | github.com/go-pg/pg                 | https://github.com/go-pg/pg                | bsd-2-clause |
+| github.com/labstack/echo            | https://github.com/labstack/echo           | MIT          |
+| github.com/go-pg/pg                 | https://github.com/go-pg/pg                | bsd-2-clause |
 | github.com/dgrijalva/jwt-go         | https://github.com/dgrijalva/jwt-go        | MIT          |
 | github.com/rs/xid                   | https://github.com/rs/xid                  | MIT          |
 | golang.org/x/crypto/bcrypt          | https://github.com/golang/crypto           |              |
 | github.com/facebookgo/grace         | https://github.com/facebookgo/grace        | Other        |
-| go.uber.org/zap                     | https://github.com/uber-go/zap             | MIT          |
 | gopkg.in/yaml.v2                    | https://github.com/go-yaml/yaml            |              |
 | gopkg.in/go-playground/validator.v8 | https://github.com/go-playground/validator | MIT          |
 | github.com/lib/pq                   | https://github.com/lib/pq                  | Other        |
@@ -82,6 +82,7 @@ The application runs as an HTTP server at port 8080. It provides the following R
 
 * `POST /login`: accepts username/passwords and returns jwt token and refresh token
 * `GET /refresh/:token`: refreshes sessions and returns jwt token
+* `GET /me`: returns info about currently logged in user
 * `GET /v1/swagger`: returns swagger.json with detailed api documentation
 * `GET /v1/users`: returns list of users
 * `GET /v1/users/:id`: returns single user

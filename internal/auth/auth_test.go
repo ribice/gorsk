@@ -6,13 +6,10 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/ribice/gorsk/internal"
-
-	"github.com/stretchr/testify/assert"
-
-	"github.com/ribice/gorsk/internal/mock/mockdb"
-
 	"github.com/ribice/gorsk/internal/auth"
 	"github.com/ribice/gorsk/internal/mock"
+	"github.com/ribice/gorsk/internal/mock/mockdb"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAuthenticate(t *testing.T) {
@@ -249,5 +246,58 @@ func TestHashMatchesPassword(t *testing.T) {
 	password := "Hunter123"
 	if !auth.HashMatchesPassword(auth.HashPassword(password), password) {
 		t.Error("Passsword and hash should match")
+	}
+}
+
+func TestMe(t *testing.T) {
+	cases := []struct {
+		name     string
+		ctx      echo.Context
+		wantData *model.User
+		udb      *mockdb.User
+		wantErr  bool
+	}{
+		{
+			name: "Success",
+			ctx: mock.EchoCtxWithKeys([]string{
+				"id", "company_id", "location_id", "username", "email", "role"},
+				9, 15, 52, "ribice", "ribice@gmail.com", int8(1)),
+			udb: &mockdb.User{
+				ViewFn: func(id int) (*model.User, error) {
+					return &model.User{
+						Base: model.Base{
+							ID:        id,
+							CreatedAt: mock.TestTime(1999),
+							UpdatedAt: mock.TestTime(2000),
+						},
+						FirstName: "John",
+						LastName:  "Doe",
+						Role: &model.Role{
+							AccessLevel: model.UserRole,
+						},
+					}, nil
+				},
+			},
+			wantData: &model.User{
+				Base: model.Base{
+					ID:        9,
+					CreatedAt: mock.TestTime(1999),
+					UpdatedAt: mock.TestTime(2000),
+				},
+				FirstName: "John",
+				LastName:  "Doe",
+				Role: &model.Role{
+					AccessLevel: model.UserRole,
+				},
+			},
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			s := auth.New(tt.udb, nil)
+			user, err := s.Me(tt.ctx)
+			assert.Equal(t, tt.wantData, user)
+			assert.Equal(t, tt.wantErr, err != nil)
+		})
 	}
 }
