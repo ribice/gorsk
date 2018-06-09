@@ -76,7 +76,7 @@ func addV1Services(cfg *config.Configuration, e *echo.Echo, db *pg.DB) {
 
 	jwt := mw.NewJWT(cfg.JWT)
 	authSvc := auth.New(userDB, jwt)
-	service.NewAuth(authSvc, e)
+	service.NewAuth(authSvc, e, jwt.MWFunc())
 
 	rbacSvc := rbac.New(userDB)
 
