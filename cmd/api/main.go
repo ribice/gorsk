@@ -32,9 +32,6 @@
 package main
 
 import (
-	"io/ioutil"
-	"net/http"
-
 	"github.com/labstack/echo"
 	"github.com/ribice/gorsk/internal/platform/postgres"
 
@@ -78,10 +75,12 @@ func addV1Services(cfg *config.Configuration, e *echo.Echo, db *pg.DB) {
 	authSvc := auth.New(userDB, jwt)
 	service.NewAuth(authSvc, e, jwt.MWFunc())
 
+	e.Static("/swaggerui", "cmd/api/swaggerui")
+
 	rbacSvc := rbac.New(userDB)
 
 	v1Router := e.Group("/v1")
-	v1Router.GET("/swagger", docHandler)
+
 	v1Router.Use(jwt.MWFunc())
 
 	// Workaround for Echo's issue with routing.
@@ -89,11 +88,6 @@ func addV1Services(cfg *config.Configuration, e *echo.Echo, db *pg.DB) {
 	uR := v1Router.Group("/users")
 	service.NewAccount(account.New(accDB, userDB, rbacSvc), uR)
 	service.NewUser(user.New(userDB, rbacSvc, authSvc), uR)
-}
-
-func docHandler(c echo.Context) error {
-	data, _ := ioutil.ReadFile("./cmd/api/swagger.json")
-	return c.Blob(http.StatusOK, "application/json", data)
 }
 
 func checkErr(err error) {
