@@ -2,6 +2,7 @@ db:
   log: true
   timeout: 5 # Query timeout in seconds
   createschema: false
+  psn: postgres://biadpozi:3_Czbl7jSjkUEWk--VP8QXMke-mFnczq@horton.elephantsql.com:5432/biadpozi
 
 server:
   port: ":8080"
@@ -10,7 +11,7 @@ server:
   writetimeout: 5 # Response write timeout in minutes
 
 jwt:
-  realm: "jwtrealm" # Change this value
-  secret: "jwtsecret" # Change this value
+  realm: jwtrealm # Change this value
+  secret: jwtsecret # Change this value
   duration: 15
-  signingalgorithm: "HS256"
+  signingalgorithm: HS256

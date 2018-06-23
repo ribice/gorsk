@@ -1,3 +1,3 @@
 profile.out
 coverage.txt
-config.dev.yaml
+cmd/api/config/files/config.dev.yaml
