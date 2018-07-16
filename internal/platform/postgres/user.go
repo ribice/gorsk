@@ -57,7 +57,7 @@ func (u *UserDB) FindByToken(token string) (*model.User, error) {
 	return user, err
 }
 
-// List returns list of all users retreivable for the current user, depending on role
+// List returns list of all users retrievable for the current user, depending on role
 func (u *UserDB) List(qp *model.ListQuery, p *model.Pagination) ([]model.User, error) {
 	var users []model.User
 	q := u.cl.Model(&users).Column("user.*", "Role").Limit(p.Limit).Offset(p.Offset).Where(notDeleted).Order("user.id desc")
