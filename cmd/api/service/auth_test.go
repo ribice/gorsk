@@ -219,6 +219,9 @@ func TestMe(t *testing.T) {
 			path := ts.URL + "/me"
 			req, err := http.NewRequest("GET", path, nil)
 			req.Header.Set("Authorization", tt.header)
+			if err != nil {
+				t.Fatal(err)
+			}
 			res, err := client.Do(req)
 			if err != nil {
 				t.Fatal(err)

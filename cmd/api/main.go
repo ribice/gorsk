@@ -64,12 +64,12 @@ func main() {
 
 func addV1Services(cfg *config.Configuration, e *echo.Echo, db *pg.DB) {
 
-	// Initalize DB interfaces
+	// Initialize DB interfaces
 
 	userDB := pgsql.NewUserDB(db, e.Logger)
 	accDB := pgsql.NewAccountDB(db, e.Logger)
 
-	// Initalize services
+	// Initialize services
 
 	jwt := mw.NewJWT(cfg.JWT)
 	authSvc := auth.New(userDB, jwt)
