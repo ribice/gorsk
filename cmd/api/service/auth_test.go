@@ -207,7 +207,7 @@ func TestMe(t *testing.T) {
 	}
 
 	client := &http.Client{}
-	jwtCfg := &config.JWT{Realm: "testRealm", Secret: "jwtsecret", Duration: 60, SigningAlgorithm: "HS256"}
+	jwtCfg := &config.JWT{Secret: "jwtsecret", Duration: 60, SigningAlgorithm: "HS256"}
 	jwtMW := mw.NewJWT(jwtCfg)
 
 	for _, tt := range cases {

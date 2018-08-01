@@ -16,7 +16,6 @@ import (
 // NewJWT generates new JWT variable necessery for auth middleware
 func NewJWT(c *config.JWT) *JWT {
 	return &JWT{
-		Realm:    c.Realm,
 		Key:      []byte(c.Secret),
 		Duration: time.Duration(c.Duration) * time.Minute,
 		Algo:     c.SigningAlgorithm,
@@ -25,9 +24,6 @@ func NewJWT(c *config.JWT) *JWT {
 
 // JWT provides a Json-Web-Token authentication implementation
 type JWT struct {
-	// Realm name to display to the user.
-	Realm string
-
 	// Secret key used for signing.
 	Key []byte
 
@@ -44,7 +40,6 @@ func (j *JWT) MWFunc() echo.MiddlewareFunc {
 		return func(c echo.Context) error {
 			token, err := j.ParseToken(c)
 			if err != nil || !token.Valid {
-				c.Response().Header().Set("WWW-Authenticate", "JWT realm="+j.Realm)
 				return c.NoContent(http.StatusUnauthorized)
 			}
 
@@ -92,18 +87,19 @@ func (j *JWT) ParseToken(c echo.Context) (*jwt.Token, error) {
 
 // GenerateToken generates new JWT token and populates it with user data
 func (j *JWT) GenerateToken(u *model.User) (string, string, error) {
-	token := jwt.New(jwt.GetSigningMethod(j.Algo))
-	claims := token.Claims.(jwt.MapClaims)
-
 	expire := time.Now().Add(j.Duration)
-	claims["id"] = u.ID
-	claims["u"] = u.Username
-	claims["e"] = u.Email
-	claims["r"] = u.Role.AccessLevel
-	claims["c"] = u.CompanyID
-	claims["l"] = u.LocationID
-	claims["exp"] = expire.Unix()
+
+	token := jwt.NewWithClaims(jwt.GetSigningMethod(j.Algo), jwt.MapClaims{
+		"id":  u.ID,
+		"u":   u.Username,
+		"e":   u.Email,
+		"r":   u.Role.AccessLevel,
+		"c":   u.CompanyID,
+		"l":   u.LocationID,
+		"exp": expire.Unix(),
+	})
 
 	tokenString, err := token.SignedString(j.Key)
+
 	return tokenString, expire.Format(time.RFC3339), err
 }
