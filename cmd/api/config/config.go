@@ -50,7 +50,6 @@ type Server struct {
 
 // JWT holds data necessery for JWT configuration
 type JWT struct {
-	Realm            string
 	Secret           string
 	Duration         int
 	RefreshDuration  int
