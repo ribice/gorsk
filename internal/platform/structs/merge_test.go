@@ -18,6 +18,8 @@ type mergeStruct struct {
 	CustomStruct      customStruct
 	CustomStructSlice []customStruct
 	IgnoredField      string
+	PointerField      *string
+	SkipField         map[string]string
 }
 
 type customStruct struct {
@@ -34,6 +36,8 @@ type mergeCmd struct {
 	CustomStruct      *customStruct
 	CustomStructSlice []customStruct
 	IgnoredField      *string `structs:"-"`
+	PointerField      *string
+	SkipField         map[string]string
 }
 
 func TestMerge(t *testing.T) {
@@ -41,6 +45,7 @@ func TestMerge(t *testing.T) {
 		mstruct      mergeStruct
 		cmd          func() mergeCmd
 		mergedStruct mergeStruct
+		notPointer   bool
 	}{
 		"basic merge": {
 			mstruct: mergeStruct{
@@ -55,6 +60,61 @@ func TestMerge(t *testing.T) {
 			mergedStruct: mergeStruct{
 				Name:    "Name",
 				Surname: "Surname",
+			},
+		},
+		"not a pointer": {
+			mstruct: mergeStruct{
+				Name: "Name",
+			},
+			cmd: func() mergeCmd {
+				surname := "Surname"
+				return mergeCmd{
+					Surname: &surname,
+				}
+			},
+			mergedStruct: mergeStruct{
+				Name:    "Name",
+				Surname: "Surname",
+			},
+			notPointer: true,
+		},
+		"skipping field": {
+			mstruct: mergeStruct{
+				Name: "Name",
+			},
+			cmd: func() mergeCmd {
+				surname := "Surname"
+
+				return mergeCmd{
+					Surname: &surname,
+					SkipField: map[string]string{
+						"name": "surname",
+					},
+				}
+			},
+			mergedStruct: mergeStruct{
+				Name:    "Name",
+				Surname: "Surname",
+			},
+		},
+		"pointer field": {
+			mstruct: mergeStruct{
+				Name:         "Name",
+				PointerField: ptrString("Pointer"),
+			},
+			cmd: func() mergeCmd {
+				surname := "Surname"
+				ptrField := "Pointer"
+
+				return mergeCmd{
+					Surname:      &surname,
+					PointerField: &ptrField,
+				}
+			},
+			mergedStruct: mergeStruct{
+				Name:         "Name",
+				Surname:      "Surname",
+				PointerField: ptrString("Pointer"),
 			},
 		},
 		"basic slice merge": {
@@ -286,8 +346,17 @@ func TestMerge(t *testing.T) {
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
 			cmd := c.cmd()
+			if c.notPointer {
+				structs.Merge(c.mstruct, &cmd)
+				assert.NotEqual(t, c.mstruct, c.mergedStruct)
+				return
+			}
 			structs.Merge(&c.mstruct, &cmd)
 			assert.Equal(t, c.mstruct, c.mergedStruct)
 		})
 	}
+}
+
+func ptrString(s string) *string {
+	return &s
 }
