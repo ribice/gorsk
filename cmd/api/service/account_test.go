@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/go-pg/pg/orm"
 	"github.com/labstack/echo"
 	"github.com/stretchr/testify/assert"
 
@@ -54,7 +55,7 @@ func TestCreate(t *testing.T) {
 				},
 			},
 			adb: &mockdb.Account{
-				CreateFn: func(usr model.User) (*model.User, error) {
+				CreateFn: func(db orm.DB, usr model.User) (*model.User, error) {
 					usr.ID = 1
 					usr.CreatedAt = mock.TestTime(2018)
 					usr.UpdatedAt = mock.TestTime(2018)
@@ -82,7 +83,7 @@ func TestCreate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := server.New()
 			rg := r.Group("/v1/users")
-			service.NewAccount(account.New(tt.adb, nil, tt.rbac), rg)
+			service.NewAccount(account.New(nil, tt.adb, nil, tt.rbac), rg)
 			ts := httptest.NewServer(r)
 			defer ts.Close()
 			path := ts.URL + "/v1/users"
@@ -140,14 +141,14 @@ func TestChangePassword(t *testing.T) {
 			},
 			id: "1",
 			udb: &mockdb.User{
-				ViewFn: func(id int) (*model.User, error) {
+				ViewFn: func(db orm.DB, id int) (*model.User, error) {
 					return &model.User{
 						Password: auth.HashPassword("oldpassw"),
 					}, nil
 				},
 			},
 			adb: &mockdb.Account{
-				ChangePasswordFn: func(usr *model.User) error {
+				ChangePasswordFn: func(db orm.DB, usr *model.User) error {
 					return nil
 				},
 			},
@@ -161,7 +162,7 @@ func TestChangePassword(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := server.New()
 			rg := r.Group("/v1/users")
-			service.NewAccount(account.New(tt.adb, tt.udb, tt.rbac), rg)
+			service.NewAccount(account.New(nil, tt.adb, tt.udb, tt.rbac), rg)
 			ts := httptest.NewServer(r)
 			defer ts.Close()
 			path := ts.URL + "/v1/users/" + tt.id + "/password"

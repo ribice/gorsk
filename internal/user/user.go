@@ -2,6 +2,7 @@
 package user
 
 import (
+	"github.com/go-pg/pg"
 	"github.com/labstack/echo"
 	"github.com/ribice/gorsk/internal"
 
@@ -10,12 +11,13 @@ import (
 )
 
 // New creates new user application service
-func New(udb model.UserDB, rbac model.RBACService, auth model.AuthService) *Service {
-	return &Service{udb: udb, rbac: rbac, auth: auth}
+func New(db *pg.DB, udb model.UserDB, rbac model.RBACService, auth model.AuthService) *Service {
+	return &Service{db: db, udb: udb, rbac: rbac, auth: auth}
 }
 
 // Service represents user application service
 type Service struct {
+	db   *pg.DB
 	udb  model.UserDB
 	rbac model.RBACService
 	auth model.AuthService
@@ -28,7 +30,7 @@ func (s *Service) List(c echo.Context, p *model.Pagination) ([]model.User, error
 	if err != nil {
 		return nil, err
 	}
-	return s.udb.List(q, p)
+	return s.udb.List(s.db, q, p)
 }
 
 // View returns single user
@@ -36,19 +38,19 @@ func (s *Service) View(c echo.Context, id int) (*model.User, error) {
 	if err := s.rbac.EnforceUser(c, id); err != nil {
 		return nil, err
 	}
-	return s.udb.View(id)
+	return s.udb.View(s.db, id)
 }
 
 // Delete deletes a user
 func (s *Service) Delete(c echo.Context, id int) error {
-	u, err := s.udb.View(id)
+	u, err := s.udb.View(s.db, id)
 	if err != nil {
 		return err
 	}
 	if err := s.rbac.IsLowerRole(c, u.Role.AccessLevel); err != nil {
 		return err
 	}
-	return s.udb.Delete(u)
+	return s.udb.Delete(s.db, u)
 }
 
 // Update contains user's information used for updating
@@ -66,10 +68,10 @@ func (s *Service) Update(c echo.Context, u *Update) (*model.User, error) {
 	if err := s.rbac.EnforceUser(c, u.ID); err != nil {
 		return nil, err
 	}
-	usr, err := s.udb.View(u.ID)
+	usr, err := s.udb.View(s.db, u.ID)
 	if err != nil {
 		return nil, err
 	}
 	structs.Merge(usr, u)
-	return s.udb.Update(usr)
+	return s.udb.Update(s.db, usr)
 }

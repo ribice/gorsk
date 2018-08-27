@@ -1,30 +1,28 @@
 package pgsql
 
 import (
+	"github.com/go-pg/pg/orm"
 	"github.com/labstack/echo"
 	"github.com/ribice/gorsk/internal"
-
-	"github.com/go-pg/pg"
 )
 
 // NewUserDB returns a new UserDB instance
-func NewUserDB(c *pg.DB, l echo.Logger) *UserDB {
-	return &UserDB{c, l}
+func NewUserDB(l echo.Logger) *UserDB {
+	return &UserDB{l}
 }
 
 // UserDB represents the client for user table
 type UserDB struct {
-	cl  *pg.DB
 	log echo.Logger
 }
 
 // View returns single user by ID
-func (u *UserDB) View(id int) (*model.User, error) {
+func (u *UserDB) View(db orm.DB, id int) (*model.User, error) {
 	var user = new(model.User)
 	sql := `SELECT "user".*, "role"."id" AS "role__id", "role"."access_level" AS "role__access_level", "role"."name" AS "role__name" 
 	FROM "users" AS "user" LEFT JOIN "roles" AS "role" ON "role"."id" = "user"."role_id" 
 	WHERE ("user"."id" = ? and deleted_at is null)`
-	_, err := u.cl.QueryOne(user, sql, id)
+	_, err := db.QueryOne(user, sql, id)
 	if err != nil {
 		u.log.Warnf("AccountDB Error: %v", err)
 	}
@@ -32,12 +30,12 @@ func (u *UserDB) View(id int) (*model.User, error) {
 }
 
 // FindByUsername queries for single user by username
-func (u *UserDB) FindByUsername(uname string) (*model.User, error) {
+func (u *UserDB) FindByUsername(db orm.DB, uname string) (*model.User, error) {
 	var user = new(model.User)
 	sql := `SELECT "user".*, "role"."id" AS "role__id", "role"."access_level" AS "role__access_level", "role"."name" AS "role__name" 
 	FROM "users" AS "user" LEFT JOIN "roles" AS "role" ON "role"."id" = "user"."role_id" 
 	WHERE ("user"."username" = ? and deleted_at is null)`
-	_, err := u.cl.QueryOne(user, sql, uname)
+	_, err := db.QueryOne(user, sql, uname)
 	if err != nil {
 		u.log.Warnf("UserDB Error: %v", err)
 	}
@@ -45,12 +43,12 @@ func (u *UserDB) FindByUsername(uname string) (*model.User, error) {
 }
 
 // FindByToken queries for single user by token
-func (u *UserDB) FindByToken(token string) (*model.User, error) {
+func (u *UserDB) FindByToken(db orm.DB, token string) (*model.User, error) {
 	var user = new(model.User)
 	sql := `SELECT "user".*, "role"."id" AS "role__id", "role"."access_level" AS "role__access_level", "role"."name" AS "role__name" 
 	FROM "users" AS "user" LEFT JOIN "roles" AS "role" ON "role"."id" = "user"."role_id" 
 	WHERE ("user"."token" = ? and deleted_at is null)`
-	_, err := u.cl.QueryOne(user, sql, token)
+	_, err := db.QueryOne(user, sql, token)
 	if err != nil {
 		u.log.Warnf("UserDB Error: %v", err)
 	}
@@ -58,9 +56,9 @@ func (u *UserDB) FindByToken(token string) (*model.User, error) {
 }
 
 // List returns list of all users retrievable for the current user, depending on role
-func (u *UserDB) List(qp *model.ListQuery, p *model.Pagination) ([]model.User, error) {
+func (u *UserDB) List(db orm.DB, qp *model.ListQuery, p *model.Pagination) ([]model.User, error) {
 	var users []model.User
-	q := u.cl.Model(&users).Column("user.*", "Role").Limit(p.Limit).Offset(p.Offset).Where(notDeleted).Order("user.id desc")
+	q := db.Model(&users).Column("user.*", "Role").Limit(p.Limit).Offset(p.Offset).Where(notDeleted).Order("user.id desc")
 	if qp != nil {
 		q.Where(qp.Query, qp.ID)
 	}
@@ -72,9 +70,9 @@ func (u *UserDB) List(qp *model.ListQuery, p *model.Pagination) ([]model.User, e
 }
 
 // Delete sets deleted_at for a user
-func (u *UserDB) Delete(user *model.User) error {
+func (u *UserDB) Delete(db orm.DB, user *model.User) error {
 	user.Delete()
-	_, err := u.cl.Model(user).Column("deleted_at").WherePK().Update()
+	_, err := db.Model(user).Column("deleted_at").WherePK().Update()
 	if err != nil {
 		u.log.Warnf("UserDB Error: %v", err)
 	}
@@ -82,8 +80,8 @@ func (u *UserDB) Delete(user *model.User) error {
 }
 
 // Update updates user's contact info
-func (u *UserDB) Update(user *model.User) (*model.User, error) {
-	_, err := u.cl.Model(user).WherePK().Update()
+func (u *UserDB) Update(db orm.DB, user *model.User) (*model.User, error) {
+	_, err := db.Model(user).WherePK().Update()
 	if err != nil {
 		u.log.Warnf("UserDB Error: %v", err)
 	}

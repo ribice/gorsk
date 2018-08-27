@@ -3,6 +3,7 @@ package account
 import (
 	"net/http"
 
+	"github.com/go-pg/pg"
 	"github.com/labstack/echo"
 
 	"github.com/ribice/gorsk/internal"
@@ -11,8 +12,9 @@ import (
 )
 
 // New creates new user application service
-func New(adb model.AccountDB, udb model.UserDB, rbac model.RBACService) *Service {
+func New(db *pg.DB, adb model.AccountDB, udb model.UserDB, rbac model.RBACService) *Service {
 	return &Service{
+		db:   db,
 		adb:  adb,
 		udb:  udb,
 		rbac: rbac,
@@ -21,6 +23,7 @@ func New(adb model.AccountDB, udb model.UserDB, rbac model.RBACService) *Service
 
 // Service represents account application service
 type Service struct {
+	db   *pg.DB
 	adb  model.AccountDB
 	udb  model.UserDB
 	rbac model.RBACService
@@ -32,7 +35,7 @@ func (s *Service) Create(c echo.Context, req model.User) (*model.User, error) {
 		return nil, err
 	}
 	req.Password = auth.HashPassword(req.Password)
-	return s.adb.Create(req)
+	return s.adb.Create(s.db, req)
 }
 
 // ChangePassword changes user's password
@@ -40,7 +43,7 @@ func (s *Service) ChangePassword(c echo.Context, oldPass, newPass string, id int
 	if err := s.rbac.EnforceUser(c, id); err != nil {
 		return err
 	}
-	u, err := s.udb.View(id)
+	u, err := s.udb.View(s.db, id)
 	if err != nil {
 		return err
 	}
@@ -48,5 +51,5 @@ func (s *Service) ChangePassword(c echo.Context, oldPass, newPass string, id int
 		return echo.NewHTTPError(http.StatusBadRequest, "old password is not correct")
 	}
 	u.Password = auth.HashPassword(newPass)
-	return s.adb.ChangePassword(u)
+	return s.adb.ChangePassword(s.db, u)
 }

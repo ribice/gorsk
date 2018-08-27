@@ -118,6 +118,18 @@ Similarly to implementing APIs relying only on a database, you can implement oth
 
 3. Once the new platform logic is implemented, create an instance of it in main.go (for example `elastic.client`) and pass it as an argument to car service (`car/car.go`).
 
+### Running database queries in transaction
+
+To use a transaction, before interacting with db create a new transaction:
+
+```go
+err := s.db.RunInTransaction(func (tx *pg.Tx) error{
+    // Application service here
+})
+````
+
+Then handle the error accordingly.
+
 ## Project Structure
 
 The project structure is explained in details in [THIS](https://medium.com/@benbjohnson/standard-package-layout-7cdbc8391fc1) blog post, with some small changes taken from [Package Oriented Design](https://www.ardanlabs.com/blog/2017/02/package-oriented-design.html). and GoDD. Primarily the package design is architectured by [tonto](https://github.com/tonto) with some small changes done by me.

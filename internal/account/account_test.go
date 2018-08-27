@@ -3,6 +3,7 @@ package account_test
 import (
 	"testing"
 
+	"github.com/go-pg/pg/orm"
 	"github.com/labstack/echo"
 
 	"github.com/ribice/gorsk/internal/mock"
@@ -51,7 +52,7 @@ func TestCreate(t *testing.T) {
 				Password:  "Thranduil8822",
 			}},
 			adb: &mockdb.Account{
-				CreateFn: func(u model.User) (*model.User, error) {
+				CreateFn: func(db orm.DB, u model.User) (*model.User, error) {
 					u.CreatedAt = mock.TestTime(2000)
 					u.UpdatedAt = mock.TestTime(2000)
 					u.Base.ID = 1
@@ -75,7 +76,7 @@ func TestCreate(t *testing.T) {
 			}}}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			s := account.New(tt.adb, tt.udb, tt.rbac)
+			s := account.New(nil, tt.adb, tt.udb, tt.rbac)
 			usr, err := s.Create(tt.args.c, tt.args.req)
 			assert.Equal(t, tt.wantErr, err != nil)
 			if tt.wantData != nil {
@@ -119,7 +120,7 @@ func TestChangePassword(t *testing.T) {
 					return nil
 				}},
 			udb: &mockdb.User{
-				ViewFn: func(id int) (*model.User, error) {
+				ViewFn: func(db orm.DB, id int) (*model.User, error) {
 					if id != 1 {
 						return nil, nil
 					}
@@ -136,7 +137,7 @@ func TestChangePassword(t *testing.T) {
 				}},
 			wantErr: true,
 			udb: &mockdb.User{
-				ViewFn: func(id int) (*model.User, error) {
+				ViewFn: func(db orm.DB, id int) (*model.User, error) {
 					return &model.User{
 						Password: "IncorrectHashedPassword",
 					}, nil
@@ -151,7 +152,7 @@ func TestChangePassword(t *testing.T) {
 					return nil
 				}},
 			udb: &mockdb.User{
-				ViewFn: func(id int) (*model.User, error) {
+				ViewFn: func(db orm.DB, id int) (*model.User, error) {
 					return &model.User{
 						Password: "$2a$10$udRBroNGBeOYwSWCVzf6Lulg98uAoRCIi4t75VZg84xgw6EJbFNsG",
 					}, nil
@@ -159,7 +160,7 @@ func TestChangePassword(t *testing.T) {
 			},
 			adb: &mockdb.Account{
 				// Check whether password was hashed correctly
-				ChangePasswordFn: func(usr *model.User) error {
+				ChangePasswordFn: func(db orm.DB, usr *model.User) error {
 					return nil
 				},
 			},
@@ -167,7 +168,7 @@ func TestChangePassword(t *testing.T) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			s := account.New(tt.adb, tt.udb, tt.rbac)
+			s := account.New(nil, tt.adb, tt.udb, tt.rbac)
 			err := s.ChangePassword(tt.args.c, tt.args.oldpass, tt.args.newpass, tt.args.id)
 			assert.Equal(t, tt.wantErr, err != nil)
 		})

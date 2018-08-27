@@ -3,6 +3,7 @@ package user_test
 import (
 	"testing"
 
+	"github.com/go-pg/pg/orm"
 	"github.com/labstack/echo"
 
 	"github.com/stretchr/testify/assert"
@@ -53,7 +54,7 @@ func TestView(t *testing.T) {
 					return nil
 				}},
 			udb: &mockdb.User{
-				ViewFn: func(id int) (*model.User, error) {
+				ViewFn: func(db orm.DB, id int) (*model.User, error) {
 					if id == 1 {
 						return &model.User{
 							Base: model.Base{
@@ -72,7 +73,7 @@ func TestView(t *testing.T) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			s := user.New(tt.udb, tt.rbac, nil)
+			s := user.New(nil, tt.udb, tt.rbac, nil)
 			usr, err := s.View(tt.args.c, tt.args.id)
 			assert.Equal(t, tt.wantData, usr)
 			assert.Equal(t, tt.wantErr, err)
@@ -125,7 +126,7 @@ func TestList(t *testing.T) {
 					}
 				}},
 			udb: &mockdb.User{
-				ListFn: func(*model.ListQuery, *model.Pagination) ([]model.User, error) {
+				ListFn: func(orm.DB, *model.ListQuery, *model.Pagination) ([]model.User, error) {
 					return []model.User{
 						{
 							Base: model.Base{
@@ -178,7 +179,7 @@ func TestList(t *testing.T) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			s := user.New(tt.udb, nil, tt.auth)
+			s := user.New(nil, tt.udb, nil, tt.auth)
 			usrs, err := s.List(tt.args.c, tt.args.pgn)
 			assert.Equal(t, tt.wantData, usrs)
 			assert.Equal(t, tt.wantErr, err != nil)
@@ -204,7 +205,7 @@ func TestDelete(t *testing.T) {
 			args:    args{id: 1},
 			wantErr: model.ErrGeneric,
 			udb: &mockdb.User{
-				ViewFn: func(id int) (*model.User, error) {
+				ViewFn: func(db orm.DB, id int) (*model.User, error) {
 					if id != 1 {
 						return nil, nil
 					}
@@ -216,7 +217,7 @@ func TestDelete(t *testing.T) {
 			name: "Fail on RBAC",
 			args: args{id: 1},
 			udb: &mockdb.User{
-				ViewFn: func(id int) (*model.User, error) {
+				ViewFn: func(db orm.DB, id int) (*model.User, error) {
 					return &model.User{
 						Base: model.Base{
 							ID:        id,
@@ -241,7 +242,7 @@ func TestDelete(t *testing.T) {
 			name: "Success",
 			args: args{id: 1},
 			udb: &mockdb.User{
-				ViewFn: func(id int) (*model.User, error) {
+				ViewFn: func(db orm.DB, id int) (*model.User, error) {
 					return &model.User{
 						Base: model.Base{
 							ID:        id,
@@ -257,7 +258,7 @@ func TestDelete(t *testing.T) {
 						},
 					}, nil
 				},
-				DeleteFn: func(usr *model.User) error {
+				DeleteFn: func(db orm.DB, usr *model.User) error {
 					return nil
 				},
 			},
@@ -269,7 +270,7 @@ func TestDelete(t *testing.T) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			s := user.New(tt.udb, tt.rbac, nil)
+			s := user.New(nil, tt.udb, tt.rbac, nil)
 			err := s.Delete(tt.args.c, tt.args.id)
 			if err != tt.wantErr {
 				t.Errorf("Expected error %v, received %v", tt.wantErr, err)
@@ -313,7 +314,7 @@ func TestUpdate(t *testing.T) {
 				}},
 			wantErr: model.ErrGeneric,
 			udb: &mockdb.User{
-				ViewFn: func(id int) (*model.User, error) {
+				ViewFn: func(db orm.DB, id int) (*model.User, error) {
 					if id != 1 {
 						return nil, nil
 					}
@@ -351,7 +352,7 @@ func TestUpdate(t *testing.T) {
 				Email:      "golang@go.org",
 			},
 			udb: &mockdb.User{
-				ViewFn: func(id int) (*model.User, error) {
+				ViewFn: func(db orm.DB, id int) (*model.User, error) {
 					if id == 1 {
 						return &model.User{
 							Base: model.Base{
@@ -372,7 +373,7 @@ func TestUpdate(t *testing.T) {
 					}
 					return nil, model.ErrGeneric
 				},
-				UpdateFn: func(usr *model.User) (*model.User, error) {
+				UpdateFn: func(db orm.DB, usr *model.User) (*model.User, error) {
 					usr.UpdatedAt = mock.TestTime(2000)
 					return usr, nil
 				},
@@ -381,7 +382,7 @@ func TestUpdate(t *testing.T) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			s := user.New(tt.udb, tt.rbac, nil)
+			s := user.New(nil, tt.udb, tt.rbac, nil)
 			usr, err := s.Update(tt.args.c, tt.args.upd)
 			assert.Equal(t, tt.wantData, usr)
 			assert.Equal(t, tt.wantErr, err)

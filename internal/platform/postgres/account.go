@@ -3,27 +3,25 @@ package pgsql
 import (
 	"net/http"
 
+	"github.com/go-pg/pg/orm"
 	"github.com/labstack/echo"
 	"github.com/ribice/gorsk/internal"
-
-	"github.com/go-pg/pg"
 )
 
 // NewAccountDB returns a new AccountDB instance
-func NewAccountDB(c *pg.DB, l echo.Logger) *AccountDB {
-	return &AccountDB{c, l}
+func NewAccountDB(l echo.Logger) *AccountDB {
+	return &AccountDB{l}
 }
 
 // AccountDB represents the client for user table
 type AccountDB struct {
-	cl  *pg.DB
 	log echo.Logger
 }
 
 // Create creates a new user on database
-func (a *AccountDB) Create(usr model.User) (*model.User, error) {
+func (a *AccountDB) Create(db orm.DB, usr model.User) (*model.User, error) {
 	var user = new(model.User)
-	res, err := a.cl.Query(user, "select id from users where username = ? or email = ? and deleted_at is null", usr.Username, usr.Email)
+	res, err := db.Query(user, "select id from users where username = ? or email = ? and deleted_at is null", usr.Username, usr.Email)
 	if err != nil {
 		a.log.Error("AccountDB Error: %v", err)
 		return nil, err
@@ -31,7 +29,7 @@ func (a *AccountDB) Create(usr model.User) (*model.User, error) {
 	if res.RowsReturned() != 0 {
 		return nil, echo.NewHTTPError(http.StatusInternalServerError, "Username or email already exists.")
 	}
-	if err := a.cl.Insert(&usr); err != nil {
+	if err := db.Insert(&usr); err != nil {
 		a.log.Error("AccountDB Error: %v", err)
 		return nil, err
 	}
@@ -39,8 +37,8 @@ func (a *AccountDB) Create(usr model.User) (*model.User, error) {
 }
 
 // ChangePassword changes user's password
-func (a *AccountDB) ChangePassword(usr *model.User) error {
-	_, err := a.cl.Model(usr).Column("password", "updated_at").WherePK().Update()
+func (a *AccountDB) ChangePassword(db orm.DB, usr *model.User) error {
+	_, err := db.Model(usr).Column("password", "updated_at").WherePK().Update()
 	if err != nil {
 		a.log.Warnf("AccountDB Error: %v", err)
 	}
