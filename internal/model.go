@@ -15,7 +15,7 @@ type Base struct {
 	ID        int        `json:"id"`
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`
-	DeletedAt *time.Time `json:"deleted_at,omitempty"`
+	DeletedAt *time.Time `json:"deleted_at,omitempty" pg:",soft_delete"`
 }
 
 // Pagination holds paginations data
@@ -42,10 +42,4 @@ func (b *Base) BeforeInsert(_ orm.DB) error {
 func (b *Base) BeforeUpdate(_ orm.DB) error {
 	b.UpdatedAt = time.Now()
 	return nil
-}
-
-// Delete sets deleted_at time to current_time
-func (b *Base) Delete() {
-	t := time.Now()
-	b.DeletedAt = &t
 }

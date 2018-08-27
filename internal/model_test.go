@@ -32,16 +32,3 @@ func TestBeforeUpdate(t *testing.T) {
 	}
 
 }
-
-func TestDelete(t *testing.T) {
-	baseModel := &model.Base{
-		ID:        1,
-		CreatedAt: mock.TestTime(2000),
-		UpdatedAt: mock.TestTime(2001),
-	}
-	baseModel.Delete()
-	if baseModel.DeletedAt.IsZero() {
-		t.Errorf("DeletedAt not changed")
-	}
-
-}
