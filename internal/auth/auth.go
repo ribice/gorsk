@@ -3,7 +3,7 @@ package auth
 import (
 	"net/http"
 
-	"github.com/go-pg/pg/orm"
+	"github.com/go-pg/pg"
 	"github.com/labstack/echo"
 
 	"github.com/rs/xid"
@@ -14,7 +14,7 @@ import (
 )
 
 // New creates new auth service
-func New(db orm.DB, udb model.UserDB, j JWT) *Service {
+func New(db *pg.DB, udb model.UserDB, j JWT) *Service {
 	return &Service{
 		db:  db,
 		udb: udb,
@@ -24,7 +24,7 @@ func New(db orm.DB, udb model.UserDB, j JWT) *Service {
 
 // Service represents auth application service
 type Service struct {
-	db  orm.DB
+	db  *pg.DB
 	udb model.UserDB
 	jwt JWT
 }

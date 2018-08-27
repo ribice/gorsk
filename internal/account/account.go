@@ -3,7 +3,7 @@ package account
 import (
 	"net/http"
 
-	"github.com/go-pg/pg/orm"
+	"github.com/go-pg/pg"
 	"github.com/labstack/echo"
 
 	"github.com/ribice/gorsk/internal"
@@ -12,7 +12,7 @@ import (
 )
 
 // New creates new user application service
-func New(db orm.DB, adb model.AccountDB, udb model.UserDB, rbac model.RBACService) *Service {
+func New(db *pg.DB, adb model.AccountDB, udb model.UserDB, rbac model.RBACService) *Service {
 	return &Service{
 		db:   db,
 		adb:  adb,
@@ -23,7 +23,7 @@ func New(db orm.DB, adb model.AccountDB, udb model.UserDB, rbac model.RBACServic
 
 // Service represents account application service
 type Service struct {
-	db   orm.DB
+	db   *pg.DB
 	adb  model.AccountDB
 	udb  model.UserDB
 	rbac model.RBACService

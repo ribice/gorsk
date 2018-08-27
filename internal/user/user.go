@@ -2,7 +2,7 @@
 package user
 
 import (
-	"github.com/go-pg/pg/orm"
+	"github.com/go-pg/pg"
 	"github.com/labstack/echo"
 	"github.com/ribice/gorsk/internal"
 
@@ -11,13 +11,13 @@ import (
 )
 
 // New creates new user application service
-func New(db orm.DB, udb model.UserDB, rbac model.RBACService, auth model.AuthService) *Service {
+func New(db *pg.DB, udb model.UserDB, rbac model.RBACService, auth model.AuthService) *Service {
 	return &Service{db: db, udb: udb, rbac: rbac, auth: auth}
 }
 
 // Service represents user application service
 type Service struct {
-	db   orm.DB
+	db   *pg.DB
 	udb  model.UserDB
 	rbac model.RBACService
 	auth model.AuthService
