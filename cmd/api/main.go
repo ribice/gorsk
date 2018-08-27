@@ -66,13 +66,13 @@ func addV1Services(cfg *config.Configuration, e *echo.Echo, db *pg.DB) {
 
 	// Initialize DB interfaces
 
-	userDB := pgsql.NewUserDB(db, e.Logger)
-	accDB := pgsql.NewAccountDB(db, e.Logger)
+	userDB := pgsql.NewUserDB(e.Logger)
+	accDB := pgsql.NewAccountDB(e.Logger)
 
 	// Initialize services
 
 	jwt := mw.NewJWT(cfg.JWT)
-	authSvc := auth.New(userDB, jwt)
+	authSvc := auth.New(db, userDB, jwt)
 	service.NewAuth(authSvc, e, jwt.MWFunc())
 
 	e.Static("/swaggerui", "cmd/api/swaggerui")
@@ -86,8 +86,8 @@ func addV1Services(cfg *config.Configuration, e *echo.Echo, db *pg.DB) {
 	// Workaround for Echo's issue with routing.
 	// v1Router should be passed to service normally, and then the group name created there
 	uR := v1Router.Group("/users")
-	service.NewAccount(account.New(accDB, userDB, rbacSvc), uR)
-	service.NewUser(user.New(userDB, rbacSvc, authSvc), uR)
+	service.NewAccount(account.New(db, accDB, userDB, rbacSvc), uR)
+	service.NewUser(user.New(db, userDB, rbacSvc, authSvc), uR)
 }
 
 func checkErr(err error) {

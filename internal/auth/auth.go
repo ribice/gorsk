@@ -3,6 +3,7 @@ package auth
 import (
 	"net/http"
 
+	"github.com/go-pg/pg/orm"
 	"github.com/labstack/echo"
 
 	"github.com/rs/xid"
@@ -13,8 +14,9 @@ import (
 )
 
 // New creates new auth service
-func New(udb model.UserDB, j JWT) *Service {
+func New(db orm.DB, udb model.UserDB, j JWT) *Service {
 	return &Service{
+		db:  db,
 		udb: udb,
 		jwt: j,
 	}
@@ -22,6 +24,7 @@ func New(udb model.UserDB, j JWT) *Service {
 
 // Service represents auth application service
 type Service struct {
+	db  orm.DB
 	udb model.UserDB
 	jwt JWT
 }
@@ -33,7 +36,7 @@ type JWT interface {
 
 // Authenticate tries to authenticate the user provided by username and password
 func (s *Service) Authenticate(c echo.Context, user, pass string) (*model.AuthToken, error) {
-	u, err := s.udb.FindByUsername(user)
+	u, err := s.udb.FindByUsername(s.db, user)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +54,7 @@ func (s *Service) Authenticate(c echo.Context, user, pass string) (*model.AuthTo
 
 	u.UpdateLastLogin()
 	u.Token = xid.New().String()
-	_, err = s.udb.Update(u)
+	_, err = s.udb.Update(s.db, u)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +64,7 @@ func (s *Service) Authenticate(c echo.Context, user, pass string) (*model.AuthTo
 
 // Refresh refreshes jwt token and puts new claims inside
 func (s *Service) Refresh(c echo.Context, token string) (*model.RefreshToken, error) {
-	user, err := s.udb.FindByToken(token)
+	user, err := s.udb.FindByToken(s.db, token)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +78,7 @@ func (s *Service) Refresh(c echo.Context, token string) (*model.RefreshToken, er
 // Me returns info about currently logged user
 func (s *Service) Me(c echo.Context) (*model.User, error) {
 	au := s.User(c)
-	return s.udb.View(au.ID)
+	return s.udb.View(s.db, au.ID)
 }
 
 // User returns user data stored in jwt token

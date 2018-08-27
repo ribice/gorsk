@@ -14,7 +14,7 @@ import (
 )
 
 func testAccountDB(t *testing.T, c *pg.DB, l echo.Logger) {
-	accDB := pgsql.NewAccountDB(c, l)
+	accDB := pgsql.NewAccountDB(l)
 	cases := []struct {
 		name string
 		fn   func(*testing.T, *pgsql.AccountDB, *pg.DB)
@@ -100,7 +100,7 @@ func testAccountCreate(t *testing.T, db *pgsql.AccountDB, c *pg.DB) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			usr, err := db.Create(tt.usr)
+			usr, err := db.Create(c, tt.usr)
 			assert.Equal(t, tt.wantErr, err != nil)
 			if tt.wantData != nil {
 				tt.wantData.CreatedAt = usr.CreatedAt
@@ -150,7 +150,7 @@ func testChangePassword(t *testing.T, db *pgsql.AccountDB, c *pg.DB) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			err := db.ChangePassword(tt.usr)
+			err := db.ChangePassword(c, tt.usr)
 			assert.Equal(t, tt.wantErr, err != nil)
 			if tt.wantData != nil {
 				userDB := queryUser(t, c, tt.usr.Base.ID)

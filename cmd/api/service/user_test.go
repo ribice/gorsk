@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/go-pg/pg/orm"
 	"github.com/labstack/echo"
 	"github.com/stretchr/testify/assert"
 
@@ -68,7 +69,7 @@ func TestListUsers(t *testing.T) {
 					}
 				}},
 			udb: &mockdb.User{
-				ListFn: func(q *model.ListQuery, p *model.Pagination) ([]model.User, error) {
+				ListFn: func(db orm.DB, q *model.ListQuery, p *model.Pagination) ([]model.User, error) {
 					if p.Limit == 100 && p.Offset == 100 {
 						return []model.User{
 							{
@@ -155,7 +156,7 @@ func TestListUsers(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := server.New()
 			rg := r.Group("/v1/users")
-			service.NewUser(user.New(tt.udb, tt.rbac, tt.auth), rg)
+			service.NewUser(user.New(nil, tt.udb, tt.rbac, tt.auth), rg)
 			ts := httptest.NewServer(r)
 			defer ts.Close()
 			path := ts.URL + "/v1/users" + tt.req
@@ -210,7 +211,7 @@ func TestViewUser(t *testing.T) {
 				},
 			},
 			udb: &mockdb.User{
-				ViewFn: func(id int) (*model.User, error) {
+				ViewFn: func(db orm.DB, id int) (*model.User, error) {
 					return &model.User{
 						Base: model.Base{
 							ID:        1,
@@ -241,7 +242,7 @@ func TestViewUser(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := server.New()
 			rg := r.Group("/v1/users")
-			service.NewUser(user.New(tt.udb, tt.rbac, tt.auth), rg)
+			service.NewUser(user.New(nil, tt.udb, tt.rbac, tt.auth), rg)
 			ts := httptest.NewServer(r)
 			defer ts.Close()
 			path := ts.URL + "/v1/users/" + tt.req
@@ -299,7 +300,7 @@ func TestUpdateUser(t *testing.T) {
 				},
 			},
 			udb: &mockdb.User{
-				ViewFn: func(id int) (*model.User, error) {
+				ViewFn: func(db orm.DB, id int) (*model.User, error) {
 					return &model.User{
 						Base: model.Base{
 							ID:        1,
@@ -313,7 +314,7 @@ func TestUpdateUser(t *testing.T) {
 						Phone:     "332223",
 					}, nil
 				},
-				UpdateFn: func(usr *model.User) (*model.User, error) {
+				UpdateFn: func(db orm.DB, usr *model.User) (*model.User, error) {
 					usr.UpdatedAt = mock.TestTime(2010)
 					usr.Mobile = "991991"
 					return usr, nil
@@ -342,7 +343,7 @@ func TestUpdateUser(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := server.New()
 			rg := r.Group("/v1/users")
-			service.NewUser(user.New(tt.udb, tt.rbac, tt.auth), rg)
+			service.NewUser(user.New(nil, tt.udb, tt.rbac, tt.auth), rg)
 			ts := httptest.NewServer(r)
 			defer ts.Close()
 			path := ts.URL + "/v1/users/" + tt.id
@@ -383,7 +384,7 @@ func TestDeleteUser(t *testing.T) {
 			name: "Fail on RBAC",
 			id:   `1`,
 			udb: &mockdb.User{
-				ViewFn: func(id int) (*model.User, error) {
+				ViewFn: func(db orm.DB, id int) (*model.User, error) {
 					return &model.User{
 						Role: &model.Role{
 							AccessLevel: model.CompanyAdminRole,
@@ -402,14 +403,14 @@ func TestDeleteUser(t *testing.T) {
 			name: "Success",
 			id:   `1`,
 			udb: &mockdb.User{
-				ViewFn: func(id int) (*model.User, error) {
+				ViewFn: func(db orm.DB, id int) (*model.User, error) {
 					return &model.User{
 						Role: &model.Role{
 							AccessLevel: model.CompanyAdminRole,
 						},
 					}, nil
 				},
-				DeleteFn: func(*model.User) error {
+				DeleteFn: func(orm.DB, *model.User) error {
 					return nil
 				},
 			},
@@ -428,7 +429,7 @@ func TestDeleteUser(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := server.New()
 			rg := r.Group("/v1/users")
-			service.NewUser(user.New(tt.udb, tt.rbac, tt.auth), rg)
+			service.NewUser(user.New(nil, tt.udb, tt.rbac, tt.auth), rg)
 			ts := httptest.NewServer(r)
 			defer ts.Close()
 			path := ts.URL + "/v1/users/" + tt.id

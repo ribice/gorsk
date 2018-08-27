@@ -2,6 +2,8 @@ package model
 
 import (
 	"time"
+
+	"github.com/go-pg/pg/orm"
 )
 
 // User represents user domain model
@@ -44,16 +46,16 @@ func (u *User) UpdateLastLogin() {
 
 // AccountDB represents account related database interface (repository)
 type AccountDB interface {
-	Create(User) (*User, error)
-	ChangePassword(*User) error
+	Create(orm.DB, User) (*User, error)
+	ChangePassword(orm.DB, *User) error
 }
 
 // UserDB represents user database interface (repository)
 type UserDB interface {
-	View(int) (*User, error)
-	FindByUsername(string) (*User, error)
-	FindByToken(string) (*User, error)
-	List(*ListQuery, *Pagination) ([]User, error)
-	Delete(*User) error
-	Update(*User) (*User, error)
+	View(orm.DB, int) (*User, error)
+	FindByUsername(orm.DB, string) (*User, error)
+	FindByToken(orm.DB, string) (*User, error)
+	List(orm.DB, *ListQuery, *Pagination) ([]User, error)
+	Delete(orm.DB, *User) error
+	Update(orm.DB, *User) (*User, error)
 }

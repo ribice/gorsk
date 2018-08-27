@@ -13,7 +13,7 @@ import (
 )
 
 func testUserDB(t *testing.T, c *pg.DB, l echo.Logger) {
-	userDB := pgsql.NewUserDB(c, l)
+	userDB := pgsql.NewUserDB(l)
 	cases := []struct {
 		name string
 		fn   func(*testing.T, *pgsql.UserDB, *pg.DB)
@@ -88,7 +88,7 @@ func testUserView(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			user, err := db.View(tt.id)
+			user, err := db.View(c, tt.id)
 			assert.Equal(t, tt.wantErr, err != nil)
 			if tt.wantData != nil {
 				tt.wantData.CreatedAt = user.CreatedAt
@@ -136,7 +136,7 @@ func testUserFindByUsername(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			user, err := db.FindByUsername(tt.username)
+			user, err := db.FindByUsername(c, tt.username)
 			assert.Equal(t, tt.wantErr, err != nil)
 
 			if tt.wantData != nil {
@@ -187,7 +187,7 @@ func testUserFindByToken(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			user, err := db.FindByToken(tt.token)
+			user, err := db.FindByToken(c, tt.token)
 			assert.Equal(t, tt.wantErr, err != nil)
 
 			if tt.wantData != nil {
@@ -268,7 +268,7 @@ func testUserList(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			users, err := db.List(tt.qp, tt.pg)
+			users, err := db.List(c, tt.qp, tt.pg)
 			assert.Equal(t, tt.wantErr, err != nil)
 			if tt.wantData != nil {
 				for i, v := range users {
@@ -323,7 +323,7 @@ func testUserDelete(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
 			if tt.wantData != nil {
 				userBefore = queryUser(t, c, tt.usr.Base.ID)
 			}
-			err := db.Delete(tt.usr)
+			err := db.Delete(c, tt.usr)
 			assert.Equal(t, tt.wantErr, err != nil)
 
 			if tt.wantData != nil {
@@ -395,7 +395,7 @@ func testUserUpdate(t *testing.T, db *pgsql.UserDB, c *pg.DB) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			resp, err := db.Update(tt.usr)
+			resp, err := db.Update(c, tt.usr)
 			assert.Equal(t, tt.wantErr, err != nil)
 			if tt.wantData != nil {
 				tt.wantData.UpdatedAt = resp.UpdatedAt

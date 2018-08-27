@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-pg/pg/orm"
 	"github.com/ribice/gorsk/internal"
 	"github.com/stretchr/testify/assert"
 
@@ -39,7 +40,7 @@ func TestLogin(t *testing.T) {
 			req:        `{"username":"juzernejm","password":"hunter123"}`,
 			wantStatus: http.StatusInternalServerError,
 			udb: &mockdb.User{
-				FindByUsernameFn: func(string) (*model.User, error) {
+				FindByUsernameFn: func(orm.DB, string) (*model.User, error) {
 					return nil, model.ErrGeneric
 				},
 			},
@@ -49,13 +50,13 @@ func TestLogin(t *testing.T) {
 			req:        `{"username":"juzernejm","password":"hunter123"}`,
 			wantStatus: http.StatusOK,
 			udb: &mockdb.User{
-				FindByUsernameFn: func(string) (*model.User, error) {
+				FindByUsernameFn: func(orm.DB, string) (*model.User, error) {
 					return &model.User{
 						Password: auth.HashPassword("hunter123"),
 						Active:   true,
 					}, nil
 				},
-				UpdateFn: func(u *model.User) (*model.User, error) {
+				UpdateFn: func(db orm.DB, u *model.User) (*model.User, error) {
 					return u, nil
 				},
 			},
@@ -71,7 +72,7 @@ func TestLogin(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			r := server.New()
-			service.NewAuth(auth.New(tt.udb, tt.jwt), r, nil)
+			service.NewAuth(auth.New(nil, tt.udb, tt.jwt), r, nil)
 			ts := httptest.NewServer(r)
 			defer ts.Close()
 			path := ts.URL + "/login"
@@ -107,7 +108,7 @@ func TestRefresh(t *testing.T) {
 			req:        "refreshtoken",
 			wantStatus: http.StatusInternalServerError,
 			udb: &mockdb.User{
-				FindByTokenFn: func(string) (*model.User, error) {
+				FindByTokenFn: func(orm.DB, string) (*model.User, error) {
 					return nil, model.ErrGeneric
 				},
 			},
@@ -117,7 +118,7 @@ func TestRefresh(t *testing.T) {
 			req:        "refreshtoken",
 			wantStatus: http.StatusOK,
 			udb: &mockdb.User{
-				FindByTokenFn: func(string) (*model.User, error) {
+				FindByTokenFn: func(orm.DB, string) (*model.User, error) {
 					return &model.User{
 						Username: "johndoe",
 						Active:   true,
@@ -136,7 +137,7 @@ func TestRefresh(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			r := server.New()
-			service.NewAuth(auth.New(tt.udb, tt.jwt), r, nil)
+			service.NewAuth(auth.New(nil, tt.udb, tt.jwt), r, nil)
 			ts := httptest.NewServer(r)
 			defer ts.Close()
 			path := ts.URL + "/refresh/" + tt.req
@@ -169,7 +170,7 @@ func TestMe(t *testing.T) {
 			name:       "Fail on user view",
 			wantStatus: http.StatusInternalServerError,
 			udb: &mockdb.User{
-				ViewFn: func(int) (*model.User, error) {
+				ViewFn: func(orm.DB, int) (*model.User, error) {
 					return nil, model.ErrGeneric
 				},
 			},
@@ -179,7 +180,7 @@ func TestMe(t *testing.T) {
 			name:       "Success",
 			wantStatus: http.StatusOK,
 			udb: &mockdb.User{
-				ViewFn: func(i int) (*model.User, error) {
+				ViewFn: func(db orm.DB, i int) (*model.User, error) {
 					return &model.User{
 						Base: model.Base{
 							ID: i,
@@ -213,7 +214,7 @@ func TestMe(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			r := server.New()
-			service.NewAuth(auth.New(tt.udb, nil), r, jwtMW.MWFunc())
+			service.NewAuth(auth.New(nil, tt.udb, nil), r, jwtMW.MWFunc())
 			ts := httptest.NewServer(r)
 			defer ts.Close()
 			path := ts.URL + "/me"

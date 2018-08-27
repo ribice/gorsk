@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-pg/pg/orm"
 	"github.com/labstack/echo"
 	"github.com/ribice/gorsk/internal"
 	"github.com/ribice/gorsk/internal/auth"
@@ -31,7 +32,7 @@ func TestAuthenticate(t *testing.T) {
 			args:    args{user: "juzernejm"},
 			wantErr: true,
 			udb: &mockdb.User{
-				FindByUsernameFn: func(user string) (*model.User, error) {
+				FindByUsernameFn: func(db orm.DB, user string) (*model.User, error) {
 					return nil, model.ErrGeneric
 				},
 			},
@@ -41,7 +42,7 @@ func TestAuthenticate(t *testing.T) {
 			args:    args{user: "juzernejm", pass: "notHashedPassword"},
 			wantErr: true,
 			udb: &mockdb.User{
-				FindByUsernameFn: func(user string) (*model.User, error) {
+				FindByUsernameFn: func(db orm.DB, user string) (*model.User, error) {
 					return &model.User{
 						Username: user,
 						Password: "HashedPassword",
@@ -54,7 +55,7 @@ func TestAuthenticate(t *testing.T) {
 			args:    args{user: "juzernejm", pass: "pass"},
 			wantErr: true,
 			udb: &mockdb.User{
-				FindByUsernameFn: func(user string) (*model.User, error) {
+				FindByUsernameFn: func(db orm.DB, user string) (*model.User, error) {
 					return &model.User{
 						Username: user,
 						Password: auth.HashPassword("pass"),
@@ -68,7 +69,7 @@ func TestAuthenticate(t *testing.T) {
 			args:    args{user: "juzernejm", pass: "pass"},
 			wantErr: true,
 			udb: &mockdb.User{
-				FindByUsernameFn: func(user string) (*model.User, error) {
+				FindByUsernameFn: func(db orm.DB, user string) (*model.User, error) {
 					return &model.User{
 						Username: user,
 						Password: auth.HashPassword("pass"),
@@ -87,14 +88,14 @@ func TestAuthenticate(t *testing.T) {
 			args:    args{user: "juzernejm", pass: "pass"},
 			wantErr: true,
 			udb: &mockdb.User{
-				FindByUsernameFn: func(user string) (*model.User, error) {
+				FindByUsernameFn: func(db orm.DB, user string) (*model.User, error) {
 					return &model.User{
 						Username: user,
 						Password: auth.HashPassword("pass"),
 						Active:   true,
 					}, nil
 				},
-				UpdateFn: func(u *model.User) (*model.User, error) {
+				UpdateFn: func(db orm.DB, u *model.User) (*model.User, error) {
 					return nil, model.ErrGeneric
 				},
 			},
@@ -108,14 +109,14 @@ func TestAuthenticate(t *testing.T) {
 			name: "Success",
 			args: args{user: "juzernejm", pass: "pass"},
 			udb: &mockdb.User{
-				FindByUsernameFn: func(user string) (*model.User, error) {
+				FindByUsernameFn: func(db orm.DB, user string) (*model.User, error) {
 					return &model.User{
 						Username: user,
 						Password: auth.HashPassword("pass"),
 						Active:   true,
 					}, nil
 				},
-				UpdateFn: func(u *model.User) (*model.User, error) {
+				UpdateFn: func(db orm.DB, u *model.User) (*model.User, error) {
 					return u, nil
 				},
 			},
@@ -132,7 +133,7 @@ func TestAuthenticate(t *testing.T) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			s := auth.New(tt.udb, tt.jwt)
+			s := auth.New(nil, tt.udb, tt.jwt)
 			token, err := s.Authenticate(tt.args.c, tt.args.user, tt.args.pass)
 			if tt.wantData != nil {
 				tt.wantData.RefreshToken = token.RefreshToken
@@ -160,7 +161,7 @@ func TestRefresh(t *testing.T) {
 			args:    args{token: "refreshtoken"},
 			wantErr: true,
 			udb: &mockdb.User{
-				FindByTokenFn: func(token string) (*model.User, error) {
+				FindByTokenFn: func(db orm.DB, token string) (*model.User, error) {
 					return nil, model.ErrGeneric
 				},
 			},
@@ -170,7 +171,7 @@ func TestRefresh(t *testing.T) {
 			args:    args{token: "refreshtoken"},
 			wantErr: true,
 			udb: &mockdb.User{
-				FindByTokenFn: func(token string) (*model.User, error) {
+				FindByTokenFn: func(db orm.DB, token string) (*model.User, error) {
 					return &model.User{
 						Username: "username",
 						Password: "password",
@@ -189,7 +190,7 @@ func TestRefresh(t *testing.T) {
 			name: "Success",
 			args: args{token: "refreshtoken"},
 			udb: &mockdb.User{
-				FindByTokenFn: func(token string) (*model.User, error) {
+				FindByTokenFn: func(db orm.DB, token string) (*model.User, error) {
 					return &model.User{
 						Username: "username",
 						Password: "password",
@@ -211,7 +212,7 @@ func TestRefresh(t *testing.T) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			s := auth.New(tt.udb, tt.jwt)
+			s := auth.New(nil, tt.udb, tt.jwt)
 			token, err := s.Refresh(tt.args.c, tt.args.token)
 			assert.Equal(t, tt.wantData, token)
 			assert.Equal(t, tt.wantErr, err != nil)
@@ -230,7 +231,7 @@ func TestUser(t *testing.T) {
 		Email:      "ribice@gmail.com",
 		Role:       model.SuperAdminRole,
 	}
-	rbacSvc := auth.New(nil, nil)
+	rbacSvc := auth.New(nil, nil, nil)
 	assert.Equal(t, wantUser, rbacSvc.User(ctx))
 }
 
@@ -263,7 +264,7 @@ func TestMe(t *testing.T) {
 				"id", "company_id", "location_id", "username", "email", "role"},
 				9, 15, 52, "ribice", "ribice@gmail.com", int8(1)),
 			udb: &mockdb.User{
-				ViewFn: func(id int) (*model.User, error) {
+				ViewFn: func(db orm.DB, id int) (*model.User, error) {
 					return &model.User{
 						Base: model.Base{
 							ID:        id,
@@ -294,7 +295,7 @@ func TestMe(t *testing.T) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			s := auth.New(tt.udb, nil)
+			s := auth.New(nil, tt.udb, nil)
 			user, err := s.Me(tt.ctx)
 			assert.Equal(t, tt.wantData, user)
 			assert.Equal(t, tt.wantErr, err != nil)
