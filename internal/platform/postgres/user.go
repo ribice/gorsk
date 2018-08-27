@@ -71,8 +71,7 @@ func (u *UserDB) List(db orm.DB, qp *model.ListQuery, p *model.Pagination) ([]mo
 
 // Delete sets deleted_at for a user
 func (u *UserDB) Delete(db orm.DB, user *model.User) error {
-	user.Delete()
-	_, err := db.Model(user).Column("deleted_at").WherePK().Update()
+	err := db.Delete(user)
 	if err != nil {
 		u.log.Warnf("UserDB Error: %v", err)
 	}
