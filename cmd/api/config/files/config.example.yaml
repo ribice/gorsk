@@ -1,0 +1,16 @@
+db:
+  log: ${APP_CFG_DB_LOG} # Logging for db. true|false
+  timeout: ${APP_CFG_DB_TIMEOUT} # Query timeout in seconds
+  createschema: ${APP_CFG_DB_CREATESCHEMA} # Allow pg to create schema. true|false
+  psn: ${APP_CFG_DB_PSN}
+
+server:
+  port: ${APP_CFG_SERVER_PORT} # Port in a string form i.e: ':8080'
+  debug: ${APP_CFG_SERVER_DEBUG} # Remove for production
+  readtimeout: ${APP_CFG_SERVER_READTIMEOUT} # Request read timeout in minutes
+  writetimeout: ${APP_CFG_SERVER_WRITETIMEOUT} # Response write timeout in minutes
+
+jwt:
+  realm: ${APP_CFG_JWT_REALM} # Change this value, i.e: jwtrealm]
+  duration: ${APP_CFG_JWT_DURATION} # Duration in minutes
+  signingalgorithm: ${APP_CFG_JWT_SIGNINGALGORITHM} # For example, i.e: HS256

@@ -2,10 +2,10 @@ db:
   log: true
   timeout: 5 # Query timeout in seconds
   createschema: false
-  psn: postgres://biadpozi:3_Czbl7jSjkUEWk--VP8QXMke-mFnczq@horton.elephantsql.com:5432/biadpozi
+  psn: ${APP_CFG_DB_PSN}
 
 server:
-  port: ":8080"
+  port: ':8080'
   debug: true
   readtimeout: 10 # Request read timeout in minutes
   writetimeout: 5 # Response write timeout in minutes

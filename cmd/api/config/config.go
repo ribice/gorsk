@@ -3,6 +3,8 @@ package config
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
+
 	"path/filepath"
 	"runtime"
 
@@ -19,6 +21,10 @@ func Load(env string) (*Configuration, error) {
 		return nil, fmt.Errorf("error reading config file, %s", err)
 	}
 	var cfg = new(Configuration)
+
+	// Expands ENV vars that are in the ${var} format in the yaml file
+	bytes = []byte(os.ExpandEnv(string(bytes)))
+
 	if err := yaml.Unmarshal(bytes, cfg); err != nil {
 		return nil, fmt.Errorf("unable to decode into struct, %v", err)
 	}

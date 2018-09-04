@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-pg/pg/orm"
 
+	"github.com/ribice/gorsk/cmd/api/config"
 	"github.com/ribice/gorsk/internal"
 
 	"github.com/go-pg/pg"
@@ -14,6 +15,9 @@ import (
 )
 
 func main() {
+	cfg, err := config.Load("dev")
+	checkErr(err)
+
 	dbInsert := `INSERT INTO public.companies VALUES (1, now(), now(), NULL, 'admin_company', true);
 	INSERT INTO public.locations VALUES (1, now(), now(), NULL, 'admin_location', true, 'admin_address', 1);
 	INSERT INTO public.roles VALUES (1, 1, 'SUPER_ADMIN');
@@ -21,7 +25,7 @@ func main() {
 	INSERT INTO public.roles VALUES (3, 3, 'COMPANY_ADMIN');
 	INSERT INTO public.roles VALUES (4, 4, 'LOCATION_ADMIN');
 	INSERT INTO public.roles VALUES (5, 5, 'USER');`
-	var psn = ``
+	var psn = cfg.DB.PSN
 	queries := strings.Split(dbInsert, ";")
 
 	u, err := pg.ParseURL(psn)
