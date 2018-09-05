@@ -1,52 +1,68 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"strings"
+	"os"
 
 	"github.com/go-pg/pg/orm"
 
 	"github.com/ribice/gorsk/cmd/api/config"
+	"github.com/ribice/gorsk/cmd/migration/queries"
 	"github.com/ribice/gorsk/internal"
 
 	"github.com/go-pg/pg"
-	"github.com/ribice/gorsk/internal/auth"
+
+	"github.com/joho/godotenv"
 )
 
+const (
+	dbCheck    = "SELECT 1"
+	appEnvName = "APP_CFG_ENVIRONMENT_NAME"
+)
+
+var dbq []string
+var dbm []interface{}
+
+func init() {
+	// Append any new models you create to this list
+	dbm = append(dbm, &model.Company{}, &model.Location{}, &model.Role{}, &model.User{})
+	// Append any new queries you create to this slice
+	dbq = append(dbq, queries.DBSetupQueries()...)
+	dbq = append(dbq, queries.CompanyQueries()...)
+	dbq = append(dbq, queries.LocationQueries()...)
+	dbq = append(dbq, queries.RoleQueries()...)
+	dbq = append(dbq, queries.UserQueries()...)
+}
+
 func main() {
-	cfg, err := config.Load("dev")
+	err := godotenv.Load()
 	checkErr(err)
 
-	dbInsert := `INSERT INTO public.companies VALUES (1, now(), now(), NULL, 'admin_company', true);
-	INSERT INTO public.locations VALUES (1, now(), now(), NULL, 'admin_location', true, 'admin_address', 1);
-	INSERT INTO public.roles VALUES (1, 1, 'SUPER_ADMIN');
-	INSERT INTO public.roles VALUES (2, 2, 'ADMIN');
-	INSERT INTO public.roles VALUES (3, 3, 'COMPANY_ADMIN');
-	INSERT INTO public.roles VALUES (4, 4, 'LOCATION_ADMIN');
-	INSERT INTO public.roles VALUES (5, 5, 'USER');`
-	var psn = cfg.DB.PSN
-	queries := strings.Split(dbInsert, ";")
+	env := os.Getenv(appEnvName)
+	cfg, err := config.Load(env)
+	checkErr(err)
+
+	psn := cfg.DB.PSN
 
 	u, err := pg.ParseURL(psn)
 	checkErr(err)
-	db := pg.Connect(u)
-	_, err = db.Exec("SELECT 1")
-	checkErr(err)
-	createSchema(db, &model.Company{}, &model.Location{}, &model.Role{}, &model.User{})
 
-	for _, v := range queries[0 : len(queries)-1] {
+	db := pg.Connect(u)
+	_, err = db.Exec(dbCheck)
+	checkErr(err)
+
+	log.Println("Check")
+	createSchema(db, dbm...)
+
+	for _, v := range dbq {
 		_, err := db.Exec(v)
 		checkErr(err)
 	}
-	userInsert := `INSERT INTO public.users VALUES (1, now(),now(), NULL, 'Admin', 'Admin', 'admin', '%s', 'johndoe@mail.com', NULL, NULL, NULL, NULL, true, 1, 1, 1);`
-	_, err = db.Exec(fmt.Sprintf(userInsert, auth.HashPassword("admin")))
-	checkErr(err)
 }
 
 func checkErr(err error) {
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 }
 

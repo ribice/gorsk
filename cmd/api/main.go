@@ -32,6 +32,9 @@
 package main
 
 import (
+	"os"
+
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo"
 	"github.com/ribice/gorsk/internal/platform/postgres"
 
@@ -47,9 +50,16 @@ import (
 	"github.com/ribice/gorsk/internal/user"
 )
 
-func main() {
+const (
+	appEnvName = "APP_CFG_ENVIRONMENT_NAME"
+)
 
-	cfg, err := config.Load("dev")
+func main() {
+	err := godotenv.Load()
+	checkErr(err)
+
+	env := os.Getenv(appEnvName)
+	cfg, err := config.Load(env)
 	checkErr(err)
 
 	e := server.New()
