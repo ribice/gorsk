@@ -5,7 +5,7 @@ import (
 	"github.com/labstack/echo/middleware"
 )
 
-// Add adds middlewares to gin engine
+// Add adds middlewares to echo engine
 func Add(r *echo.Echo, m ...echo.MiddlewareFunc) {
 	for _, v := range m {
 		r.Use(v)
