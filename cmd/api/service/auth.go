@@ -49,7 +49,7 @@ func NewAuth(svc *auth.Service, e *echo.Echo, mw echo.MiddlewareFunc) {
 	e.GET("/refresh/:token", a.refresh)
 
 	// swagger:route GET /me auth meReq
-	// Gets user's info from session
+	// Gets user's info from session.
 	// responses:
 	//  200: userResp
 	//  500: err
