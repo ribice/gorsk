@@ -86,7 +86,7 @@ func NewUser(svc *user.Service, ur *echo.Group) {
 	//   description: Request body
 	//   required: true
 	//   schema:
-	//     "$ref": "#/definitions/UserUpdate"
+	//     "$ref": "#/definitions/userUpdate"
 	// responses:
 	//   "200":
 	//     "$ref": "#/responses/userResp"

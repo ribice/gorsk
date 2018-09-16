@@ -14,17 +14,15 @@ type swaggAccCreateReq struct {
 }
 
 // Password change request
-// swagger:parameters pwChange
+// swagger:model pwChange
 type swaggPwChange struct {
-	// in:body
-	Body request.Password
+	request.Password
 }
 
 // User update request
-// swagger:parameters userUpdate
+// swagger:model userUpdate
 type swaggUserUpdateReq struct {
-	// in:body
-	Body request.UpdateUser
+	request.UpdateUser
 }
 
 // User model response
