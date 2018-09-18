@@ -1,10 +1,12 @@
 package server
 
 import (
+	"context"
 	"net/http"
+	"os"
+	"os/signal"
 	"time"
 
-	"github.com/facebookgo/grace/gracehttp"
 	"github.com/go-playground/validator"
 	"github.com/labstack/echo/middleware"
 	"github.com/ribice/gorsk/cmd/api/config"
@@ -30,11 +32,30 @@ func healthCheck(c echo.Context) error {
 	return c.JSON(http.StatusOK, "OK")
 }
 
-// Start starts echo server
+// Start starts echo server handling graceful shutdown, needs go1.8+.
 func Start(e *echo.Echo, cfg *config.Server) {
-	e.Server.Addr = cfg.Port
-	e.Server.ReadTimeout = time.Duration(cfg.ReadTimeout) * time.Minute
-	e.Server.WriteTimeout = time.Duration(cfg.WriteTimeout) * time.Minute
+	s := &http.Server{
+		Addr:         cfg.Port,
+		ReadTimeout:  time.Duration(cfg.ReadTimeout) * time.Minute,
+		WriteTimeout: time.Duration(cfg.WriteTimeout) * time.Minute,
+	}
 	e.Debug = cfg.Debug
-	e.Logger.Fatal(gracehttp.Serve(e.Server))
+
+	// Start server
+	go func() {
+		if err := e.StartServer(s); err != nil {
+			e.Logger.Info("Shutting down the server")
+		}
+	}()
+
+	// Wait for interrupt signal to gracefully shutdown the server with
+	// a timeout of 10 seconds.
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := e.Shutdown(ctx); err != nil {
+		e.Logger.Fatal(err)
+	}
 }
