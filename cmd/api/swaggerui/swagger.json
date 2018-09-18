@@ -63,6 +63,23 @@
         }
       }
     },
+    "/me": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Gets user's info from session.",
+        "operationId": "meReq",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/userResp"
+          },
+          "500": {
+            "$ref": "#/responses/err"
+          }
+        }
+      }
+    },
     "/refresh/{token}": {
       "get": {
         "description": "Refreshes jwt token by checking at database whether refresh token exists.",
@@ -106,13 +123,13 @@
         "operationId": "listUsers",
         "parameters": [
           {
-            "type": "int",
+            "type": "integer",
             "description": "number of results",
             "name": "limit",
             "in": "query"
           },
           {
-            "type": "int",
+            "type": "integer",
             "description": "page number",
             "name": "page",
             "in": "query"
@@ -180,7 +197,7 @@
         "operationId": "getUser",
         "parameters": [
           {
-            "type": "int",
+            "type": "integer",
             "description": "id of user",
             "name": "id",
             "in": "path",
@@ -217,7 +234,7 @@
         "operationId": "userDelete",
         "parameters": [
           {
-            "type": "int",
+            "type": "integer",
             "description": "id of user",
             "name": "id",
             "in": "path",
@@ -251,14 +268,11 @@
         "operationId": "userUpdate",
         "parameters": [
           {
-            "type": "int",
+            "type": "integer",
             "description": "id of user",
             "name": "id",
             "in": "path",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/UpdateUser"
-            }
+            "required": true
           },
           {
             "description": "Request body",
@@ -266,7 +280,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/UserUpdate"
+              "$ref": "#/definitions/userUpdate"
             }
           }
         ],
@@ -299,13 +313,19 @@
         "operationId": "pwChange",
         "parameters": [
           {
-            "type": "int",
+            "type": "integer",
             "description": "id of user",
             "name": "id",
             "in": "path",
+            "required": true
+          },
+          {
+            "description": "Request body",
+            "name": "request",
+            "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/Password"
+              "$ref": "#/definitions/pwChange"
             }
           }
         ],
@@ -347,25 +367,6 @@
         "username": {
           "type": "string",
           "x-go-name": "Username"
-        }
-      },
-      "x-go-package": "github.com/ribice/gorsk/cmd/api/request"
-    },
-    "Password": {
-      "description": "Password contains password change request",
-      "type": "object",
-      "properties": {
-        "new_password": {
-          "type": "string",
-          "x-go-name": "NewPassword"
-        },
-        "new_password_confirm": {
-          "type": "string",
-          "x-go-name": "NewPasswordConfirm"
-        },
-        "old_password": {
-          "type": "string",
-          "x-go-name": "OldPassword"
         }
       },
       "x-go-package": "github.com/ribice/gorsk/cmd/api/request"
@@ -434,33 +435,6 @@
         }
       },
       "x-go-package": "github.com/ribice/gorsk/internal"
-    },
-    "UpdateUser": {
-      "description": "UpdateUser contains user update data from json request",
-      "type": "object",
-      "properties": {
-        "address": {
-          "type": "string",
-          "x-go-name": "Address"
-        },
-        "first_name": {
-          "type": "string",
-          "x-go-name": "FirstName"
-        },
-        "last_name": {
-          "type": "string",
-          "x-go-name": "LastName"
-        },
-        "mobile": {
-          "type": "string",
-          "x-go-name": "Mobile"
-        },
-        "phone": {
-          "type": "string",
-          "x-go-name": "Phone"
-        }
-      },
-      "x-go-package": "github.com/ribice/gorsk/cmd/api/request"
     },
     "User": {
       "description": "User represents user domain model",
@@ -538,6 +512,172 @@
         }
       },
       "x-go-package": "github.com/ribice/gorsk/internal"
+    },
+    "pwChange": {
+      "description": "Password change request",
+      "type": "object",
+      "properties": {
+        "new_password": {
+          "type": "string",
+          "x-go-name": "NewPassword"
+        },
+        "new_password_confirm": {
+          "type": "string",
+          "x-go-name": "NewPasswordConfirm"
+        },
+        "old_password": {
+          "type": "string",
+          "x-go-name": "OldPassword"
+        }
+      },
+      "x-go-name": "swaggPwChange",
+      "x-go-package": "github.com/ribice/gorsk/cmd/api/swagger"
+    },
+    "swaggAccCreateReq": {
+      "description": "Account create request",
+      "type": "object",
+      "properties": {
+        "Body": {
+          "$ref": "#/definitions/Register"
+        }
+      },
+      "x-go-package": "github.com/ribice/gorsk/cmd/api/swagger"
+    },
+    "swaggUserListResponse": {
+      "description": "Users model response",
+      "type": "object",
+      "properties": {
+        "Body": {
+          "description": "in:body",
+          "type": "object",
+          "properties": {
+            "page": {
+              "type": "integer",
+              "format": "int64",
+              "x-go-name": "Page"
+            },
+            "users": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/User"
+              },
+              "x-go-name": "Users"
+            }
+          }
+        }
+      },
+      "x-go-package": "github.com/ribice/gorsk/cmd/api/swagger"
+    },
+    "swaggUserResponse": {
+      "description": "User model response",
+      "type": "object",
+      "properties": {
+        "Body": {
+          "description": "in:body",
+          "type": "object",
+          "properties": {
+            "active": {
+              "type": "boolean",
+              "x-go-name": "Active"
+            },
+            "address": {
+              "type": "string",
+              "x-go-name": "Address"
+            },
+            "company_id": {
+              "type": "integer",
+              "format": "int64",
+              "x-go-name": "CompanyID"
+            },
+            "created_at": {
+              "type": "string",
+              "format": "date-time",
+              "x-go-name": "CreatedAt"
+            },
+            "deleted_at": {
+              "type": "string",
+              "format": "date-time",
+              "x-go-name": "DeletedAt"
+            },
+            "email": {
+              "type": "string",
+              "x-go-name": "Email"
+            },
+            "first_name": {
+              "type": "string",
+              "x-go-name": "FirstName"
+            },
+            "id": {
+              "type": "integer",
+              "format": "int64",
+              "x-go-name": "ID"
+            },
+            "last_login": {
+              "type": "string",
+              "format": "date-time",
+              "x-go-name": "LastLogin"
+            },
+            "last_name": {
+              "type": "string",
+              "x-go-name": "LastName"
+            },
+            "location_id": {
+              "type": "integer",
+              "format": "int64",
+              "x-go-name": "LocationID"
+            },
+            "mobile": {
+              "type": "string",
+              "x-go-name": "Mobile"
+            },
+            "phone": {
+              "type": "string",
+              "x-go-name": "Phone"
+            },
+            "role": {
+              "$ref": "#/definitions/Role"
+            },
+            "updated_at": {
+              "type": "string",
+              "format": "date-time",
+              "x-go-name": "UpdatedAt"
+            },
+            "username": {
+              "type": "string",
+              "x-go-name": "Username"
+            }
+          }
+        }
+      },
+      "x-go-package": "github.com/ribice/gorsk/cmd/api/swagger"
+    },
+    "userUpdate": {
+      "description": "User update request",
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string",
+          "x-go-name": "Address"
+        },
+        "first_name": {
+          "type": "string",
+          "x-go-name": "FirstName"
+        },
+        "last_name": {
+          "type": "string",
+          "x-go-name": "LastName"
+        },
+        "mobile": {
+          "type": "string",
+          "x-go-name": "Mobile"
+        },
+        "phone": {
+          "type": "string",
+          "x-go-name": "Phone"
+        }
+      },
+      "x-go-name": "swaggUserUpdateReq",
+      "x-go-package": "github.com/ribice/gorsk/cmd/api/swagger"
     }
   },
   "responses": {
@@ -700,7 +840,6 @@
   "security": [
     {
       "bearer": [
-        "[]"
       ]
     }
   ]
