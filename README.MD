@@ -62,7 +62,7 @@ Most of these can easily be replaced with your own choices since their usage is 
 
 ## Getting started
 
-Using Gorsk requires having Go 1.7 or above. Once you downloaded Gorsk (either using Git or go get) you need to configure the following:
+Using Gorsk requires having Go 1.8 or above. Once you downloaded Gorsk (either using Git or go get) you need to configure the following:
 
 1. To use Gorsk as a starting point of a real project whose package name is something like `github.com/author/project`, move the directory `$GOPATH/github.com/ribice/gorsk` to `$GOPATH/github.com/author/project` and do a global replacement of the string `github.com/ribice/gorsk` with `github.com/author/project`.
 
