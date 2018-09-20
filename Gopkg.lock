@@ -27,17 +27,6 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1f21d86648746b776eae0dff77e4cafa2d9ccec0f0f1248c48306231ee800674"
-  name = "github.com/facebookgo/grace"
-  packages = [
-    "gracehttp",
-    "gracenet",
-  ]
-  pruneopts = "UT"
-  revision = "75cf19382434e82df4dd84953f566b8ad23d6e9e"
-
-[[projects]]
-  branch = "master"
   digest = "1:17cb421603403a24edb0c7eeb382295dd31c72ab9ccf31cf7f0a37971f00aaa7"
   name = "github.com/facebookgo/httpdown"
   packages = ["."]
@@ -238,7 +227,6 @@
   analyzer-version = 1
   input-imports = [
     "github.com/dgrijalva/jwt-go",
-    "github.com/facebookgo/grace/gracehttp",
     "github.com/fortytw2/dockertest",
     "github.com/go-pg/pg",
     "github.com/go-pg/pg/orm",

@@ -31,10 +31,6 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/facebookgo/grace"
-
-[[constraint]]
-  branch = "master"
   name = "github.com/fortytw2/dockertest"
 
 [[constraint]]
