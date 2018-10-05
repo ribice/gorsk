@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/ribice/gorsk/internal/auth"
 	"log"
 	"strings"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/ribice/gorsk/internal"
 
 	"github.com/go-pg/pg"
-	"github.com/ribice/gorsk/internal/auth"
 )
 
 func main() {
@@ -35,7 +35,7 @@ func main() {
 		_, err := db.Exec(v)
 		checkErr(err)
 	}
-	userInsert := `INSERT INTO public.users VALUES (1, now(),now(), NULL, 'Admin', 'Admin', 'admin', '%s', 'johndoe@mail.com', NULL, NULL, NULL, NULL, true, 1, 1, 1);`
+	userInsert := `INSERT INTO public.users VALUES (1, now(),now(), NULL, 'Admin', 'Admin', 'admin', '%s', 'johndoe@mail.com', NULL, NULL, NULL, NULL, true, NULL, 1, 1, 1);`
 	_, err = db.Exec(fmt.Sprintf(userInsert, auth.HashPassword("admin")))
 	checkErr(err)
 }

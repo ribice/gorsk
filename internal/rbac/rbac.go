@@ -24,7 +24,7 @@ func checkBool(b bool) error {
 
 // EnforceRole authorizes request by AccessRole
 func (s *Service) EnforceRole(c echo.Context, r model.AccessRole) error {
-	return checkBool(!(c.Get("role").(int8) > int8(r)))
+	return checkBool(!(c.Get("role").(model.AccessRole) > r))
 }
 
 // EnforceUser checks whether the request to change user data is done by the same user
@@ -63,17 +63,17 @@ func (s *Service) EnforceLocation(c echo.Context, ID int) error {
 }
 
 func (s *Service) isAdmin(c echo.Context) bool {
-	return !(c.Get("role").(int8) > int8(model.AdminRole))
+	return !(c.Get("role").(model.AccessRole) > model.AdminRole)
 }
 
 func (s *Service) isCompanyAdmin(c echo.Context) bool {
 	// Must query company ID in database for the given user
-	return !(c.Get("role").(int8) > int8(model.CompanyAdminRole))
+	return !(c.Get("role").(model.AccessRole) > model.CompanyAdminRole)
 }
 
 // AccountCreate performs auth check when creating a new account
 // Location admin cannot create accounts, needs to be fixed on EnforceLocation function
-func (s *Service) AccountCreate(c echo.Context, roleID, companyID, locationID int) error {
+func (s *Service) AccountCreate(c echo.Context, roleID model.AccessRole, companyID, locationID int) error {
 	if err := s.EnforceLocation(c, locationID); err != nil {
 		return err
 	}
@@ -83,5 +83,5 @@ func (s *Service) AccountCreate(c echo.Context, roleID, companyID, locationID in
 // IsLowerRole checks whether the requesting user has higher role than the user it wants to change
 // Used for account creation/deletion
 func (s *Service) IsLowerRole(c echo.Context, r model.AccessRole) error {
-	return checkBool(c.Get("role").(int8) < int8(r))
+	return checkBool(c.Get("role").(model.AccessRole) < r)
 }
