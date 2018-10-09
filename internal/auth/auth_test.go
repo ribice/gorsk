@@ -222,7 +222,7 @@ func TestRefresh(t *testing.T) {
 func TestUser(t *testing.T) {
 	ctx := mock.EchoCtxWithKeys([]string{
 		"id", "company_id", "location_id", "username", "email", "role"},
-		9, 15, 52, "ribice", "ribice@gmail.com", int8(1))
+		9, 15, 52, "ribice", "ribice@gmail.com", model.AccessRole(1))
 	wantUser := &model.AuthUser{
 		ID:         9,
 		Username:   "ribice",
@@ -262,7 +262,7 @@ func TestMe(t *testing.T) {
 			name: "Success",
 			ctx: mock.EchoCtxWithKeys([]string{
 				"id", "company_id", "location_id", "username", "email", "role"},
-				9, 15, 52, "ribice", "ribice@gmail.com", int8(1)),
+				9, 15, 52, "ribice", "ribice@gmail.com", model.AccessRole(1)),
 			udb: &mockdb.User{
 				ViewFn: func(db orm.DB, id int) (*model.User, error) {
 					return &model.User{
