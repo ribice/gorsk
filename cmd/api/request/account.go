@@ -16,9 +16,9 @@ type Register struct {
 	PasswordConfirm string `json:"password_confirm" validate:"required"`
 	Email           string `json:"email" validate:"required,email"`
 
-	CompanyID  int `json:"company_id" validate:"required"`
-	LocationID int `json:"location_id" validate:"required"`
-	RoleID     int `json:"role_id" validate:"required"`
+	CompanyID  int              `json:"company_id" validate:"required"`
+	LocationID int              `json:"location_id" validate:"required"`
+	RoleID     model.AccessRole `json:"role_id" validate:"required"`
 }
 
 // AccountCreate validates account creation request
@@ -30,7 +30,7 @@ func AccountCreate(c echo.Context) (*Register, error) {
 	if r.Password != r.PasswordConfirm {
 		return nil, echo.NewHTTPError(http.StatusBadRequest, "passwords do not match")
 	}
-	if r.RoleID < int(model.SuperAdminRole) || r.RoleID > int(model.UserRole) {
+	if r.RoleID < model.SuperAdminRole || r.RoleID > model.UserRole {
 		return nil, echo.NewHTTPError(http.StatusBadRequest)
 	}
 	return r, nil

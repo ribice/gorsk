@@ -88,7 +88,7 @@ func (s *Service) User(c echo.Context) *model.AuthUser {
 	locationID := c.Get("location_id").(int)
 	user := c.Get("username").(string)
 	email := c.Get("email").(string)
-	role := c.Get("role").(int8)
+	role := c.Get("role").(model.AccessRole)
 	return &model.AuthUser{
 		ID:         id,
 		Username:   user,

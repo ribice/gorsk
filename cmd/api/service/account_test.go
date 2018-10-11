@@ -40,7 +40,7 @@ func TestCreate(t *testing.T) {
 			name: "Fail on userSvc",
 			req:  `{"first_name":"John","last_name":"Doe","username":"juzernejm","password":"hunter123","password_confirm":"hunter123","email":"johndoe@gmail.com","company_id":1,"location_id":2,"role_id":2}`,
 			rbac: &mock.RBAC{
-				AccountCreateFn: func(c echo.Context, roleID, companyID, locationID int) error {
+				AccountCreateFn: func(c echo.Context, roleID model.AccessRole, companyID, locationID int) error {
 					return echo.ErrForbidden
 				},
 			},
@@ -50,7 +50,7 @@ func TestCreate(t *testing.T) {
 			name: "Success",
 			req:  `{"first_name":"John","last_name":"Doe","username":"juzernejm","password":"hunter123","password_confirm":"hunter123","email":"johndoe@gmail.com","company_id":1,"location_id":2,"role_id":2}`,
 			rbac: &mock.RBAC{
-				AccountCreateFn: func(c echo.Context, roleID, companyID, locationID int) error {
+				AccountCreateFn: func(c echo.Context, roleID model.AccessRole, companyID, locationID int) error {
 					return nil
 				},
 			},

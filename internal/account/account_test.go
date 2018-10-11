@@ -30,7 +30,7 @@ func TestCreate(t *testing.T) {
 	}{{
 		name: "Fail on is lower role",
 		rbac: &mock.RBAC{
-			AccountCreateFn: func(echo.Context, int, int, int) error {
+			AccountCreateFn: func(echo.Context, model.AccessRole, int, int) error {
 				return model.ErrGeneric
 			}},
 		wantErr: true,
@@ -60,7 +60,7 @@ func TestCreate(t *testing.T) {
 				},
 			},
 			rbac: &mock.RBAC{
-				AccountCreateFn: func(echo.Context, int, int, int) error {
+				AccountCreateFn: func(echo.Context, model.AccessRole, int, int) error {
 					return nil
 				}},
 			wantData: &model.User{

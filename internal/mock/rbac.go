@@ -12,7 +12,7 @@ type RBAC struct {
 	EnforceUserFn     func(echo.Context, int) error
 	EnforceCompanyFn  func(echo.Context, int) error
 	EnforceLocationFn func(echo.Context, int) error
-	AccountCreateFn   func(echo.Context, int, int, int) error
+	AccountCreateFn   func(echo.Context, model.AccessRole, int, int) error
 	IsLowerRoleFn     func(echo.Context, model.AccessRole) error
 }
 
@@ -37,7 +37,7 @@ func (a *RBAC) EnforceLocation(c echo.Context, id int) error {
 }
 
 // AccountCreate mock
-func (a *RBAC) AccountCreate(c echo.Context, roleID, companyID, locationID int) error {
+func (a *RBAC) AccountCreate(c echo.Context, roleID model.AccessRole, companyID, locationID int) error {
 	return a.AccountCreateFn(c, roleID, companyID, locationID)
 }
 
