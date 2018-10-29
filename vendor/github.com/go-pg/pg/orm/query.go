@@ -23,29 +23,35 @@ type joinQuery struct {
 	on   []*condAppender
 }
 
+func (q *joinQuery) AppendOn(app *condAppender) {
+	q.on = append(q.on, app)
+}
+
 type Query struct {
 	db        DB
 	stickyErr error
 
 	model       tableModel
 	ignoreModel bool
+	deleted     bool
 
-	with        []withQuery
-	tables      []FormatAppender
-	columns     []FormatAppender
-	set         []FormatAppender
-	modelValues map[string]*queryParamsAppender
-	where       []sepFormatAppender
-	updWhere    []sepFormatAppender
-	joins       []*joinQuery
-	group       []FormatAppender
-	having      []*queryParamsAppender
-	order       []FormatAppender
-	onConflict  *queryParamsAppender
-	returning   []*queryParamsAppender
-	limit       int
-	offset      int
-	selFor      *queryParamsAppender
+	with         []withQuery
+	tables       []FormatAppender
+	columns      []FormatAppender
+	set          []FormatAppender
+	modelValues  map[string]*queryParamsAppender
+	where        []sepFormatAppender
+	updWhere     []sepFormatAppender
+	joins        []*joinQuery
+	joinAppendOn func(app *condAppender)
+	group        []FormatAppender
+	having       []*queryParamsAppender
+	order        []FormatAppender
+	onConflict   *queryParamsAppender
+	returning    []*queryParamsAppender
+	limit        int
+	offset       int
+	selFor       *queryParamsAppender
 }
 
 var _ queryAppender = (*Query)(nil)
@@ -60,6 +66,7 @@ func (q *Query) New() *Query {
 		db:          q.db,
 		model:       q.model,
 		ignoreModel: true,
+		deleted:     q.deleted,
 	}
 }
 
@@ -83,6 +90,7 @@ func (q *Query) Copy() *Query {
 
 		model:       q.model,
 		ignoreModel: q.ignoreModel,
+		deleted:     q.deleted,
 
 		tables:      q.tables[:len(q.tables):len(q.tables)],
 		columns:     q.columns[:len(q.columns):len(q.columns)],
@@ -140,6 +148,24 @@ func (q *Query) Model(model ...interface{}) *Query {
 	return q
 }
 
+func (q *Query) softDelete() bool {
+	if q.model != nil {
+		return q.model.Table().HasFlag(softDelete)
+	}
+	return false
+}
+
+// Deleted adds `WHERE deleted_at IS NOT NULL` clause for soft deleted models.
+func (q *Query) Deleted() *Query {
+	if q.model != nil {
+		if err := q.model.Table().mustSoftDelete(); err != nil {
+			return q.err(err)
+		}
+	}
+	q.deleted = true
+	return q
+}
+
 // With adds subq as common table expression with the given name.
 func (q *Query) With(name string, subq *Query) *Query {
 	q.with = append(q.with, withQuery{name, subq})
@@ -183,7 +209,7 @@ func (q *Query) Column(columns ...string) *Query {
 		}
 
 		if q.model != nil {
-			if _, j := q.model.Join(column, nil); j != nil {
+			if j := q.model.Join(column, nil); j != nil {
 				continue
 			}
 		}
@@ -268,12 +294,25 @@ func (q *Query) Relation(name string, apply ...func(*Query) (*Query, error)) *Qu
 	} else if len(apply) > 1 {
 		panic("only one apply function is supported")
 	}
-	_, join := q.model.Join(name, fn)
+
+	join := q.model.Join(name, fn)
 	if join == nil {
 		return q.err(fmt.Errorf("%s does not have relation=%q",
 			q.model.Table(), name))
 	}
-	return q
+
+	if fn == nil {
+		return q
+	}
+
+	switch join.Rel.Type {
+	case HasOneRelation, BelongsToRelation:
+		q.joinAppendOn = join.AppendOn
+		return q.Apply(fn)
+	default:
+		q.joinAppendOn = nil
+		return q
+	}
 }
 
 func (q *Query) Set(set string, params ...interface{}) *Query {
@@ -411,16 +450,21 @@ func (q *Query) WherePK() *Query {
 }
 
 func (q *Query) Join(join string, params ...interface{}) *Query {
-	q.joins = append(q.joins, &joinQuery{
+	j := &joinQuery{
 		join: &queryParamsAppender{join, params},
-	})
+	}
+	q.joins = append(q.joins, j)
+	q.joinAppendOn = j.AppendOn
 	return q
 }
 
 // JoinOn appends join condition to the last join.
 func (q *Query) JoinOn(condition string, params ...interface{}) *Query {
-	j := q.joins[len(q.joins)-1]
-	j.on = append(j.on, &condAppender{
+	if q.joinAppendOn == nil {
+		q.err(errors.New("pg: no joins to apply JoinOn"))
+		return q
+	}
+	q.joinAppendOn(&condAppender{
 		sep:    " AND ",
 		cond:   condition,
 		params: params,
@@ -429,8 +473,11 @@ func (q *Query) JoinOn(condition string, params ...interface{}) *Query {
 }
 
 func (q *Query) JoinOnOr(condition string, params ...interface{}) *Query {
-	j := q.joins[len(q.joins)-1]
-	j.on = append(j.on, &condAppender{
+	if q.joinAppendOn == nil {
+		q.err(errors.New("pg: no joins to apply JoinOn"))
+		return q
+	}
+	q.joinAppendOn(&condAppender{
 		sep:    " OR ",
 		cond:   condition,
 		params: params,
@@ -591,6 +638,11 @@ func (q *Query) Select(values ...interface{}) error {
 		return err
 	}
 
+	q, err = model.BeforeSelectQuery(q.db, q)
+	if err != nil {
+		return err
+	}
+
 	res, err := q.query(model, selectQuery{q: q})
 	if err != nil {
 		return err
@@ -746,7 +798,7 @@ func (q *Query) selectJoins(joins []join) error {
 		if j.Rel.Type == HasOneRelation || j.Rel.Type == BelongsToRelation {
 			err = q.selectJoins(j.JoinModel.GetJoins())
 		} else {
-			err = j.Select(q.db)
+			err = j.Select(q.New())
 		}
 		if err != nil {
 			return err
@@ -898,11 +950,29 @@ func (q *Query) returningQuery(model Model, query interface{}) (Result, error) {
 	return q.db.Query(model, query, q.model)
 }
 
-// Delete deletes the model.
+// Delete deletes the model. When model has deleted_at column the row
+// is soft deleted instead.
 func (q *Query) Delete(values ...interface{}) (Result, error) {
+	if q.softDelete() {
+		q.model.setDeletedAt()
+		columns := q.columns
+		q.columns = nil
+		res, err := q.Column("deleted_at").Update(values...)
+		q.columns = columns
+		return res, err
+	}
+	return q.ForceDelete(values...)
+}
+
+// Delete forces delete of the model with deleted_at column.
+func (q *Query) ForceDelete(values ...interface{}) (Result, error) {
 	if q.stickyErr != nil {
 		return nil, q.stickyErr
 	}
+	if q.model == nil {
+		return nil, errors.New("pg: Model(nil)")
+	}
+	q.deleted = true
 
 	model, err := q.newModel(values...)
 	if err != nil {
@@ -929,6 +999,22 @@ func (q *Query) Delete(values ...interface{}) (Result, error) {
 	}
 
 	return res, nil
+}
+
+func (q *Query) CreateTable(opt *CreateTableOptions) error {
+	_, err := q.db.Exec(createTableQuery{
+		q:   q,
+		opt: opt,
+	})
+	return err
+}
+
+func (q *Query) DropTable(opt *DropTableOptions) error {
+	_, err := q.db.Exec(dropTableQuery{
+		q:   q,
+		opt: opt,
+	})
+	return err
 }
 
 // Exec is an alias for DB.Exec.
@@ -992,24 +1078,21 @@ func (q *Query) hasModel() bool {
 	return !q.ignoreModel && q.model != nil
 }
 
+func (q *Query) modelHasTableName() bool {
+	return q.hasModel() && q.model.Table().Name != ""
+}
+
+func (q *Query) modelHasTableAlias() bool {
+	return q.hasModel() && q.model.Table().Alias != ""
+}
+
 func (q *Query) hasTables() bool {
-	return q.hasModel() || len(q.tables) > 0
-}
-
-func (q *Query) appendTableName(b []byte) []byte {
-	return q.FormatQuery(b, string(q.model.Table().Name))
-}
-
-func (q *Query) appendTableNameWithAlias(b []byte) []byte {
-	b = q.appendTableName(b)
-	b = append(b, " AS "...)
-	b = append(b, q.model.Table().Alias...)
-	return b
+	return q.modelHasTableName() || len(q.tables) > 0
 }
 
 func (q *Query) appendFirstTable(b []byte) []byte {
-	if q.hasModel() {
-		return q.appendTableName(b)
+	if q.modelHasTableName() {
+		return q.FormatQuery(b, string(q.model.Table().Name))
 	}
 	if len(q.tables) > 0 {
 		b = q.tables[0].AppendFormat(b, q)
@@ -1018,33 +1101,27 @@ func (q *Query) appendFirstTable(b []byte) []byte {
 }
 
 func (q *Query) appendFirstTableWithAlias(b []byte) []byte {
-	if q.hasModel() {
-		return q.appendTableNameWithAlias(b)
+	if q.modelHasTableName() {
+		table := q.model.Table()
+		b = q.FormatQuery(b, string(table.Name))
+		b = append(b, " AS "...)
+		b = append(b, table.Alias...)
+		return b
 	}
+
 	if len(q.tables) > 0 {
 		b = q.tables[0].AppendFormat(b, q)
+		if q.modelHasTableAlias() {
+			b = append(b, " AS "...)
+			b = append(b, q.model.Table().Alias...)
+		}
 	}
+
 	return b
 }
 
-func (q *Query) appendTables(b []byte) []byte {
-	if q.hasModel() {
-		b = q.appendTableNameWithAlias(b)
-		if len(q.tables) > 0 {
-			b = append(b, ", "...)
-		}
-	}
-	for i, f := range q.tables {
-		if i > 0 {
-			b = append(b, ", "...)
-		}
-		b = f.AppendFormat(b, q)
-	}
-	return b
-}
-
-func (q *Query) hasOtherTables() bool {
-	if q.hasModel() {
+func (q *Query) hasMultiTables() bool {
+	if q.modelHasTableName() {
 		return len(q.tables) > 0
 	}
 	return len(q.tables) > 1
@@ -1052,7 +1129,7 @@ func (q *Query) hasOtherTables() bool {
 
 func (q *Query) appendOtherTables(b []byte) []byte {
 	tables := q.tables
-	if !q.hasModel() {
+	if !q.modelHasTableName() {
 		tables = tables[1:]
 	}
 	for i, f := range tables {
@@ -1074,8 +1151,12 @@ func (q *Query) appendColumns(b []byte) []byte {
 	return b
 }
 
+func (q *Query) hasWhere() bool {
+	return len(q.where) > 0 || q.softDelete()
+}
+
 func (q *Query) mustAppendWhere(b []byte) ([]byte, error) {
-	if len(q.where) > 0 {
+	if q.hasWhere() {
 		b = q.appendWhere(b)
 		return b, nil
 	}
@@ -1089,7 +1170,24 @@ func (q *Query) mustAppendWhere(b []byte) ([]byte, error) {
 }
 
 func (q *Query) appendWhere(b []byte) []byte {
-	return q._appendWhere(b, q.where)
+	b = q._appendWhere(b, q.where)
+	if q.softDelete() {
+		if len(q.where) > 0 {
+			b = append(b, " AND "...)
+		}
+		b = append(b, q.model.Table().Alias...)
+		b = q.appendSoftDelete(b)
+	}
+	return b
+}
+
+func (q *Query) appendSoftDelete(b []byte) []byte {
+	if q.deleted {
+		b = append(b, ".deleted_at IS NOT NULL"...)
+	} else {
+		b = append(b, ".deleted_at IS NULL"...)
+	}
+	return b
 }
 
 func (q *Query) appendUpdWhere(b []byte) []byte {

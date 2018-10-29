@@ -1,10 +1,6 @@
 package pool
 
 import (
-	"bufio"
-	"encoding/hex"
-	"fmt"
-	"io"
 	"net"
 	"strconv"
 	"sync/atomic"
@@ -16,13 +12,13 @@ var noDeadline = time.Time{}
 type Conn struct {
 	netConn net.Conn
 
-	Reader  *bufio.Reader
-	readBuf []byte
-	Columns [][]byte
-
-	Writer *WriteBuffer
+	buf      []byte
+	rd       *Reader
+	rdLocked bool
+	wb       *WriteBuffer
 
 	InitedAt time.Time
+	pooled   bool
 	usedAt   atomic.Value
 
 	ProcessId int32
@@ -33,10 +29,9 @@ type Conn struct {
 
 func NewConn(netConn net.Conn) *Conn {
 	cn := &Conn{
-		Reader:  bufio.NewReader(netConn),
-		readBuf: make([]byte, 0, 512),
-
-		Writer: NewWriteBuffer(),
+		buf: makeBuffer(),
+		rd:  NewReader(NewElasticBufReader(netConn)),
+		wb:  NewWriteBuffer(),
 	}
 	cn.SetNetConn(netConn)
 	cn.SetUsedAt(time.Now())
@@ -57,7 +52,7 @@ func (cn *Conn) RemoteAddr() net.Addr {
 
 func (cn *Conn) SetNetConn(netConn net.Conn) {
 	cn.netConn = netConn
-	cn.Reader.Reset(netConn)
+	cn.rd.Reset(netConn)
 }
 
 func (cn *Conn) NetConn() net.Conn {
@@ -69,47 +64,66 @@ func (cn *Conn) NextId() string {
 	return strconv.FormatInt(cn._lastId, 10)
 }
 
-func (cn *Conn) SetTimeout(rt, wt time.Duration) {
+func (cn *Conn) setReadTimeout(timeout time.Duration) error {
 	now := time.Now()
 	cn.SetUsedAt(now)
-	if rt > 0 {
-		_ = cn.netConn.SetReadDeadline(now.Add(rt))
-	} else {
-		_ = cn.netConn.SetReadDeadline(noDeadline)
+	if timeout > 0 {
+		return cn.netConn.SetReadDeadline(now.Add(timeout))
 	}
-	if wt > 0 {
-		_ = cn.netConn.SetWriteDeadline(now.Add(wt))
-	} else {
-		_ = cn.netConn.SetWriteDeadline(noDeadline)
-	}
+	return cn.netConn.SetReadDeadline(noDeadline)
 }
 
-func (cn *Conn) ReadN(n int) ([]byte, error) {
-	if d := n - cap(cn.readBuf); d > 0 {
-		cn.readBuf = cn.readBuf[:cap(cn.readBuf)]
-		cn.readBuf = append(cn.readBuf, make([]byte, d)...)
-	} else {
-		cn.readBuf = cn.readBuf[:n]
+func (cn *Conn) setWriteTimeout(timeout time.Duration) error {
+	now := time.Now()
+	cn.SetUsedAt(now)
+	if timeout > 0 {
+		return cn.netConn.SetWriteDeadline(now.Add(timeout))
 	}
-	_, err := io.ReadFull(cn.Reader, cn.readBuf)
-	return cn.readBuf, err
+	return cn.netConn.SetWriteDeadline(noDeadline)
 }
 
-func (cn *Conn) FlushWriter() error {
-	_, err := cn.netConn.Write(cn.Writer.Bytes)
-	cn.Writer.Reset()
+func (cn *Conn) LockReaderBuffer() {
+	cn.rdLocked = true
+	cn.rd.ResetBuffer(makeBuffer())
+}
+
+func (cn *Conn) WithReader(timeout time.Duration, fn func(rd *Reader) error) error {
+	_ = cn.setReadTimeout(timeout)
+
+	if !cn.rdLocked {
+		cn.rd.ResetBuffer(cn.buf)
+	}
+
+	err := fn(cn.rd)
+
+	if !cn.rdLocked {
+		cn.buf = cn.rd.Buffer()
+	}
+
 	return err
+}
+
+func (cn *Conn) WithWriter(timeout time.Duration, fn func(wb *WriteBuffer) error) error {
+	_ = cn.setWriteTimeout(timeout)
+
+	cn.wb.ResetBuffer(cn.buf)
+
+	firstErr := fn(cn.wb)
+
+	_, err := cn.netConn.Write(cn.wb.Bytes)
+	cn.buf = cn.wb.Buffer()
+	if err != nil && firstErr == nil {
+		firstErr = err
+	}
+
+	return firstErr
 }
 
 func (cn *Conn) Close() error {
 	return cn.netConn.Close()
 }
 
-func (cn *Conn) CheckHealth() error {
-	if cn.Reader.Buffered() != 0 {
-		b, _ := cn.Reader.Peek(cn.Reader.Buffered())
-		err := fmt.Errorf("connection has unread data:\n%s", hex.Dump(b))
-		return err
-	}
-	return nil
+func makeBuffer() []byte {
+	const defaulBufSize = 4096
+	return make([]byte, defaulBufSize)
 }

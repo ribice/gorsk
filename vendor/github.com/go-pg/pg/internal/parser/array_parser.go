@@ -32,16 +32,30 @@ func (p *ArrayParser) NextElem() ([]byte, error) {
 
 	switch c := p.Peek(); c {
 	case '"':
-		p.Advance()
-		b := p.readSubstring()
-		p.Skip(',')
+		b, err := p.ReadSubstring()
+		if err != nil {
+			return nil, err
+		}
+
+		if p.Valid() {
+			if err := p.MustSkip(','); err != nil {
+				return nil, err
+			}
+		}
+
 		return b, nil
 	case '{':
-		b := p.readElem()
+		b := p.readSubArray()
 		if b != nil {
 			b = append(b, '}')
 		}
-		p.Skip(',')
+
+		if p.Valid() {
+			if err := p.MustSkip(','); err != nil {
+				return nil, err
+			}
+		}
+
 		return b, nil
 	default:
 		b, _ := p.ReadSep(',')
@@ -52,7 +66,7 @@ func (p *ArrayParser) NextElem() ([]byte, error) {
 	}
 }
 
-func (p *ArrayParser) readElem() []byte {
+func (p *ArrayParser) readSubArray() []byte {
 	var b []byte
 	for p.Valid() {
 		c := p.Read()

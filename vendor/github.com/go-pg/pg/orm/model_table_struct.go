@@ -1,9 +1,11 @@
 package orm
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 )
 
 type structTableModel struct {
@@ -14,8 +16,9 @@ type structTableModel struct {
 	root  reflect.Value
 	index []int
 
-	strct        reflect.Value
-	structInited bool
+	strct         reflect.Value
+	structInited  bool
+	structInitErr error
 }
 
 var _ tableModel = (*structTableModel)(nil)
@@ -95,15 +98,20 @@ func (m *structTableModel) Mount(host reflect.Value) {
 	m.structInited = false
 }
 
-func (m *structTableModel) initStruct() {
+func (m *structTableModel) initStruct() error {
 	if m.structInited {
-		return
+		return m.structInitErr
 	}
 	m.structInited = true
 
-	if m.strct.Kind() == reflect.Interface {
+	switch m.strct.Kind() {
+	case reflect.Invalid:
+		m.structInitErr = errors.New("pg: Model(nil)")
+		return m.structInitErr
+	case reflect.Interface:
 		m.strct = m.strct.Elem()
 	}
+
 	if m.strct.Kind() == reflect.Ptr {
 		if m.strct.IsNil() {
 			m.strct.Set(reflect.New(m.strct.Type().Elem()))
@@ -114,6 +122,8 @@ func (m *structTableModel) initStruct() {
 	}
 
 	m.mountJoins()
+
+	return nil
 }
 
 func (m *structTableModel) mountJoins() {
@@ -131,7 +141,6 @@ func (structTableModel) Init() error {
 }
 
 func (m *structTableModel) NewModel() ColumnScanner {
-	m.initStruct()
 	return m
 }
 
@@ -144,6 +153,13 @@ func (m *structTableModel) AfterQuery(db DB) error {
 		return nil
 	}
 	return callAfterQueryHook(m.strct.Addr(), db)
+}
+
+func (m *structTableModel) BeforeSelectQuery(db DB, q *Query) (*Query, error) {
+	if !m.table.HasFlag(BeforeSelectQueryHookFlag) {
+		return q, nil
+	}
+	return callBeforeSelectQueryHook(m.table.zeroStruct.Addr(), db, q)
 }
 
 func (m *structTableModel) AfterSelect(db DB) error {
@@ -217,7 +233,11 @@ func (m *structTableModel) scanColumn(
 		m.strct.IsNil() {
 		return true, nil
 	}
-	m.initStruct()
+
+	err := m.initStruct()
+	if err != nil {
+		return true, err
+	}
 
 	joinName, fieldName := splitColumn(colName)
 	if joinName != "" {
@@ -256,13 +276,13 @@ func (m *structTableModel) AddJoin(j join) *join {
 	return &m.joins[len(m.joins)-1]
 }
 
-func (m *structTableModel) Join(name string, apply func(*Query) (*Query, error)) (bool, *join) {
+func (m *structTableModel) Join(name string, apply func(*Query) (*Query, error)) *join {
 	return m.join(m.Value(), name, apply)
 }
 
 func (m *structTableModel) join(
 	bind reflect.Value, name string, apply func(*Query) (*Query, error),
-) (bool, *join) {
+) *join {
 	path := strings.Split(name, ".")
 	index := make([]int, 0, len(path))
 
@@ -270,7 +290,6 @@ func (m *structTableModel) join(
 		BaseModel: m,
 		JoinModel: m,
 	}
-	var created bool
 	var lastJoin *join
 	var hasColumnName bool
 
@@ -287,26 +306,24 @@ func (m *structTableModel) join(
 			currJoin.BaseModel = j.BaseModel
 			currJoin.JoinModel = j.JoinModel
 
-			created = false
 			lastJoin = j
 		} else {
 			model, err := newTableModelIndex(bind, index, rel)
 			if err != nil {
-				return false, nil
+				return nil
 			}
 
 			currJoin.Parent = lastJoin
 			currJoin.BaseModel = currJoin.JoinModel
 			currJoin.JoinModel = model
 
-			created = true
 			lastJoin = currJoin.BaseModel.AddJoin(currJoin)
 		}
 	}
 
 	// No joins with such name.
 	if lastJoin == nil {
-		return false, nil
+		return nil
 	}
 	if apply != nil {
 		lastJoin.ApplyQuery = apply
@@ -323,7 +340,18 @@ func (m *structTableModel) join(
 		}
 	}
 
-	return created, lastJoin
+	return lastJoin
+}
+
+func (m *structTableModel) setDeletedAt() {
+	field := m.table.FieldsMap["deleted_at"]
+	value := field.Value(m.strct)
+	if value.Kind() == reflect.Ptr {
+		now := time.Now()
+		value.Set(reflect.ValueOf(&now))
+	} else {
+		value.Set(reflect.ValueOf(time.Now()))
+	}
 }
 
 func splitColumn(s string) (string, string) {

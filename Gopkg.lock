@@ -19,30 +19,6 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b29ac3fe6b4601f89b589337c584ab7204a5c72932465e5f4a16772b5560b4a7"
-  name = "github.com/facebookgo/clock"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "600d898af40aa09a7a93ecb9265d87b0504b6f03"
-
-[[projects]]
-  branch = "master"
-  digest = "1:17cb421603403a24edb0c7eeb382295dd31c72ab9ccf31cf7f0a37971f00aaa7"
-  name = "github.com/facebookgo/httpdown"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "5979d39b15c26299dc282711b0d65b113daccea6"
-
-[[projects]]
-  branch = "master"
-  digest = "1:35a271df55b343e440407daac25d877269e3bb2f60d2031bcc339bcbe6c0f9b9"
-  name = "github.com/facebookgo/stats"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "1b76add642e42c6ffba7211ad7b3939ce654526e"
-
-[[projects]]
-  branch = "master"
   digest = "1:b792ca62f4973ab6938f9e63a6f45569efc1cb26ad7b6cf1786a89c535132b6a"
   name = "github.com/fortytw2/dockertest"
   packages = ["."]
@@ -50,28 +26,7 @@
   revision = "a73397bdeff4b713648d4b2e7fc655eb9a85fb6b"
 
 [[projects]]
-  branch = "master"
-  digest = "1:23edf5aaca7a1f15d68215ac41595c0732152757e9d7b3f282821222784049f1"
-  name = "github.com/gin-contrib/sse"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "22d885f9ecc78bf4ee5d72b937e4bbcdc58e8cae"
-
-[[projects]]
-  digest = "1:7f029513a3c64c1fc923af79bf27d4fd0ce4fafdd13b421c1884d52c84e9c600"
-  name = "github.com/gin-gonic/gin"
-  packages = [
-    ".",
-    "binding",
-    "json",
-    "render",
-  ]
-  pruneopts = "NUT"
-  revision = "b869fe1415e4b9eb52f247441830d502aece2d4d"
-  version = "v1.3.0"
-
-[[projects]]
-  digest = "1:8852fcfc55e0418d742862a1848e76b34f209b762134ba2fe821551bdb0b375f"
+  digest = "1:7e5aca655482da034b9128b1cbc110082725d7d6fde5436df234cc70780889cc"
   name = "github.com/go-pg/pg"
   packages = [
     ".",
@@ -82,8 +37,8 @@
     "types",
   ]
   pruneopts = "NUT"
-  revision = "514bed76d8f579d6ff8d40294fa77e476a5c1b3f"
-  version = "v6.15.0"
+  revision = "ae5d5e7df4b2e598390e10b66b849c6af94f092b"
+  version = "v6.15.1"
 
 [[projects]]
   digest = "1:1c109e91a99627f9c80e8794d80773c8532dfcf234b45cdb6a6388b30a5bb5e7"
@@ -105,20 +60,12 @@
   version = "v0.16.0"
 
 [[projects]]
-  digest = "1:813792cd18ed752eea76bd63abc0b5ebd3329fb9d645eacc9b37da9027b7c673"
+  digest = "1:4d6110f3aa6f40b56e3d03b90030db9628247fb1c9c19495d9fe46a62a119562"
   name = "github.com/go-playground/validator"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "e69e9a28bb62b977fdc58d051f1bb477b7cbe486"
-  version = "v9.21.0"
-
-[[projects]]
-  digest = "1:97df918963298c287643883209a2c3f642e6593379f97ab400c2a2e219ab647d"
-  name = "github.com/golang/protobuf"
-  packages = ["proto"]
-  pruneopts = "NUT"
-  revision = "aa810b61a9c79d51363740d207bb46cf8e620ed5"
-  version = "v1.2.0"
+  revision = "f8af4b15dbe132b53d3a53e7c3724271040e82e7"
+  version = "v9.21.1"
 
 [[projects]]
   branch = "master"
@@ -127,14 +74,6 @@
   packages = ["."]
   pruneopts = "NUT"
   revision = "04140366298a54a039076d798123ffa108fff46c"
-
-[[projects]]
-  digest = "1:8e36686e8b139f8fe240c1d5cf3a145bc675c22ff8e707857cdd3ae17b00d728"
-  name = "github.com/json-iterator/go"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "1624edc4454b8682399def8740d46db5e4362ba4"
-  version = "v1.1.5"
 
 [[projects]]
   digest = "1:0f7251e66e237eff3aa62a70890f67a3364b4a77c3a496f18773d6cd4b50938c"
@@ -188,20 +127,22 @@
   version = "v0.0.4"
 
 [[projects]]
-  digest = "1:2f42fa12d6911c7b7659738758631bec870b7e9b4c6be5444f963cdcfccc191f"
-  name = "github.com/modern-go/concurrent"
-  packages = ["."]
+  digest = "1:bdfb0c1330370fa59d2cb3961dc926492888ef6c16e00c557ab66233e0f58844"
+  name = "github.com/nbutton23/zxcvbn-go"
+  packages = [
+    ".",
+    "adjacency",
+    "data",
+    "entropy",
+    "frequency",
+    "match",
+    "matching",
+    "scoring",
+    "utils/math",
+  ]
   pruneopts = "NUT"
-  revision = "bacd9c7ef1dd9b15be4a9909b8ac7a4e313eec94"
-  version = "1.0.3"
-
-[[projects]]
-  digest = "1:c6aca19413b13dc59c220ad7430329e2ec454cc310bc6d8de2c7e2b93c18a0f6"
-  name = "github.com/modern-go/reflect2"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "4b7aa43c6742a2c18fdef89dd197aaae7dac7ccd"
-  version = "1.0.1"
+  revision = "eafdab6b0663b4b528c35975c8b0e78be6e25261"
+  version = "v0.1"
 
 [[projects]]
   digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
@@ -212,40 +153,12 @@
   version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:d156977c0bff74721acfec69f4bdfe57ae3837bac2626feb8861a181e00f78e4"
-  name = "github.com/ribice/gorsk-gin"
-  packages = [
-    "cmd/api/request",
-    "internal",
-    "internal/errors",
-  ]
-  pruneopts = "NUT"
-  revision = "66321457570def0b7cbacd26b4edcc05bd7543cd"
-
-[[projects]]
-  digest = "1:0975c74a2cd70df6c2ae353c6283a25ce759dda7e1e706e5c07458baf3faca22"
-  name = "github.com/rs/xid"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "15d26544def341f036c5f8dca987a4cbe575032c"
-  version = "v1.2.1"
-
-[[projects]]
   digest = "1:bacb8b590716ab7c33f2277240972c9582d389593ee8d66fc10074e0508b8126"
   name = "github.com/stretchr/testify"
   packages = ["assert"]
   pruneopts = "NUT"
   revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
   version = "v1.2.2"
-
-[[projects]]
-  digest = "1:919fc2a81add8ac4a7a236dceaf3e4c29ba4df96d13c3f2ce13a4d0132ebefb8"
-  name = "github.com/ugorji/go"
-  packages = ["codec"]
-  pruneopts = "NUT"
-  revision = "b4c50a2b199d93b13dc15e78929cfb23bfdf21ab"
-  version = "v1.1.1"
 
 [[projects]]
   digest = "1:af354641f23332b1a8d5d361d11b5a9171589e412a67d499633706c611acc064"
@@ -265,15 +178,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c10b0f80f5d0972bbceb2bd727eff2ba86070bbdd0ed2e1c547e720fcb9bda27"
-  name = "github.com/vmihailenco/sasl"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "2f13c189728a02f8cc31b3b9cc06047b383c21cc"
-
-[[projects]]
-  branch = "master"
-  digest = "1:4540f9690098dde6d0cb647b1b76ecbbecc78b3ddb138370ee3a2c7a3a49e4ec"
+  digest = "1:6374bcd21e1c7e962a8d2b99fdf8e0184b5be7601f29041fa5e07e1a245ea457"
   name = "golang.org/x/crypto"
   packages = [
     "acme",
@@ -283,23 +188,15 @@
     "pbkdf2",
   ]
   pruneopts = "NUT"
-  revision = "0c41d7ab0a0ee717d4590a44bcb987dfd9e183eb"
+  revision = "dab2b1051b5dd33a57e97c4774ed152e6a6c9a13"
 
 [[projects]]
   branch = "master"
-  digest = "1:e1e75018db0765a0ac54aa7f9473417a7db770c75c9527b4bfff03d2e55f0a0a"
+  digest = "1:3393dbc238e6b9c79779c9228b967039d260fd7fc91974b2f58ae25aee3bb4f5"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "NUT"
-  revision = "fa43e7bc11baaae89f3f902b2b4d832b68234844"
-
-[[projects]]
-  digest = "1:0215407129c5f116ae8f6d3af64df59c39d3f606a72ef77a1e6ed874f92a8d9c"
-  name = "gopkg.in/go-playground/validator.v8"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "5f1438d3fca68893a817e4a66806cea46a9e4ebf"
-  version = "v8.18.2"
+  revision = "95b1ffbd15a57cc5abb3f04402b9e8ec0016a52c"
 
 [[projects]]
   digest = "1:7c95b35057a0ff2e19f707173cc1a947fa43a6eb5c4d300d196ece0334046082"
@@ -308,6 +205,14 @@
   pruneopts = "NUT"
   revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
   version = "v2.2.1"
+
+[[projects]]
+  digest = "1:7a568962d9a096530b96beae746a1bb0a77498dc4e14fedf9cc8946089635fe9"
+  name = "mellium.im/sasl"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "e58e780e1378aa4df5dc705364ff5ae9a4dd1e04"
+  version = "v0.2.1"
 
 [solve-meta]
   analyzer-name = "dep"
@@ -321,8 +226,7 @@
     "github.com/labstack/echo",
     "github.com/labstack/echo/middleware",
     "github.com/lib/pq",
-    "github.com/ribice/gorsk-gin/cmd/api/request",
-    "github.com/rs/xid",
+    "github.com/nbutton23/zxcvbn-go",
     "github.com/stretchr/testify/assert",
     "golang.org/x/crypto/bcrypt",
     "gopkg.in/yaml.v2",

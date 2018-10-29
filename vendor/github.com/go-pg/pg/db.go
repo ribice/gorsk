@@ -122,8 +122,6 @@ func (db *DB) conn() (*pool.Conn, error) {
 		return nil, err
 	}
 
-	cn.SetTimeout(db.opt.ReadTimeout, db.opt.WriteTimeout)
-
 	if cn.InitedAt.IsZero() {
 		cn.InitedAt = time.Now()
 		err = db.initConn(cn)
@@ -138,12 +136,13 @@ func (db *DB) conn() (*pool.Conn, error) {
 
 func (db *DB) initConn(cn *pool.Conn) error {
 	if db.opt.TLSConfig != nil {
-		if err := enableSSL(cn, db.opt.TLSConfig); err != nil {
+		err := db.enableSSL(cn, db.opt.TLSConfig)
+		if err != nil {
 			return err
 		}
 	}
 
-	err := startup(cn, db.opt.User, db.opt.Password, db.opt.Database)
+	err := db.startup(cn, db.opt.User, db.opt.Password, db.opt.Database, db.opt.ApplicationName)
 	if err != nil {
 		return err
 	}
@@ -175,6 +174,8 @@ func (db *DB) shouldRetry(err error) bool {
 	if pgerr, ok := err.(Error); ok {
 		switch pgerr.Field('C') {
 		case "40001": // serialization_failure
+			return true
+		case "53300": // too_many_connections
 			return true
 		case "55000": // attempted to delete invisible tuple
 			return true
@@ -294,6 +295,7 @@ func (db *DB) Listen(channels ...string) *Listener {
 	ln := &Listener{
 		db: db,
 	}
+	ln.init()
 	_ = ln.Listen(channels...)
 	return ln
 }
@@ -311,37 +313,50 @@ func (db *DB) CopyFrom(r io.Reader, query interface{}, params ...interface{}) (o
 }
 
 func (db *DB) copyFrom(cn *pool.Conn, r io.Reader, query interface{}, params ...interface{}) (orm.Result, error) {
-	if err := writeQueryMsg(cn.Writer, db, query, params...); err != nil {
+	err := cn.WithWriter(db.opt.WriteTimeout, func(wb *pool.WriteBuffer) error {
+		return writeQueryMsg(wb, db, query, params...)
+	})
+	if err != nil {
 		return nil, err
 	}
 
-	if err := cn.FlushWriter(); err != nil {
-		return nil, err
-	}
-
-	if err := readCopyInResponse(cn); err != nil {
+	err = cn.WithReader(db.opt.ReadTimeout, func(rd *pool.Reader) error {
+		return readCopyInResponse(rd)
+	})
+	if err != nil {
 		return nil, err
 	}
 
 	for {
-		if err := writeCopyData(cn.Writer, r); err != nil {
+		err = cn.WithWriter(db.opt.WriteTimeout, func(wb *pool.WriteBuffer) error {
+			return writeCopyData(wb, r)
+		})
+		if err != nil {
 			if err == io.EOF {
 				break
 			}
 			return nil, err
 		}
-
-		if err := cn.FlushWriter(); err != nil {
-			return nil, err
-		}
 	}
 
-	writeCopyDone(cn.Writer)
-	if err := cn.FlushWriter(); err != nil {
+	err = cn.WithWriter(db.opt.WriteTimeout, func(wb *pool.WriteBuffer) error {
+		writeCopyDone(wb)
+		return nil
+	})
+	if err != nil {
 		return nil, err
 	}
 
-	return readReadyForQuery(cn)
+	var res orm.Result
+	err = cn.WithReader(db.opt.ReadTimeout, func(rd *pool.Reader) error {
+		res, err = readReadyForQuery(rd)
+		return err
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
 
 // CopyTo copies data from a table to writer.
@@ -362,19 +377,28 @@ func (db *DB) CopyTo(w io.Writer, query interface{}, params ...interface{}) (orm
 }
 
 func (db *DB) copyTo(cn *pool.Conn, w io.Writer, query interface{}, params ...interface{}) (orm.Result, error) {
-	if err := writeQueryMsg(cn.Writer, db, query, params...); err != nil {
+	err := cn.WithWriter(db.opt.WriteTimeout, func(wb *pool.WriteBuffer) error {
+		return writeQueryMsg(wb, db, query, params...)
+	})
+	if err != nil {
 		return nil, err
 	}
 
-	if err := cn.FlushWriter(); err != nil {
+	var res orm.Result
+	err = cn.WithReader(db.opt.ReadTimeout, func(rd *pool.Reader) error {
+		err := readCopyOutResponse(rd)
+		if err != nil {
+			return err
+		}
+
+		res, err = readCopyData(rd, w)
+		return err
+	})
+	if err != nil {
 		return nil, err
 	}
 
-	if err := readCopyOutResponse(cn); err != nil {
-		return nil, err
-	}
-
-	return readCopyData(cn, w)
+	return res, nil
 }
 
 // Model returns new query for the model.
@@ -402,19 +426,30 @@ func (db *DB) Delete(model interface{}) error {
 	return orm.Delete(db, model)
 }
 
+// Delete forces delete of the model with deleted_at column.
+func (db *DB) ForceDelete(model interface{}) error {
+	return orm.ForceDelete(db, model)
+}
+
 // CreateTable creates table for the model. It recognizes following field tags:
 //   - notnull - sets NOT NULL constraint.
 //   - unique - sets UNIQUE constraint.
 //   - default:value - sets default value.
 func (db *DB) CreateTable(model interface{}, opt *orm.CreateTableOptions) error {
-	_, err := orm.CreateTable(db, model, opt)
-	return err
+	return orm.CreateTable(db, model, opt)
 }
 
 // DropTable drops table for the model.
 func (db *DB) DropTable(model interface{}, opt *orm.DropTableOptions) error {
-	_, err := orm.DropTable(db, model, opt)
-	return err
+	return orm.DropTable(db, model, opt)
+}
+
+func (db *DB) CreateComposite(model interface{}, opt *orm.CreateCompositeOptions) error {
+	return orm.CreateComposite(db, model, opt)
+}
+
+func (db *DB) DropComposite(model interface{}, opt *orm.DropCompositeOptions) error {
+	return orm.DropComposite(db, model, opt)
 }
 
 func (db *DB) FormatQuery(dst []byte, query string, params ...interface{}) []byte {
@@ -427,27 +462,33 @@ func (db *DB) cancelRequest(processId, secretKey int32) error {
 		return err
 	}
 
-	writeCancelRequestMsg(cn.Writer, processId, secretKey)
-	if err = cn.FlushWriter(); err != nil {
+	err = cn.WithWriter(db.opt.WriteTimeout, func(wb *pool.WriteBuffer) error {
+		writeCancelRequestMsg(wb, processId, secretKey)
+		return nil
+	})
+	if err != nil {
 		return err
 	}
-	cn.Close()
 
+	cn.Close()
 	return nil
 }
 
 func (db *DB) simpleQuery(
 	cn *pool.Conn, query interface{}, params ...interface{},
 ) (orm.Result, error) {
-	if err := writeQueryMsg(cn.Writer, db, query, params...); err != nil {
+	err := cn.WithWriter(db.opt.WriteTimeout, func(wb *pool.WriteBuffer) error {
+		return writeQueryMsg(wb, db, query, params...)
+	})
+	if err != nil {
 		return nil, err
 	}
 
-	if err := cn.FlushWriter(); err != nil {
-		return nil, err
-	}
-
-	res, err := readSimpleQuery(cn)
+	var res orm.Result
+	err = cn.WithReader(db.opt.ReadTimeout, func(rd *pool.Reader) error {
+		res, err = readSimpleQuery(rd)
+		return err
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -458,15 +499,18 @@ func (db *DB) simpleQuery(
 func (db *DB) simpleQueryData(
 	cn *pool.Conn, model, query interface{}, params ...interface{},
 ) (orm.Result, error) {
-	if err := writeQueryMsg(cn.Writer, db, query, params...); err != nil {
+	err := cn.WithWriter(db.opt.WriteTimeout, func(wb *pool.WriteBuffer) error {
+		return writeQueryMsg(wb, db, query, params...)
+	})
+	if err != nil {
 		return nil, err
 	}
 
-	if err := cn.FlushWriter(); err != nil {
-		return nil, err
-	}
-
-	res, err := readSimpleQueryData(cn, model)
+	var res orm.Result
+	err = cn.WithReader(db.opt.ReadTimeout, func(rd *pool.Reader) error {
+		res, err = readSimpleQueryData(rd, model)
+		return err
+	})
 	if err != nil {
 		return nil, err
 	}
