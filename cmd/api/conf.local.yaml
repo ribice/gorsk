@@ -1,0 +1,21 @@
+database:
+  log_queries: true
+  timeout_seconds: 5
+  psn: postgres://biadpozi:3_Czbl7jSjkUEWk--VP8QXMke-mFnczq@horton.elephantsql.com:5432/biadpozi
+
+server:
+  port: :8080
+  debug: true
+  read_timeout_seconds: 10
+  write_timeout_seconds: 5
+
+jwt:
+  secret: jwtrealm # Change this value
+  duration_minutes: 15
+  refresh_duration_minutes: 15
+  max_refresh_minutes: 1440
+  signing_algorithm: HS256
+
+application:
+  min_password_strength: 1
+  swagger_ui_path: assets/swaggerui

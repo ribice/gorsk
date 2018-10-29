@@ -2,26 +2,25 @@ package main
 
 import (
 	"fmt"
-	"github.com/ribice/gorsk/internal/auth"
 	"log"
 	"strings"
 
-	"github.com/go-pg/pg/orm"
-
-	"github.com/ribice/gorsk/internal"
+	"github.com/ribice/gorsk/pkg/utl/model"
+	"github.com/ribice/gorsk/pkg/utl/secure"
 
 	"github.com/go-pg/pg"
+	"github.com/go-pg/pg/orm"
 )
 
 func main() {
 	dbInsert := `INSERT INTO public.companies VALUES (1, now(), now(), NULL, 'admin_company', true);
 	INSERT INTO public.locations VALUES (1, now(), now(), NULL, 'admin_location', true, 'admin_address', 1);
-	INSERT INTO public.roles VALUES (1, 1, 'SUPER_ADMIN');
-	INSERT INTO public.roles VALUES (2, 2, 'ADMIN');
-	INSERT INTO public.roles VALUES (3, 3, 'COMPANY_ADMIN');
-	INSERT INTO public.roles VALUES (4, 4, 'LOCATION_ADMIN');
-	INSERT INTO public.roles VALUES (5, 5, 'USER');`
-	var psn = ``
+	INSERT INTO public.roles VALUES (100, 100, 'SUPER_ADMIN');
+	INSERT INTO public.roles VALUES (110, 110, 'ADMIN');
+	INSERT INTO public.roles VALUES (120, 120, 'COMPANY_ADMIN');
+	INSERT INTO public.roles VALUES (130, 130, 'LOCATION_ADMIN');
+	INSERT INTO public.roles VALUES (200, 200, 'USER');`
+	var psn = `postgres://biadpozi:3_Czbl7jSjkUEWk--VP8QXMke-mFnczq@horton.elephantsql.com:5432/biadpozi`
 	queries := strings.Split(dbInsert, ";")
 
 	u, err := pg.ParseURL(psn)
@@ -29,14 +28,17 @@ func main() {
 	db := pg.Connect(u)
 	_, err = db.Exec("SELECT 1")
 	checkErr(err)
-	createSchema(db, &model.Company{}, &model.Location{}, &model.Role{}, &model.User{})
+	createSchema(db, &gorsk.Company{}, &gorsk.Location{}, &gorsk.Role{}, &gorsk.User{})
 
 	for _, v := range queries[0 : len(queries)-1] {
 		_, err := db.Exec(v)
 		checkErr(err)
 	}
-	userInsert := `INSERT INTO public.users VALUES (1, now(),now(), NULL, 'Admin', 'Admin', 'admin', '%s', 'johndoe@mail.com', NULL, NULL, NULL, NULL, true, NULL, 1, 1, 1);`
-	_, err = db.Exec(fmt.Sprintf(userInsert, auth.HashPassword("admin")))
+
+	sec := secure.New(1, nil)
+
+	userInsert := `INSERT INTO public.users (id, created_at, updated_at, first_name, last_name, username, password, email, active, role_id, company_id, location_id) VALUES (1, now(),now(),'Admin', 'Admin', 'admin', '%s', 'johndoe@mail.com', true, 100, 1, 1);`
+	_, err = db.Exec(fmt.Sprintf(userInsert, sec.Hash("admin")))
 	checkErr(err)
 }
 
