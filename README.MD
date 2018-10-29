@@ -48,7 +48,6 @@ The following dependencies are used in this project (generated using [Glice](htt
 |-------------------------------------|--------------------------------------------|--------------|
 ```
 
-# DODATI ZXCVBN
 
 1. Echo - HTTP 'framework'.
 2. Go-Pg - PostgreSQL ORM
