@@ -12,6 +12,14 @@ func Delete(db DB, model interface{}) error {
 	return internal.AssertOneRow(res.RowsAffected())
 }
 
+func ForceDelete(db DB, model interface{}) error {
+	res, err := NewQuery(db, model).WherePK().ForceDelete()
+	if err != nil {
+		return err
+	}
+	return internal.AssertOneRow(res.RowsAffected())
+}
+
 type deleteQuery struct {
 	q *Query
 }
@@ -45,7 +53,7 @@ func (q deleteQuery) AppendQuery(b []byte) ([]byte, error) {
 	b = append(b, "DELETE FROM "...)
 	b = q.q.appendFirstTableWithAlias(b)
 
-	if q.q.hasOtherTables() {
+	if q.q.hasMultiTables() {
 		b = append(b, " USING "...)
 		b = q.q.appendOtherTables(b)
 	}
@@ -56,7 +64,7 @@ func (q deleteQuery) AppendQuery(b []byte) ([]byte, error) {
 		table := q.q.model.Table()
 		b = appendColumnAndSliceValue(b, value, table.Alias, table.PKs)
 
-		if len(q.q.where) > 0 {
+		if q.q.hasWhere() {
 			b = append(b, " AND "...)
 			b = q.q.appendWhere(b)
 		}

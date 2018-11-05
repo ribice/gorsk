@@ -1,0 +1,21 @@
+database:
+  log_queries: true
+  timeout_seconds: 20
+  psn: postgres://postgres:postgres@postgres
+
+server:
+  port: :8080
+  debug: true
+  read_timeout_seconds: 15
+  write_timeout_seconds: 20
+
+jwt:
+  secret: testing # Change this value
+  duration_minutes: 10
+  refresh_duration_minutes: 10
+  max_refresh_minutes: 144
+  signing_algorithm: HS384
+
+application:
+  min_password_strength: 3
+  swagger_ui_path: assets/swagger

@@ -2,6 +2,7 @@ package parser
 
 import (
 	"bytes"
+	"fmt"
 	"strconv"
 
 	"github.com/go-pg/pg/internal"
@@ -32,7 +33,7 @@ func (p *Parser) Valid() bool {
 func (p *Parser) Read() byte {
 	if p.Valid() {
 		c := p.b[0]
-		p.Skip(c)
+		p.Advance()
 		return c
 	}
 	return 0
@@ -55,6 +56,13 @@ func (p *Parser) Skip(c byte) bool {
 		return true
 	}
 	return false
+}
+
+func (p *Parser) MustSkip(c byte) error {
+	if p.Skip(c) {
+		return nil
+	}
+	return fmt.Errorf("expecting '%c', got %q", c, p.Bytes())
 }
 
 func (p *Parser) SkipBytes(b []byte) bool {
@@ -119,7 +127,11 @@ func (p *Parser) ReadNumber() int {
 	return n
 }
 
-func (p *Parser) readSubstring() []byte {
+func (p *Parser) ReadSubstring() ([]byte, error) {
+	if !p.Skip('"') {
+		return nil, fmt.Errorf("pg: substring: can't find opening quote: %q", p.Bytes())
+	}
+
 	var b []byte
 	for p.Valid() {
 		c := p.Read()
@@ -127,27 +139,27 @@ func (p *Parser) readSubstring() []byte {
 		case '\\':
 			switch p.Peek() {
 			case '\\':
+				p.Advance()
 				b = append(b, '\\')
-				p.Advance()
 			case '"':
-				b = append(b, '"')
 				p.Advance()
+				b = append(b, '"')
 			default:
 				b = append(b, c)
 			}
 		case '\'':
-			switch p.Peek() {
-			case '\'':
+			if p.Peek() == '\'' {
+				p.Advance()
 				b = append(b, '\'')
-				p.Skip(c)
-			default:
+			} else {
 				b = append(b, c)
 			}
 		case '"':
-			return b
+			return b, nil
 		default:
 			b = append(b, c)
 		}
 	}
-	return b
+
+	return nil, fmt.Errorf("pg: substring: can't find closing quote: %q", p.Bytes())
 }

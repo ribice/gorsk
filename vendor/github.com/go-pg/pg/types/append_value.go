@@ -7,6 +7,8 @@ import (
 	"reflect"
 	"strconv"
 	"time"
+
+	"github.com/go-pg/pg/internal"
 )
 
 var driverValuerType = reflect.TypeOf((*driver.Valuer)(nil)).Elem()
@@ -59,6 +61,8 @@ func appender(typ reflect.Type, pgArray bool) AppenderFunc {
 		return appendIPValue
 	case ipNetType:
 		return appendIPNetValue
+	case jsonRawMessageType:
+		return appendJSONRawMessageValue
 	}
 
 	if typ.Implements(appenderType) {
@@ -99,13 +103,9 @@ func ptrAppenderFunc(typ reflect.Type) AppenderFunc {
 }
 
 func appendValue(b []byte, v reflect.Value, quote int) []byte {
-	if v.Kind() == reflect.Ptr {
-		if v.IsNil() {
-			return AppendNull(b, quote)
-		}
-		return appendValue(b, v.Elem(), quote)
+	if v.Kind() == reflect.Ptr && v.IsNil() {
+		return AppendNull(b, quote)
 	}
-
 	appender := Appender(v.Type())
 	return appender(b, v, quote)
 }
@@ -126,8 +126,8 @@ func appendUintValue(b []byte, v reflect.Value, _ int) []byte {
 	return strconv.AppendUint(b, v.Uint(), 10)
 }
 
-func appendFloatValue(b []byte, v reflect.Value, _ int) []byte {
-	return appendFloat(b, v.Float())
+func appendFloatValue(b []byte, v reflect.Value, quote int) []byte {
+	return appendFloat(b, v.Float(), quote)
 }
 
 func appendBytesValue(b []byte, v reflect.Value, quote int) []byte {
@@ -170,6 +170,10 @@ func appendIPValue(b []byte, v reflect.Value, quote int) []byte {
 func appendIPNetValue(b []byte, v reflect.Value, quote int) []byte {
 	ipnet := v.Interface().(net.IPNet)
 	return AppendString(b, ipnet.String(), quote)
+}
+
+func appendJSONRawMessageValue(b []byte, v reflect.Value, quote int) []byte {
+	return AppendString(b, internal.BytesToString(v.Bytes()), quote)
 }
 
 func appendAppenderValue(b []byte, v reflect.Value, quote int) []byte {

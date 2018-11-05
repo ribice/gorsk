@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net"
 	"reflect"
-	"strconv"
 	"time"
 
 	"github.com/go-pg/pg/internal"
@@ -17,6 +16,7 @@ var scannerType = reflect.TypeOf((*sql.Scanner)(nil)).Elem()
 var timeType = reflect.TypeOf((*time.Time)(nil)).Elem()
 var ipType = reflect.TypeOf((*net.IP)(nil)).Elem()
 var ipNetType = reflect.TypeOf((*net.IPNet)(nil)).Elem()
+var jsonRawMessageType = reflect.TypeOf((*json.RawMessage)(nil)).Elem()
 
 type ScannerFunc func(reflect.Value, []byte) error
 
@@ -65,6 +65,8 @@ func scanner(typ reflect.Type, pgArray bool) ScannerFunc {
 		return scanIPValue
 	case ipNetType:
 		return scanIPNetValue
+	case jsonRawMessageType:
+		return scanJSONRawMessageValue
 	}
 
 	if typ.Implements(scannerType) {
@@ -158,7 +160,7 @@ func scanIntValue(v reflect.Value, b []byte) error {
 		v.SetInt(0)
 		return nil
 	}
-	n, err := strconv.ParseInt(internal.BytesToString(b), 10, 64)
+	n, err := internal.ParseInt(b, 10, 64)
 	if err != nil {
 		return err
 	}
@@ -174,7 +176,7 @@ func scanUintValue(v reflect.Value, b []byte) error {
 		v.SetUint(0)
 		return nil
 	}
-	n, err := strconv.ParseUint(internal.BytesToString(b), 10, 64)
+	n, err := internal.ParseUint(b, 10, 64)
 	if err != nil {
 		return err
 	}
@@ -190,7 +192,7 @@ func scanFloatValue(v reflect.Value, b []byte) error {
 		v.SetFloat(0)
 		return nil
 	}
-	n, err := strconv.ParseFloat(internal.BytesToString(b), 64)
+	n, err := internal.ParseFloat(b, 64)
 	if err != nil {
 		return err
 	}
@@ -265,6 +267,14 @@ func scanIPNetValue(v reflect.Value, b []byte) error {
 		return err
 	}
 	v.Set(reflect.ValueOf(*ipnet))
+	return nil
+}
+
+func scanJSONRawMessageValue(v reflect.Value, b []byte) error {
+	if !v.CanSet() {
+		return fmt.Errorf("pg: Scan(nonsettable %s)", v.Type())
+	}
+	v.Set(reflect.ValueOf(b))
 	return nil
 }
 

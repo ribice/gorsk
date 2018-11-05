@@ -33,11 +33,13 @@ func (f *URLFilter) Values() URLValues {
 	return f.values
 }
 
-func (f *URLFilter) Allow(filter string) {
+func (f *URLFilter) Allow(filters ...string) {
 	if f.allowed == nil {
 		f.allowed = make(map[string]struct{})
 	}
-	f.allowed[filter] = struct{}{}
+	for _, filter := range filters {
+		f.allowed[filter] = struct{}{}
+	}
 }
 
 func (f *URLFilter) isAllowed(filter string) bool {
@@ -54,6 +56,10 @@ func (f *URLFilter) Filters(q *Query) (*Query, error) {
 	}
 
 	for filter, values := range f.values {
+		if strings.HasSuffix(filter, "[]") {
+			filter = filter[:len(filter)-2]
+		}
+
 		if !f.isAllowed(filter) {
 			continue
 		}

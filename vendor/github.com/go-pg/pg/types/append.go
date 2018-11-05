@@ -36,9 +36,9 @@ func Append(b []byte, v interface{}, quote int) []byte {
 	case uint:
 		return strconv.AppendUint(b, uint64(v), 10)
 	case float32:
-		return appendFloat(b, float64(v))
+		return appendFloat(b, float64(v), quote)
 	case float64:
-		return appendFloat(b, v)
+		return appendFloat(b, v, quote)
 	case string:
 		return AppendString(b, v, quote)
 	case time.Time:
@@ -76,24 +76,34 @@ func appendBool(dst []byte, v bool) []byte {
 	return append(dst, "FALSE"...)
 }
 
-func appendFloat(dst []byte, v float64) []byte {
+func appendFloat(dst []byte, v float64, quote int) []byte {
 	switch {
 	case math.IsNaN(v):
-		return append(dst, "'NaN'"...)
+		if quote == 1 {
+			return append(dst, "'NaN'"...)
+		}
+		return append(dst, "NaN"...)
 	case math.IsInf(v, 1):
-		return append(dst, "'Infinity'"...)
+		if quote == 1 {
+			return append(dst, "'Infinity'"...)
+		}
+		return append(dst, "Infinity"...)
 	case math.IsInf(v, -1):
-		return append(dst, "'-Infinity'"...)
+		if quote == 1 {
+			return append(dst, "'-Infinity'"...)
+		}
+		return append(dst, "-Infinity"...)
 	default:
 		return strconv.AppendFloat(dst, v, 'f', -1, 64)
 	}
 }
 
 func AppendString(b []byte, s string, quote int) []byte {
-	if quote == 2 {
-		b = append(b, '"')
-	} else if quote == 1 {
+	switch quote {
+	case 1:
 		b = append(b, '\'')
+	case 2:
+		b = append(b, '"')
 	}
 
 	for i := 0; i < len(s); i++ {
@@ -111,23 +121,25 @@ func AppendString(b []byte, s string, quote int) []byte {
 		}
 
 		if quote == 2 {
-			if c == '"' {
+			switch c {
+			case '"':
 				b = append(b, '\\', '"')
-				continue
-			}
-			if c == '\\' {
+			case '\\':
 				b = append(b, '\\', '\\')
-				continue
+			default:
+				b = append(b, c)
 			}
+			continue
 		}
 
 		b = append(b, c)
 	}
 
-	if quote >= 2 {
-		b = append(b, '"')
-	} else if quote == 1 {
+	switch quote {
+	case 1:
 		b = append(b, '\'')
+	case 2:
+		b = append(b, '"')
 	}
 
 	return b
@@ -138,17 +150,26 @@ func AppendBytes(b []byte, bytes []byte, quote int) []byte {
 		return AppendNull(b, quote)
 	}
 
-	if quote == 1 {
+	switch quote {
+	case 1:
 		b = append(b, '\'')
+	case 2:
+		b = append(b, '"')
 	}
 
 	tmp := make([]byte, hex.EncodedLen(len(bytes)))
 	hex.Encode(tmp, bytes)
+	if quote == 2 {
+		b = append(b, '\\')
+	}
 	b = append(b, "\\x"...)
 	b = append(b, tmp...)
 
-	if quote == 1 {
+	switch quote {
+	case 1:
 		b = append(b, '\'')
+	case 2:
+		b = append(b, '"')
 	}
 
 	return b
