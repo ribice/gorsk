@@ -4,7 +4,6 @@ import (
 	"os"
 
 	"github.com/labstack/echo"
-	"github.com/ribice/chisk/model"
 
 	"github.com/rs/zerolog"
 )
@@ -31,9 +30,9 @@ func (z *Log) Log(ctx echo.Context, source, msg string, err error, params map[st
 
 	params["source"] = source
 
-	if user, ok := ctx.Get("au").(*chisk.AuthUser); ok {
-		params["id"] = user.ID
-		params["username"] = user.DisplayName
+	if id, ok := ctx.Get("id").(int); ok {
+		params["id"] = id
+		params["user"] = ctx.Get("username").(string)
 	}
 
 	if err != nil {
