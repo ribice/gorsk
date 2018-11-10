@@ -35,11 +35,16 @@ package api
 import (
 	"crypto/sha1"
 
+	"github.com/ribice/gorsk/pkg/utl/zlog"
+
 	"github.com/ribice/gorsk/pkg/api/auth"
+	al "github.com/ribice/gorsk/pkg/api/auth/logging"
 	at "github.com/ribice/gorsk/pkg/api/auth/transport"
 	"github.com/ribice/gorsk/pkg/api/password"
+	pl "github.com/ribice/gorsk/pkg/api/password/logging"
 	pt "github.com/ribice/gorsk/pkg/api/password/transport"
 	"github.com/ribice/gorsk/pkg/api/user"
+	ul "github.com/ribice/gorsk/pkg/api/user/logging"
 	ut "github.com/ribice/gorsk/pkg/api/user/transport"
 
 	"github.com/ribice/gorsk/pkg/utl/config"
@@ -60,17 +65,18 @@ func Start(cfg *config.Configuration) error {
 	sec := secure.New(cfg.App.MinPasswordStr, sha1.New())
 	rbac := rbac.New()
 	jwt := jwt.New(cfg.JWT.Secret, cfg.JWT.SigningAlgorithm, cfg.JWT.Duration)
+	log := zlog.New()
 
 	e := server.New()
 	e.Static("/swaggerui", cfg.App.SwaggerUIPath)
 
-	at.NewHTTP(auth.Initialize(db, jwt, sec, rbac), e, jwt.MWFunc())
+	at.NewHTTP(al.New(auth.Initialize(db, jwt, sec, rbac), log), e, jwt.MWFunc())
 
 	v1 := e.Group("/v1")
 	v1.Use(jwt.MWFunc())
 
-	ut.NewHTTP(user.Initialize(db, rbac, sec), v1)
-	pt.NewHTTP(password.Initialize(db, rbac, sec), v1)
+	ut.NewHTTP(ul.New(user.Initialize(db, rbac, sec), log), v1)
+	pt.NewHTTP(pl.New(password.Initialize(db, rbac, sec), log), v1)
 
 	server.Start(e, &server.Config{
 		Port:                cfg.Server.Port,
