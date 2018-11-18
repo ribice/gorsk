@@ -15,19 +15,18 @@ Gorsk follows SOLID principles, with package design being inspired by several pa
 
 This starter kit currently provides:
 
-* Fully featured RESTful endpoints for authentication, password reset and CRUD operations on the user entity
-* Session handling
-* JWT Based authentication
+* Fully featured RESTful endpoints for authentication, changing password and CRUD operations on the user entity
+* JWT authentication and session
 * Application configuration via config file (yaml)
 * RBAC (role-based access control)
-* Structured (error) logging
+* Structured logging
 * Great performance
 * Partial update (PATCH) handling using reflection
 * Request marshaling and data validation
 * API Docs using SwaggerUI
 * Mocking using stdlib
-* Full test coverage
-* Containerized DB query tests
+* Complete test coverage
+* Containerized database query tests
 
 The following dependencies are used in this project (generated using [Glice](https://github.com/ribice/glice)):
 
@@ -38,6 +37,7 @@ The following dependencies are used in this project (generated using [Glice](htt
 | github.com/labstack/echo            | https://github.com/labstack/echo           | MIT          |
 | github.com/go-pg/pg                 | https://github.com/go-pg/pg                | bsd-2-clause |
 | github.com/dgrijalva/jwt-go         | https://github.com/dgrijalva/jwt-go        | MIT          |
+| github.com/rs/zerolog               | https://github.com/rs/zerolog              | MIT          |
 | golang.org/x/crypto/bcrypt          | https://github.com/golang/crypto           |              |
 | gopkg.in/yaml.v2                    | https://github.com/go-yaml/yaml            |              |
 | gopkg.in/go-playground/validator.v8 | https://github.com/go-playground/validator | MIT          |
@@ -48,17 +48,17 @@ The following dependencies are used in this project (generated using [Glice](htt
 |-------------------------------------|--------------------------------------------|--------------|
 ```
 
-
 1. Echo - HTTP 'framework'.
 2. Go-Pg - PostgreSQL ORM
 3. JWT-Go - JWT Authentication
-4. zxcvbn-go - Password strength checker
+4. Zerolog - Structured logging
 5. Bcrypt - Password hashing
 6. Yaml - Unmarshalling YAML config file
 7. Validator - Request validation.
-8. lib/pq - Postgres driver
-9. DockerTest - Testing database queries
-10. Testify/Assert - Asserting test results
+8. lib/pq - PostgreSQL driver
+9. zxcvbn-go - Password strength checker
+10. DockerTest - Testing database queries
+11. Testify/Assert - Asserting test results
 
 Most of these can easily be replaced with your own choices since their usage is abstracted and localized.
 
