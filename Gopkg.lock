@@ -153,6 +153,18 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:2d09c73bf49520d181d81911f2a58af86f7b6e597e96d15bae33e732e08c0004"
+  name = "github.com/rs/zerolog"
+  packages = [
+    ".",
+    "internal/cbor",
+    "internal/json",
+  ]
+  pruneopts = "NUT"
+  revision = "848482bc3dbeed6a47eb8f8cec0d4484795b1314"
+  version = "v1.10.3"
+
+[[projects]]
   digest = "1:bacb8b590716ab7c33f2277240972c9582d389593ee8d66fc10074e0508b8126"
   name = "github.com/stretchr/testify"
   packages = ["assert"]
@@ -227,6 +239,7 @@
     "github.com/labstack/echo/middleware",
     "github.com/lib/pq",
     "github.com/nbutton23/zxcvbn-go",
+    "github.com/rs/zerolog",
     "github.com/stretchr/testify/assert",
     "golang.org/x/crypto/bcrypt",
     "gopkg.in/yaml.v2",
