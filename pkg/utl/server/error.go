@@ -49,9 +49,8 @@ func (ce *customErrHandler) handler(err error, c echo.Context) {
 			code = http.StatusBadRequest
 		}
 	} else {
-		switch err.(type) {
+		switch e := err.(type) {
 		case *echo.HTTPError:
-			e := err.(*echo.HTTPError)
 			code = e.Code
 			msg = e.Message
 			if e.Internal != nil {
@@ -59,7 +58,6 @@ func (ce *customErrHandler) handler(err error, c echo.Context) {
 			}
 		case validator.ValidationErrors:
 			var errMsg []string
-			e := err.(validator.ValidationErrors)
 			for _, v := range e {
 				errMsg = append(errMsg, fmt.Sprintf("%s%s", v.Field(), getVldErrorMsg(v.ActualTag())))
 			}
