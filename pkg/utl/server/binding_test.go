@@ -6,7 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ribice/gorsk/pkg/utl/mock"
+	"github.com/go-playground/validator"
+	"github.com/labstack/echo"
 	"github.com/ribice/gorsk/pkg/utl/server"
 	"github.com/stretchr/testify/assert"
 )
@@ -44,7 +45,11 @@ func TestBind(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			w := httptest.NewRecorder()
 			req, _ := http.NewRequest("POST", "", bytes.NewBufferString(tt.req))
-			c := mock.EchoCtx(req, w)
+			req.Header.Set("Content-Type", "application/json")
+			e := echo.New()
+			e.Validator = &server.CustomValidator{V: validator.New()}
+			e.Binder = server.NewBinder()
+			c := e.NewContext(req, w)
 			r := new(Req)
 			err := b.Bind(r, c)
 			assert.Equal(t, tt.wantData, r)
