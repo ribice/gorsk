@@ -87,7 +87,7 @@ The application runs as an HTTP server at port 8080. It provides the following R
 * `POST /login`: accepts username/passwords and returns jwt token and refresh token
 * `GET /refresh/:token`: refreshes sessions and returns jwt token
 * `GET /me`: returns info about currently logged in user
-* `GET /swaggerui/`: launches swaggerui in browser
+* `GET /swaggerui/` (with trailing slash): launches swaggerui in browser
 * `GET /v1/users`: returns list of users
 * `GET /v1/users/:id`: returns single user
 * `POST /v1/users`: creates a new user
