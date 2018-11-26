@@ -87,7 +87,7 @@ The application runs as an HTTP server at port 8080. It provides the following R
 * `POST /login`: accepts username/passwords and returns jwt token and refresh token
 * `GET /refresh/:token`: refreshes sessions and returns jwt token
 * `GET /me`: returns info about currently logged in user
-* `GET /swaggerui/`: launches swaggerui in browser
+* `GET /swaggerui/` (with trailing slash): launches swaggerui in browser
 * `GET /v1/users`: returns list of users
 * `GET /v1/users/:id`: returns single user
 * `POST /v1/users`: creates a new user
@@ -104,13 +104,15 @@ Let's say you have a table named 'cars' that handles employee's cars. To impleme
 
 2. Create a new `car` folder in the (micro)service where your service will be located, most probably inside `api`. Inside create a file/service named car.go and test file for it (`car/car.go` and `car/car_test.go`). You can test your code without writing a single query by mocking the database logic inside /mock/mockdb folder. If you have complex queries interfering with other entities, you can create in this folder other files such as car_users.go or car_templates.go for example.
 
-3. Inside car folder, create two folders named `platform` and `transport`.
+3. Inside car folder, create folders named `platform`, `transport` and `logging`.
 
 4. Code for interacting with a platform like database (postgresql) should be placed under `car/platform/pgsql`. (`pkg/api/car/platform/pgsql/car.go`)
 
 5. In `pkg/api/car/transport` create a new file named `http.go`. This is where your handlers are located. Under the same location create http_test.go to test your API.
 
-6. In `pkg/api/api.go` wire up all the logic, by instantiating car service and then pass it to the transport package.
+6. In logging directory create a file named `car.go` and copy the logic from another service. This serves as request/response logging.
+
+6. In `pkg/api/api.go` wire up all the logic, by instantiating car service, passing it to the logging and transport service afterwards.
 
 ### Implementing other platforms
 
