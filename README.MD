@@ -156,7 +156,7 @@ Instead of passing database client as `s.db` , inside this function pass it as `
 
 ## License
 
-gorsk is licensed under the MIT license. Check the [LICENSE](LICENSE.md) file for details.
+gorsk is licensed under the MIT license. Check the [LICENSE](LICENSE) file for details.
 
 ## Author
 
