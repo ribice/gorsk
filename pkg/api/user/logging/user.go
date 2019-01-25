@@ -26,8 +26,8 @@ const name = "user"
 
 // Create logging
 func (ls *LogService) Create(c echo.Context, req gorsk.User) (resp *gorsk.User, err error) {
-	req.Password = "xxx-redacted-xxx"
 	defer func(begin time.Time) {
+		req.Password = "xxx-redacted-xxx"
 		ls.logger.Log(
 			c,
 			name, "Create user request", err,
