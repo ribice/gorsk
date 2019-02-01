@@ -21,7 +21,7 @@
       "name": "MIT",
       "url": "http://opensource.org/licenses/MIT"
     },
-    "version": "1.0.0"
+    "version": "2.0.0"
   },
   "host": "localhost:8080",
   "paths": {
@@ -37,7 +37,7 @@
             "name": "Body",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/Credentials"
+              "$ref": "#/definitions/credentials"
             }
           }
         ],
@@ -113,6 +113,51 @@
         }
       }
     },
+    "/v1/password/{id}": {
+      "patch": {
+        "description": "If user's old passowrd is correct, it will be replaced with new password.",
+        "tags": [
+          "password"
+        ],
+        "summary": "Changes user's password.",
+        "operationId": "pwChange",
+        "parameters": [
+          {
+            "type": "int",
+            "description": "id of user",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "Request body",
+            "name": "request",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/pwChange"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/ok"
+          },
+          "400": {
+            "$ref": "#/responses/errMsg"
+          },
+          "401": {
+            "$ref": "#/responses/err"
+          },
+          "403": {
+            "$ref": "#/responses/err"
+          },
+          "500": {
+            "$ref": "#/responses/err"
+          }
+        }
+      }
+    },
     "/v1/users": {
       "get": {
         "description": "Returns list of users. Depending on the user role requesting it, it may return all users for SuperAdmin/Admin users, all company/location users for Company/Location admins, and an error for non-admin users.",
@@ -123,13 +168,13 @@
         "operationId": "listUsers",
         "parameters": [
           {
-            "type": "integer",
+            "type": "int",
             "description": "number of results",
             "name": "limit",
             "in": "query"
           },
           {
-            "type": "integer",
+            "type": "int",
             "description": "page number",
             "name": "page",
             "in": "query"
@@ -158,16 +203,7 @@
           "users"
         ],
         "summary": "Creates new user account.",
-        "operationId": "accCreate",
-        "parameters": [
-          {
-            "name": "Body",
-            "in": "body",
-            "schema": {
-              "$ref": "#/definitions/Register"
-            }
-          }
-        ],
+        "operationId": "userCreate",
         "responses": {
           "200": {
             "$ref": "#/responses/userResp"
@@ -197,7 +233,7 @@
         "operationId": "getUser",
         "parameters": [
           {
-            "type": "integer",
+            "type": "int",
             "description": "id of user",
             "name": "id",
             "in": "path",
@@ -234,7 +270,7 @@
         "operationId": "userDelete",
         "parameters": [
           {
-            "type": "integer",
+            "type": "int",
             "description": "id of user",
             "name": "id",
             "in": "path",
@@ -268,7 +304,7 @@
         "operationId": "userUpdate",
         "parameters": [
           {
-            "type": "integer",
+            "type": "int",
             "description": "id of user",
             "name": "id",
             "in": "path",
@@ -302,120 +338,19 @@
           }
         }
       }
-    },
-    "/v1/users/{id}/password": {
-      "patch": {
-        "description": "If user's old passowrd is correct, it will be replaced with new password.",
-        "tags": [
-          "users"
-        ],
-        "summary": "Changes user's password.",
-        "operationId": "pwChange",
-        "parameters": [
-          {
-            "type": "integer",
-            "description": "id of user",
-            "name": "id",
-            "in": "path",
-            "required": true
-          },
-          {
-            "description": "Request body",
-            "name": "request",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/pwChange"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/ok"
-          },
-          "400": {
-            "$ref": "#/responses/errMsg"
-          },
-          "401": {
-            "$ref": "#/responses/err"
-          },
-          "403": {
-            "$ref": "#/responses/err"
-          },
-          "500": {
-            "$ref": "#/responses/err"
-          }
-        }
-      }
     }
   },
   "definitions": {
     "AccessRole": {
       "description": "AccessRole represents access role type",
       "type": "integer",
-      "format": "int8",
-      "x-go-package": "github.com/ribice/gorsk/internal"
+      "format": "int64",
+      "x-go-package": "github.com/ribice/gorsk/pkg/utl/model"
     },
-    "Credentials": {
-      "description": "Credentials contains login request",
+    "HTTP": {
+      "description": "HTTP represents password http transport service",
       "type": "object",
-      "properties": {
-        "password": {
-          "type": "string",
-          "x-go-name": "Password"
-        },
-        "username": {
-          "type": "string",
-          "x-go-name": "Username"
-        }
-      },
-      "x-go-package": "github.com/ribice/gorsk/cmd/api/request"
-    },
-    "Register": {
-      "description": "Register contains registration request",
-      "type": "object",
-      "properties": {
-        "company_id": {
-          "type": "integer",
-          "format": "int64",
-          "x-go-name": "CompanyID"
-        },
-        "email": {
-          "type": "string",
-          "x-go-name": "Email"
-        },
-        "first_name": {
-          "type": "string",
-          "x-go-name": "FirstName"
-        },
-        "last_name": {
-          "type": "string",
-          "x-go-name": "LastName"
-        },
-        "location_id": {
-          "type": "integer",
-          "format": "int64",
-          "x-go-name": "LocationID"
-        },
-        "password": {
-          "type": "string",
-          "x-go-name": "Password"
-        },
-        "password_confirm": {
-          "type": "string",
-          "x-go-name": "PasswordConfirm"
-        },
-        "role_id": {
-          "type": "integer",
-          "format": "int64",
-          "x-go-name": "RoleID"
-        },
-        "username": {
-          "type": "string",
-          "x-go-name": "Username"
-        }
-      },
-      "x-go-package": "github.com/ribice/gorsk/cmd/api/request"
+      "x-go-package": "github.com/ribice/gorsk/pkg/api/password/transport"
     },
     "Role": {
       "description": "Role model",
@@ -425,16 +360,14 @@
           "$ref": "#/definitions/AccessRole"
         },
         "id": {
-          "type": "integer",
-          "format": "int64",
-          "x-go-name": "ID"
+          "$ref": "#/definitions/AccessRole"
         },
         "name": {
           "type": "string",
           "x-go-name": "Name"
         }
       },
-      "x-go-package": "github.com/ribice/gorsk/internal"
+      "x-go-package": "github.com/ribice/gorsk/pkg/utl/model"
     },
     "User": {
       "description": "User represents user domain model",
@@ -485,6 +418,11 @@
           "type": "string",
           "x-go-name": "LastName"
         },
+        "last_password_change": {
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "LastPasswordChange"
+        },
         "location_id": {
           "type": "integer",
           "format": "int64",
@@ -511,7 +449,39 @@
           "x-go-name": "Username"
         }
       },
-      "x-go-package": "github.com/ribice/gorsk/internal"
+      "x-go-package": "github.com/ribice/gorsk/pkg/utl/model"
+    },
+    "credentials": {
+      "type": "object",
+      "properties": {
+        "password": {
+          "type": "string",
+          "x-go-name": "Password"
+        },
+        "username": {
+          "type": "string",
+          "x-go-name": "Username"
+        }
+      },
+      "x-go-package": "github.com/ribice/gorsk/pkg/api/auth/transport"
+    },
+    "listResponse": {
+      "type": "object",
+      "properties": {
+        "page": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Page"
+        },
+        "users": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/User"
+          },
+          "x-go-name": "Users"
+        }
+      },
+      "x-go-package": "github.com/ribice/gorsk/pkg/api/user/transport"
     },
     "pwChange": {
       "description": "Password change request",
@@ -530,126 +500,53 @@
           "x-go-name": "OldPassword"
         }
       },
-      "x-go-name": "swaggPwChange",
-      "x-go-package": "github.com/ribice/gorsk/cmd/api/swagger"
+      "x-go-name": "changeReq",
+      "x-go-package": "github.com/ribice/gorsk/pkg/api/password/transport"
     },
-    "swaggAccCreateReq": {
-      "description": "Account create request",
+    "userCreate": {
+      "description": "User create request",
       "type": "object",
       "properties": {
-        "Body": {
-          "$ref": "#/definitions/Register"
+        "company_id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "CompanyID"
+        },
+        "email": {
+          "type": "string",
+          "x-go-name": "Email"
+        },
+        "first_name": {
+          "type": "string",
+          "x-go-name": "FirstName"
+        },
+        "last_name": {
+          "type": "string",
+          "x-go-name": "LastName"
+        },
+        "location_id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "LocationID"
+        },
+        "password": {
+          "type": "string",
+          "x-go-name": "Password"
+        },
+        "password_confirm": {
+          "type": "string",
+          "x-go-name": "PasswordConfirm"
+        },
+        "role_id": {
+          "$ref": "#/definitions/AccessRole"
+        },
+        "username": {
+          "type": "string",
+          "x-go-name": "Username"
         }
       },
-      "x-go-package": "github.com/ribice/gorsk/cmd/api/swagger"
-    },
-    "swaggUserListResponse": {
-      "description": "Users model response",
-      "type": "object",
-      "properties": {
-        "Body": {
-          "description": "in:body",
-          "type": "object",
-          "properties": {
-            "page": {
-              "type": "integer",
-              "format": "int64",
-              "x-go-name": "Page"
-            },
-            "users": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/User"
-              },
-              "x-go-name": "Users"
-            }
-          }
-        }
-      },
-      "x-go-package": "github.com/ribice/gorsk/cmd/api/swagger"
-    },
-    "swaggUserResponse": {
-      "description": "User model response",
-      "type": "object",
-      "properties": {
-        "Body": {
-          "description": "in:body",
-          "type": "object",
-          "properties": {
-            "active": {
-              "type": "boolean",
-              "x-go-name": "Active"
-            },
-            "address": {
-              "type": "string",
-              "x-go-name": "Address"
-            },
-            "company_id": {
-              "type": "integer",
-              "format": "int64",
-              "x-go-name": "CompanyID"
-            },
-            "created_at": {
-              "type": "string",
-              "format": "date-time",
-              "x-go-name": "CreatedAt"
-            },
-            "deleted_at": {
-              "type": "string",
-              "format": "date-time",
-              "x-go-name": "DeletedAt"
-            },
-            "email": {
-              "type": "string",
-              "x-go-name": "Email"
-            },
-            "first_name": {
-              "type": "string",
-              "x-go-name": "FirstName"
-            },
-            "id": {
-              "type": "integer",
-              "format": "int64",
-              "x-go-name": "ID"
-            },
-            "last_login": {
-              "type": "string",
-              "format": "date-time",
-              "x-go-name": "LastLogin"
-            },
-            "last_name": {
-              "type": "string",
-              "x-go-name": "LastName"
-            },
-            "location_id": {
-              "type": "integer",
-              "format": "int64",
-              "x-go-name": "LocationID"
-            },
-            "mobile": {
-              "type": "string",
-              "x-go-name": "Mobile"
-            },
-            "phone": {
-              "type": "string",
-              "x-go-name": "Phone"
-            },
-            "role": {
-              "$ref": "#/definitions/Role"
-            },
-            "updated_at": {
-              "type": "string",
-              "format": "date-time",
-              "x-go-name": "UpdatedAt"
-            },
-            "username": {
-              "type": "string",
-              "x-go-name": "Username"
-            }
-          }
-        }
-      },
-      "x-go-package": "github.com/ribice/gorsk/cmd/api/swagger"
+      "x-go-name": "createReq",
+      "x-go-package": "github.com/ribice/gorsk/pkg/api/user/transport"
     },
     "userUpdate": {
       "description": "User update request",
@@ -676,8 +573,8 @@
           "x-go-name": "Phone"
         }
       },
-      "x-go-name": "swaggUserUpdateReq",
-      "x-go-package": "github.com/ribice/gorsk/cmd/api/swagger"
+      "x-go-name": "updateReq",
+      "x-go-package": "github.com/ribice/gorsk/pkg/api/user/transport"
     }
   },
   "responses": {
@@ -801,6 +698,11 @@
             "type": "string",
             "x-go-name": "LastName"
           },
+          "last_password_change": {
+            "type": "string",
+            "format": "date-time",
+            "x-go-name": "LastPasswordChange"
+          },
           "location_id": {
             "type": "integer",
             "format": "int64",
@@ -840,6 +742,7 @@
   "security": [
     {
       "bearer": [
+        "[]"
       ]
     }
   ]

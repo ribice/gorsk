@@ -29,7 +29,6 @@
 //          in: header
 //
 // swagger:meta
-
 package api
 
 import (
