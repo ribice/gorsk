@@ -1,7 +1,7 @@
 database:
   log_queries: true
   timeout_seconds: 5
-  psn: postgres://biadpozi:3_Czbl7jSjkUEWk--VP8QXMke-mFnczq@horton.elephantsql.com:5432/biadpozi
+  psn: postgres://username:password@hostname:port/database_name # Change this value
 
 server:
   port: :8080
