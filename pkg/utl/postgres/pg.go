@@ -9,6 +9,14 @@ import (
 	_ "github.com/lib/pq"
 )
 
+type dbLogger struct{}
+
+func (d dbLogger) BeforeQuery(pg *pg.QueryEvent) {}
+
+func (d dbLogger) AfterQuery(q *pg.QueryEvent) {
+	log.Printf(q.FormattedQuery())
+}
+
 // New creates new database connection to a postgres database
 func New(psn string, timeout int, enableLog bool) (*pg.DB, error) {
 	u, err := pg.ParseURL(psn)
@@ -28,11 +36,7 @@ func New(psn string, timeout int, enableLog bool) (*pg.DB, error) {
 	}
 
 	if enableLog {
-		db.OnQueryProcessed(func(event *pg.QueryProcessedEvent) {
-			if query, err := event.FormattedQuery(); err == nil {
-				log.Printf("%s | %s", time.Since(event.StartTime), query)
-			}
-		})
+		db.AddQueryHook(dbLogger{})
 	}
 
 	return db, nil
