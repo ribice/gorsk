@@ -24,7 +24,7 @@ type (
 		AllowMethods []string `yaml:"allow_methods"`
 
 		// AllowHeaders defines a list of request headers that can be used when
-		// making the actual request. This in response to a preflight request.
+		// making the actual request. This is in response to a preflight request.
 		// Optional. Default value []string{}.
 		AllowHeaders []string `yaml:"allow_headers"`
 
@@ -52,7 +52,7 @@ var (
 	DefaultCORSConfig = CORSConfig{
 		Skipper:      DefaultSkipper,
 		AllowOrigins: []string{"*"},
-		AllowMethods: []string{echo.GET, echo.HEAD, echo.PUT, echo.PATCH, echo.POST, echo.DELETE},
+		AllowMethods: []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
 	}
 )
 
@@ -105,7 +105,7 @@ func CORSWithConfig(config CORSConfig) echo.MiddlewareFunc {
 			}
 
 			// Simple request
-			if req.Method != echo.OPTIONS {
+			if req.Method != http.MethodOptions {
 				res.Header().Add(echo.HeaderVary, echo.HeaderOrigin)
 				res.Header().Set(echo.HeaderAccessControlAllowOrigin, allowOrigin)
 				if config.AllowCredentials {

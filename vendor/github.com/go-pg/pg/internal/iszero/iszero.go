@@ -1,4 +1,4 @@
-package orm
+package iszero
 
 import (
 	"database/sql/driver"
@@ -11,13 +11,15 @@ var driverValuerType = reflect.TypeOf((*driver.Valuer)(nil)).Elem()
 var appenderType = reflect.TypeOf((*types.ValueAppender)(nil)).Elem()
 var isZeroerType = reflect.TypeOf((*isZeroer)(nil)).Elem()
 
+type Func func(reflect.Value) bool
+
 type isZeroer interface {
 	IsZero() bool
 }
 
-func isZeroFunc(typ reflect.Type) func(reflect.Value) bool {
+func Checker(typ reflect.Type) func(reflect.Value) bool {
 	if typ.Implements(isZeroerType) {
-		return isZero
+		return isZeroInterface
 	}
 
 	switch typ.Kind() {
@@ -50,9 +52,9 @@ func isZeroFunc(typ reflect.Type) func(reflect.Value) bool {
 	return isZeroFalse
 }
 
-func isZero(v reflect.Value) bool {
-	if v.Kind() == reflect.Ptr {
-		return v.IsNil()
+func isZeroInterface(v reflect.Value) bool {
+	if v.Kind() == reflect.Ptr && v.IsNil() {
+		return true
 	}
 	return v.Interface().(isZeroer).IsZero()
 }

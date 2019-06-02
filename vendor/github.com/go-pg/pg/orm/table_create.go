@@ -1,7 +1,7 @@
 package orm
 
 import (
-	"errors"
+	"github.com/go-pg/pg/types"
 	"strconv"
 )
 
@@ -12,7 +12,8 @@ type CreateTableOptions struct {
 
 	// FKConstraints causes CreateTable to create foreign key constraints
 	// for has one relations. ON DELETE hook can be added using tag
-	// `sql:"on_delete:RESTRICT"` on foreign key field.
+	// `sql:"on_delete:RESTRICT"` on foreign key field. ON UPDATE hook can be added using tag
+	// `sql:"on_update:CASCADE"`
 	FKConstraints bool
 }
 
@@ -25,20 +26,29 @@ type createTableQuery struct {
 	opt *CreateTableOptions
 }
 
-func (q createTableQuery) Copy() QueryAppender {
-	return q
+func (q *createTableQuery) Copy() *createTableQuery {
+	return &createTableQuery{
+		q:   q.q.Copy(),
+		opt: q.opt,
+	}
 }
 
-func (q createTableQuery) Query() *Query {
+func (q *createTableQuery) Query() *Query {
 	return q.q
 }
 
-func (q createTableQuery) AppendQuery(b []byte) ([]byte, error) {
+func (q *createTableQuery) AppendTemplate(b []byte) ([]byte, error) {
+	cp := q.Copy()
+	cp.q = cp.q.Formatter(dummyFormatter{})
+	return cp.AppendQuery(b)
+}
+
+func (q *createTableQuery) AppendQuery(b []byte) ([]byte, error) {
 	if q.q.stickyErr != nil {
 		return nil, q.q.stickyErr
 	}
 	if q.q.model == nil {
-		return nil, errors.New("pg: Model(nil)")
+		return nil, errModelNil
 	}
 	table := q.q.model.Table()
 
@@ -93,7 +103,11 @@ func (q createTableQuery) AppendQuery(b []byte) ([]byte, error) {
 
 	b = append(b, ")"...)
 
-	return b, nil
+	if table.Tablespace != "" {
+		b = q.appendTablespace(b, table.Tablespace)
+	}
+
+	return b, q.q.stickyErr
 }
 
 func appendPKConstraint(b []byte, pks []*Field) []byte {
@@ -124,7 +138,7 @@ func (q createTableQuery) appendFKConstraint(b []byte, table *Table, rel *Relati
 	b = append(b, ")"...)
 
 	b = append(b, " REFERENCES "...)
-	b = q.q.FormatQuery(b, string(rel.JoinTable.Name))
+	b = q.q.FormatQuery(b, string(rel.JoinTable.FullName))
 	b = append(b, " ("...)
 	b = appendColumns(b, "", rel.JoinTable.PKs)
 	b = append(b, ")"...)
@@ -134,6 +148,17 @@ func (q createTableQuery) appendFKConstraint(b []byte, table *Table, rel *Relati
 		b = append(b, s...)
 	}
 
+	if s := OnUpdate(rel.FKs); s != "" {
+		b = append(b, " ON UPDATE "...)
+		b = append(b, s...)
+	}
+
+	return b
+}
+
+func (q createTableQuery) appendTablespace(b []byte, tableSpace types.Q) []byte {
+	b = append(b, " TABLESPACE "...)
+	b = append(b, tableSpace...)
 	return b
 }
 
@@ -146,4 +171,15 @@ func onDelete(fks []*Field) string {
 		}
 	}
 	return onDelete
+}
+
+func OnUpdate(fks []*Field) string {
+	var onUpdate string
+	for _, f := range fks {
+		if f.OnUpdate != "" {
+			onUpdate = f.OnUpdate
+			break
+		}
+	}
+	return onUpdate
 }

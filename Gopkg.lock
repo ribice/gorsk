@@ -26,19 +26,22 @@
   revision = "a73397bdeff4b713648d4b2e7fc655eb9a85fb6b"
 
 [[projects]]
-  digest = "1:7e5aca655482da034b9128b1cbc110082725d7d6fde5436df234cc70780889cc"
+  digest = "1:1cf3098fd2ae3b58abfbfdb7fed1302a9c904503b77cd718fcad705e7a539fce"
   name = "github.com/go-pg/pg"
   packages = [
     ".",
     "internal",
+    "internal/iszero",
     "internal/parser",
     "internal/pool",
+    "internal/struct_filter",
+    "internal/tag",
     "orm",
     "types",
   ]
   pruneopts = "NUT"
-  revision = "ae5d5e7df4b2e598390e10b66b849c6af94f092b"
-  version = "v6.15.1"
+  revision = "11cb265cd96c769490bea4cdc3634ea2049197f6"
+  version = "v8.0.4"
 
 [[projects]]
   digest = "1:1c109e91a99627f9c80e8794d80773c8532dfcf234b45cdb6a6388b30a5bb5e7"
@@ -76,15 +79,15 @@
   revision = "04140366298a54a039076d798123ffa108fff46c"
 
 [[projects]]
-  digest = "1:0f7251e66e237eff3aa62a70890f67a3364b4a77c3a496f18773d6cd4b50938c"
+  digest = "1:e1a4a004e1797b96ee265d52809696ef6101fb7830aa50bd9ffc331e535f1956"
   name = "github.com/labstack/echo"
   packages = [
     ".",
     "middleware",
   ]
   pruneopts = "NUT"
-  revision = "1abaa3049251d17932e4313c2d6165073fd07fd8"
-  version = "v3.3.6"
+  revision = "38772c686c76b501f94bd6cd5b77f5842e93b559"
+  version = "v3.3.10"
 
 [[projects]]
   digest = "1:42ecba6280172b66005991519361e5c0505d89f9685c0d4311f9ec546610d453"
