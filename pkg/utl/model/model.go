@@ -1,6 +1,7 @@
 package gorsk
 
 import (
+	"context"
 	"time"
 
 	"github.com/go-pg/pg/orm"
@@ -21,7 +22,7 @@ type ListQuery struct {
 }
 
 // BeforeInsert hooks into insert operations, setting createdAt and updatedAt to current time
-func (b *Base) BeforeInsert(_ orm.DB) error {
+func (b *Base) BeforeInsert(_ context.Context, _ orm.DB) error {
 	now := time.Now()
 	b.CreatedAt = now
 	b.UpdatedAt = now
@@ -29,7 +30,7 @@ func (b *Base) BeforeInsert(_ orm.DB) error {
 }
 
 // BeforeUpdate hooks into update operations, setting updatedAt to current time
-func (b *Base) BeforeUpdate(_ orm.DB) error {
+func (b *Base) BeforeUpdate(_ context.Context, _ orm.DB) error {
 	b.UpdatedAt = time.Now()
 	return nil
 }
