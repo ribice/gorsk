@@ -18,11 +18,6 @@ func TestTimePtr(year int) *time.Time {
 	return &t
 }
 
-// Str2Ptr converts string to pointer
-func Str2Ptr(s string) *string {
-	return &s
-}
-
 // HeaderValid is used for jwt testing
 func HeaderValid() string {
 	return "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidSI6ImpvaG5kb2UiLCJlIjoiam9obmRvZUBtYWlsLmNvbSIsInIiOjEsImMiOjEsImwiOjEsImV4cCI6NDEwOTMyMDg5NCwiaWF0IjoxNTE2MjM5MDIyfQ.8Fa8mhshx3tiQVzS5FoUXte5lHHC4cvaa_tzvcel38I"

@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-pg/pg/orm"
 	"github.com/labstack/echo"
-	"github.com/ribice/gorsk/pkg/utl/model"
+	gorsk "github.com/ribice/gorsk/pkg/utl/model"
 )
 
 // NewUser returns a new user database instance
@@ -57,7 +57,8 @@ func (u *User) View(db orm.DB, id int) (*gorsk.User, error) {
 
 // Update updates user's contact info
 func (u *User) Update(db orm.DB, user *gorsk.User) error {
-	return db.Update(user)
+	_, err := db.Model(user).UpdateNotNull()
+	return err
 }
 
 // List returns list of all users retrievable for the current user, depending on role

@@ -3,9 +3,8 @@ package user
 
 import (
 	"github.com/labstack/echo"
-	"github.com/ribice/gorsk/pkg/utl/model"
+	gorsk "github.com/ribice/gorsk/pkg/utl/model"
 	"github.com/ribice/gorsk/pkg/utl/query"
-	"github.com/ribice/gorsk/pkg/utl/structs"
 )
 
 // Create creates a new user account
@@ -50,28 +49,28 @@ func (u *User) Delete(c echo.Context, id int) error {
 // Update contains user's information used for updating
 type Update struct {
 	ID        int
-	FirstName *string
-	LastName  *string
-	Mobile    *string
-	Phone     *string
-	Address   *string
+	FirstName string
+	LastName  string
+	Mobile    string
+	Phone     string
+	Address   string
 }
 
 // Update updates user's contact information
-func (u *User) Update(c echo.Context, req *Update) (*gorsk.User, error) {
-	if err := u.rbac.EnforceUser(c, req.ID); err != nil {
+func (u *User) Update(c echo.Context, r *Update) (*gorsk.User, error) {
+	if err := u.rbac.EnforceUser(c, r.ID); err != nil {
 		return nil, err
 	}
 
-	user, err := u.udb.View(u.db, req.ID)
-	if err != nil {
+	if err := u.udb.Update(u.db, &gorsk.User{
+		Base:      gorsk.Base{ID: r.ID},
+		FirstName: r.FirstName,
+		LastName:  r.LastName,
+		Mobile:    r.Mobile,
+		Address:   r.Address,
+	}); err != nil {
 		return nil, err
 	}
 
-	structs.Merge(user, req)
-	if err := u.udb.Update(u.db, user); err != nil {
-		return nil, err
-	}
-
-	return user, nil
+	return u.udb.View(u.db, r.ID)
 }
