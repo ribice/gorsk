@@ -21,7 +21,6 @@ This starter kit currently provides:
 * RBAC (role-based access control)
 * Structured logging
 * Great performance
-* Partial update (PATCH) handling using reflection
 * Request marshaling and data validation
 * API Docs using SwaggerUI
 * Mocking using stdlib

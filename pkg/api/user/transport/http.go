@@ -6,7 +6,7 @@ import (
 
 	"github.com/ribice/gorsk/pkg/api/user"
 
-	"github.com/ribice/gorsk/pkg/utl/model"
+	gorsk "github.com/ribice/gorsk/pkg/utl/model"
 
 	"github.com/labstack/echo"
 )
@@ -227,12 +227,12 @@ func (h *HTTP) view(c echo.Context) error {
 // User update request
 // swagger:model userUpdate
 type updateReq struct {
-	ID        int     `json:"-"`
-	FirstName *string `json:"first_name,omitempty" validate:"omitempty,min=2"`
-	LastName  *string `json:"last_name,omitempty" validate:"omitempty,min=2"`
-	Mobile    *string `json:"mobile,omitempty"`
-	Phone     *string `json:"phone,omitempty"`
-	Address   *string `json:"address,omitempty"`
+	ID        int    `json:"-"`
+	FirstName string `json:"first_name,omitempty" validate:"omitempty,min=2"`
+	LastName  string `json:"last_name,omitempty" validate:"omitempty,min=2"`
+	Mobile    string `json:"mobile,omitempty"`
+	Phone     string `json:"phone,omitempty"`
+	Address   string `json:"address,omitempty"`
 }
 
 func (h *HTTP) update(c echo.Context) error {

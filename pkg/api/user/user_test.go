@@ -6,7 +6,7 @@ import (
 	"github.com/ribice/gorsk/pkg/api/user"
 	"github.com/ribice/gorsk/pkg/utl/mock"
 	"github.com/ribice/gorsk/pkg/utl/mock/mockdb"
-	"github.com/ribice/gorsk/pkg/utl/model"
+	gorsk "github.com/ribice/gorsk/pkg/utl/model"
 
 	"github.com/go-pg/pg/orm"
 	"github.com/labstack/echo"
@@ -380,25 +380,6 @@ func TestUpdate(t *testing.T) {
 			wantErr: gorsk.ErrGeneric,
 		},
 		{
-			name: "Fail on ViewUser",
-			args: args{upd: &user.Update{
-				ID: 1,
-			}},
-			rbac: &mock.RBAC{
-				EnforceUserFn: func(c echo.Context, id int) error {
-					return nil
-				}},
-			wantErr: gorsk.ErrGeneric,
-			udb: &mockdb.User{
-				ViewFn: func(db orm.DB, id int) (*gorsk.User, error) {
-					if id != 1 {
-						return nil, nil
-					}
-					return nil, gorsk.ErrGeneric
-				},
-			},
-		},
-		{
 			name: "Fail on Update",
 			args: args{upd: &user.Update{
 				ID: 1,
@@ -419,10 +400,10 @@ func TestUpdate(t *testing.T) {
 						CompanyID:  1,
 						LocationID: 2,
 						RoleID:     3,
-						FirstName:  "Joanna",
-						LastName:   "Doep",
-						Mobile:     "334455",
-						Phone:      "444555",
+						FirstName:  "John",
+						LastName:   "Doe",
+						Mobile:     "123456",
+						Phone:      "234567",
 						Address:    "Work Address",
 						Email:      "golang@go.org",
 					}, nil
@@ -436,10 +417,10 @@ func TestUpdate(t *testing.T) {
 			name: "Success",
 			args: args{upd: &user.Update{
 				ID:        1,
-				FirstName: mock.Str2Ptr("John"),
-				LastName:  mock.Str2Ptr("Doe"),
-				Mobile:    mock.Str2Ptr("123456"),
-				Phone:     mock.Str2Ptr("234567"),
+				FirstName: "John",
+				LastName:  "Doe",
+				Mobile:    "123456",
+				Phone:     "234567",
 			}},
 			rbac: &mock.RBAC{
 				EnforceUserFn: func(c echo.Context, id int) error {
@@ -467,15 +448,15 @@ func TestUpdate(t *testing.T) {
 						Base: gorsk.Base{
 							ID:        1,
 							CreatedAt: mock.TestTime(1990),
-							UpdatedAt: mock.TestTime(1991),
+							UpdatedAt: mock.TestTime(2000),
 						},
 						CompanyID:  1,
 						LocationID: 2,
 						RoleID:     3,
-						FirstName:  "Joanna",
-						LastName:   "Doep",
-						Mobile:     "334455",
-						Phone:      "444555",
+						FirstName:  "John",
+						LastName:   "Doe",
+						Mobile:     "123456",
+						Phone:      "234567",
 						Address:    "Work Address",
 						Email:      "golang@go.org",
 					}, nil
