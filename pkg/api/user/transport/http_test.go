@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ribice/gorsk/pkg/utl/model"
+	gorsk "github.com/ribice/gorsk/pkg/utl/model"
 
 	"github.com/ribice/gorsk/pkg/api/user"
 	"github.com/ribice/gorsk/pkg/api/user/transport"
@@ -422,6 +422,7 @@ func TestUpdate(t *testing.T) {
 						Username:  "JohnDoe",
 						Address:   "Work",
 						Phone:     "332223",
+						Mobile:    "991991",
 					}, nil
 				},
 				UpdateFn: func(db orm.DB, usr *gorsk.User) error {
@@ -435,13 +436,13 @@ func TestUpdate(t *testing.T) {
 				Base: gorsk.Base{
 					ID:        1,
 					CreatedAt: mock.TestTime(2000),
-					UpdatedAt: mock.TestTime(2010),
+					UpdatedAt: mock.TestTime(2000),
 				},
-				FirstName: "jj",
-				LastName:  "okocha",
+				FirstName: "John",
+				LastName:  "Doe",
 				Username:  "JohnDoe",
-				Phone:     "321321",
-				Address:   "home",
+				Phone:     "332223",
+				Address:   "Work",
 				Mobile:    "991991",
 			},
 		},
