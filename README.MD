@@ -65,17 +65,15 @@ Most of these can easily be replaced with your own choices since their usage is 
 
 Using Gorsk requires having Go 1.7 or above. Once you downloaded Gorsk (either using Git or go get) you need to configure the following:
 
-1. To use Gorsk as a starting point of a real project whose package name is something like `github.com/author/project`, move the directory `$GOPATH/github.com/ribice/gorsk` to `$GOPATH/github.com/author/project` and do a global replacement of the string `github.com/ribice/gorsk` with `github.com/author/project`.
+1. To use Gorsk as a starting point of a real project whose package name is something like `github.com/author/project`, move the directory `$GOPATH/github.com/ribice/gorsk` to `$GOPATH/github.com/author/project`. We use [task](https://github.com/go-task/task) as a task runner. Run ``task relocate`` to rename the packages, e.g. ``task relocate TARGET=github.com/author/project``
 
-2. Rename the gorsk package inside `pkg/utl/model` with your own project name, then using search & replace do a global replacement of `.gorsk` with your project name.
+2. Change the configuration file according to your needs, or create a new one.
 
-3. Change the configuration file according to your needs, or create a new one.
+3. Set the ("ENVIRONMENT_NAME") environment variable, either using terminal or os.Setenv("ENVIRONMENT_NAME","dev").
 
-4. Set the ("ENVIRONMENT_NAME") environment variable, either using terminal or os.Setenv("ENVIRONMENT_NAME","dev").
+4. In cmd/migration/main.go set up psn variable and then run it (go run main.go). It will create all tables, and necessery data, with a new account username/password admin/admin.
 
-5. In cmd/migration/main.go set up psn variable and then run it (go run main.go). It will create all tables, and necessery data, with a new account username/password admin/admin.
-
-6. Run the app using:
+5. Run the app using:
 
 ```bash
 go run cmd/api/main.go

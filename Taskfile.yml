@@ -1,0 +1,43 @@
+version: '2'
+
+tasks:
+  test:
+    cmds:
+      - echo " *** Running Coverage Tests ***"
+      - $(pwd)/test.sh
+      - echo " *** Completed *** "
+    silent: true
+  relocate:
+    cmds:
+      - echo " *** Relocating packages to {{.TARGET_PATH}} ***"
+      - task: replace-string
+        vars: {
+          SOURCE_STR: "{{.PACKAGE_NAME}}",
+          TARGET_STG: "{{.TARGET_PATH}}"
+        }
+      - task: replace-string
+        vars: {
+          SOURCE_STR: "{{.PROJECT_NAME}}",
+          TARGET_STG: "{{.TARGET_PROJECTNAME}}"
+        }
+      - echo " *** Completed *** "
+    silent: true
+    vars:
+      GITHUB: "github.com"
+      PROJECT_NAME_DIR:
+        sh: echo $(basename "$(dirname "$(pwd)")")
+      PROJECT_NAME: 
+        sh: echo $(basename "$(pwd)" | sed -e 's/[\/&]/\\&/g')
+      PACKAGE_NAME: 
+        sh: echo "{{.GITHUB}}/{{.PROJECT_NAME_DIR}}/{{.PROJECT_NAME}}" | sed -e 's/[\/&]/\\&/g'
+      TARGET_PATH: 
+        sh: echo "{{.TARGET}}" | sed -e 's/[\/&]/\\&/g'
+      TARGET_PROJECTNAME: 
+        sh: basename "dirname {{.TARGET_PATH}}" | sed -e 's/[\/&]/\\&/g'
+    preconditions:
+      - sh: "[ {{.TARGET}} != '' ]"
+
+  replace-string:
+    cmds:
+      - grep -rlI '{{.SOURCE_STR}}' --include=*.{go,json} ./ | xargs -I@ sed -i '' 's/{{.SOURCE_STR}}/{{.TARGET_STG}}/g' @
+    silent: true
