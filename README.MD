@@ -65,7 +65,7 @@ Most of these can easily be replaced with your own choices since their usage is 
 
 Using Gorsk requires having Go 1.7 or above. Once you downloaded Gorsk (either using Git or go get) you need to configure the following:
 
-1. To use Gorsk as a starting point of a real project whose package name is something like `github.com/author/project`, move the directory `$GOPATH/github.com/ribice/gorsk` to `$GOPATH/github.com/author/project`. Run ``make relocate`` to rename the packages, e.g. ``make relocate TARGET=github.com/author/project``
+1. To use Gorsk as a starting point of a real project whose package name is something like `github.com/author/project`, move the directory `$GOPATH/github.com/ribice/gorsk` to `$GOPATH/github.com/author/project`. We use [task](https://github.com/go-task/task) as a task runner. Run ``task relocate`` to rename the packages, e.g. ``task relocate TARGET=github.com/author/project``
 
 2. Change the configuration file according to your needs, or create a new one.
 
