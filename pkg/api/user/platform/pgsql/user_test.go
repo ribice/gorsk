@@ -1,9 +1,10 @@
 package pgsql_test
 
 import (
+	"fmt"
 	"testing"
 
-	"github.com/ribice/gorsk/pkg/utl/model"
+	gorsk "github.com/ribice/gorsk/pkg/utl/model"
 
 	"github.com/ribice/gorsk/pkg/api/user/platform/pgsql"
 	"github.com/ribice/gorsk/pkg/utl/mock"
@@ -17,14 +18,6 @@ func TestCreate(t *testing.T) {
 		req      gorsk.User
 		wantData *gorsk.User
 	}{
-		{
-			name:    "User already exists",
-			wantErr: true,
-			req: gorsk.User{
-				Email:    "johndoe@mail.com",
-				Username: "johndoe",
-			},
-		},
 		{
 			name:    "Fail on insert duplicate ID",
 			wantErr: true,
@@ -71,6 +64,14 @@ func TestCreate(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:    "User already exists",
+			wantErr: true,
+			req: gorsk.User{
+				Email:    "newtomjones@mail.com",
+				Username: "newtomjones",
+			},
+		},
 	}
 
 	dbCon := mock.NewPGContainer(t)
@@ -78,10 +79,20 @@ func TestCreate(t *testing.T) {
 
 	db := mock.NewDB(t, dbCon, &gorsk.Role{}, &gorsk.User{})
 
-	if err := mock.InsertMultiple(db, &gorsk.Role{
-		ID:          1,
-		AccessLevel: 1,
-		Name:        "SUPER_ADMIN"}, &cases[1].req); err != nil {
+	err := mock.InsertMultiple(db,
+		&gorsk.Role{
+			ID:          1,
+			AccessLevel: 1,
+			Name:        "SUPER_ADMIN",
+		},
+		&gorsk.User{
+			Email:    "nottomjones@mail.com",
+			Username: "nottomjones",
+			Base: gorsk.Base{
+				ID: 1,
+			},
+		})
+	if err != nil {
 		t.Error(err)
 	}
 
@@ -90,6 +101,7 @@ func TestCreate(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			resp, err := udb.Create(db, tt.req)
+			fmt.Println("T", tt.name, err)
 			assert.Equal(t, tt.wantErr, err != nil)
 			if tt.wantData != nil {
 				if resp == nil {
