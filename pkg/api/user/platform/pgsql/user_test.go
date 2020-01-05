@@ -1,7 +1,6 @@
 package pgsql_test
 
 import (
-	"fmt"
 	"testing"
 
 	gorsk "github.com/ribice/gorsk/pkg/utl/model"
@@ -101,7 +100,6 @@ func TestCreate(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			resp, err := udb.Create(db, tt.req)
-			fmt.Println("T", tt.name, err)
 			assert.Equal(t, tt.wantErr, err != nil)
 			if tt.wantData != nil {
 				if resp == nil {
