@@ -29,15 +29,14 @@ func (u *User) Create(db orm.DB, usr gorsk.User) (*gorsk.User, error) {
 	var user = new(gorsk.User)
 	err := db.Model(user).Where("lower(username) = ? or lower(email) = ? and deleted_at is null",
 		strings.ToLower(usr.Username), strings.ToLower(usr.Email)).Select()
-
-	if err != nil && err != pg.ErrNoRows {
+	if (err == nil) || (err != nil && err != pg.ErrNoRows) {
 		return nil, ErrAlreadyExists
-
 	}
 
 	if err := db.Insert(&usr); err != nil {
 		return nil, err
 	}
+
 	return &usr, nil
 }
 
