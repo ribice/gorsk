@@ -2,7 +2,8 @@ package rbac
 
 import (
 	"github.com/labstack/echo"
-	"github.com/ribice/gorsk/pkg/utl/model"
+
+	"github.com/ribice/gorsk"
 )
 
 // New creates new RBAC service

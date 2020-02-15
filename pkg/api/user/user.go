@@ -3,12 +3,13 @@ package user
 
 import (
 	"github.com/labstack/echo"
-	gorsk "github.com/ribice/gorsk/pkg/utl/model"
+
+	gorsk2 "github.com/ribice/gorsk"
 	"github.com/ribice/gorsk/pkg/utl/query"
 )
 
 // Create creates a new user account
-func (u *User) Create(c echo.Context, req gorsk.User) (*gorsk.User, error) {
+func (u *User) Create(c echo.Context, req gorsk2.User) (*gorsk2.User, error) {
 	if err := u.rbac.AccountCreate(c, req.RoleID, req.CompanyID, req.LocationID); err != nil {
 		return nil, err
 	}
@@ -17,7 +18,7 @@ func (u *User) Create(c echo.Context, req gorsk.User) (*gorsk.User, error) {
 }
 
 // List returns list of users
-func (u *User) List(c echo.Context, p *gorsk.Pagination) ([]gorsk.User, error) {
+func (u *User) List(c echo.Context, p *gorsk2.Pagination) ([]gorsk2.User, error) {
 	au := u.rbac.User(c)
 	q, err := query.List(au)
 	if err != nil {
@@ -27,7 +28,7 @@ func (u *User) List(c echo.Context, p *gorsk.Pagination) ([]gorsk.User, error) {
 }
 
 // View returns single user
-func (u *User) View(c echo.Context, id int) (*gorsk.User, error) {
+func (u *User) View(c echo.Context, id int) (*gorsk2.User, error) {
 	if err := u.rbac.EnforceUser(c, id); err != nil {
 		return nil, err
 	}
@@ -57,13 +58,13 @@ type Update struct {
 }
 
 // Update updates user's contact information
-func (u *User) Update(c echo.Context, r *Update) (*gorsk.User, error) {
+func (u *User) Update(c echo.Context, r *Update) (*gorsk2.User, error) {
 	if err := u.rbac.EnforceUser(c, r.ID); err != nil {
 		return nil, err
 	}
 
-	if err := u.udb.Update(u.db, &gorsk.User{
-		Base:      gorsk.Base{ID: r.ID},
+	if err := u.udb.Update(u.db, &gorsk2.User{
+		Base:      gorsk2.Base{ID: r.ID},
 		FirstName: r.FirstName,
 		LastName:  r.LastName,
 		Mobile:    r.Mobile,

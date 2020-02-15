@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/ribice/gorsk/pkg/utl/model"
-
 	"github.com/stretchr/testify/assert"
+
+	"github.com/ribice/gorsk"
 
 	"github.com/ribice/gorsk/pkg/utl/postgres"
 

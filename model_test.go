@@ -3,12 +3,12 @@ package gorsk_test
 import (
 	"testing"
 
+	gorsk2 "github.com/ribice/gorsk"
 	"github.com/ribice/gorsk/pkg/utl/mock"
-	gorsk "github.com/ribice/gorsk/pkg/utl/model"
 )
 
 func TestBeforeInsert(t *testing.T) {
-	base := &gorsk.Base{
+	base := &gorsk2.Base{
 		ID: 1,
 	}
 	base.BeforeInsert(nil, nil)
@@ -21,7 +21,7 @@ func TestBeforeInsert(t *testing.T) {
 }
 
 func TestBeforeUpdate(t *testing.T) {
-	base := &gorsk.Base{
+	base := &gorsk2.Base{
 		ID:        1,
 		CreatedAt: mock.TestTime(2000),
 	}
@@ -33,7 +33,7 @@ func TestBeforeUpdate(t *testing.T) {
 }
 
 func TestPaginationTransform(t *testing.T) {
-	p := &gorsk.PaginationReq{
+	p := &gorsk2.PaginationReq{
 		Limit: 5000, Page: 5,
 	}
 

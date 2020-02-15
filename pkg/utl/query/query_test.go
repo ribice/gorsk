@@ -3,12 +3,13 @@ package query_test
 import (
 	"testing"
 
-	"github.com/ribice/gorsk/pkg/utl/model"
-
 	"github.com/labstack/echo"
 
-	"github.com/ribice/gorsk/pkg/utl/query"
+	"github.com/ribice/gorsk"
+
 	"github.com/stretchr/testify/assert"
+
+	"github.com/ribice/gorsk/pkg/utl/query"
 )
 
 func TestList(t *testing.T) {

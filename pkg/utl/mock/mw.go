@@ -1,15 +1,15 @@
 package mock
 
 import (
-	"github.com/ribice/gorsk/pkg/utl/model"
+	"github.com/ribice/gorsk"
 )
 
 // JWT mock
 type JWT struct {
-	GenerateTokenFn func(*gorsk.User) (string, string, error)
+	GenerateTokenFn func(*gorsk.User) (string, error)
 }
 
 // GenerateToken mock
-func (j *JWT) GenerateToken(u *gorsk.User) (string, string, error) {
+func (j *JWT) GenerateToken(u *gorsk.User) (string, error) {
 	return j.GenerateTokenFn(u)
 }

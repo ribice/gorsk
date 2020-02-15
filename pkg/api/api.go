@@ -47,7 +47,8 @@ import (
 	ut "github.com/ribice/gorsk/pkg/api/user/transport"
 
 	"github.com/ribice/gorsk/pkg/utl/config"
-	"github.com/ribice/gorsk/pkg/utl/middleware/jwt"
+	"github.com/ribice/gorsk/pkg/utl/jwt"
+	authMw "github.com/ribice/gorsk/pkg/utl/middleware/auth"
 	"github.com/ribice/gorsk/pkg/utl/postgres"
 	"github.com/ribice/gorsk/pkg/utl/rbac"
 	"github.com/ribice/gorsk/pkg/utl/secure"
@@ -63,16 +64,22 @@ func Start(cfg *config.Configuration) error {
 
 	sec := secure.New(cfg.App.MinPasswordStr, sha1.New())
 	rbac := rbac.New()
-	jwt := jwt.New(cfg.JWT.Secret, cfg.JWT.SigningAlgorithm, cfg.JWT.Duration)
+	jwt, err := jwt.New(cfg.JWT.SigningAlgorithm, cfg.JWT.DurationMinutes, cfg.JWT.MinSecretLength)
+	if err != nil {
+		return err
+	}
+
 	log := zlog.New()
 
 	e := server.New()
 	e.Static("/swaggerui", cfg.App.SwaggerUIPath)
 
-	at.NewHTTP(al.New(auth.Initialize(db, jwt, sec, rbac), log), e, jwt.MWFunc())
+	authMiddleware := authMw.Middleware(jwt)
+
+	at.NewHTTP(al.New(auth.Initialize(db, jwt, sec, rbac), log), e, authMiddleware)
 
 	v1 := e.Group("/v1")
-	v1.Use(jwt.MWFunc())
+	v1.Use(authMiddleware)
 
 	ut.NewHTTP(ul.New(user.Initialize(db, rbac, sec), log), v1)
 	pt.NewHTTP(pl.New(password.Initialize(db, rbac, sec), log), v1)

@@ -71,9 +71,11 @@ Using Gorsk requires having Go 1.7 or above. Once you downloaded Gorsk (either u
 
 3. Set the ("ENVIRONMENT_NAME") environment variable, either using terminal or os.Setenv("ENVIRONMENT_NAME","dev").
 
-4. In cmd/migration/main.go set up psn variable and then run it (go run main.go). It will create all tables, and necessery data, with a new account username/password admin/admin.
+4. Set the JWT secret env var ("JWT_SECRET")
 
-5. Run the app using:
+5. In cmd/migration/main.go set up psn variable and then run it (go run main.go). It will create all tables, and necessery data, with a new account username/password admin/admin.
+
+6. Run the app using:
 
 ```bash
 go run cmd/api/main.go

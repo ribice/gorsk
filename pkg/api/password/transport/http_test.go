@@ -6,12 +6,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/ribice/gorsk"
 	"github.com/ribice/gorsk/pkg/api/password"
 	"github.com/ribice/gorsk/pkg/api/password/transport"
 
 	"github.com/ribice/gorsk/pkg/utl/mock"
 	"github.com/ribice/gorsk/pkg/utl/mock/mockdb"
-	"github.com/ribice/gorsk/pkg/utl/model"
 	"github.com/ribice/gorsk/pkg/utl/server"
 
 	"github.com/go-pg/pg/orm"
