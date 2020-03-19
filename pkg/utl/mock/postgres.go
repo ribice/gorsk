@@ -19,7 +19,7 @@ func NewPGContainer(t *testing.T) *dockertest.Container {
 		fatalErr(t, err)
 
 		return db.Ping()
-	})
+	}, "-e", "POSTGRES_PASSWORD=postgres", "-e", "POSTGRES_USER=postgres")
 	fatalErr(t, err)
 
 	return container
