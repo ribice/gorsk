@@ -63,7 +63,7 @@ func Start(cfg *config.Configuration) error {
 	}
 
 	sec := secure.New(cfg.App.MinPasswordStr, sha1.New())
-	rbac := rbac.New()
+	rbac := rbac.Service{}
 	jwt, err := jwt.New(cfg.JWT.SigningAlgorithm, cfg.JWT.DurationMinutes, cfg.JWT.MinSecretLength)
 	if err != nil {
 		return err

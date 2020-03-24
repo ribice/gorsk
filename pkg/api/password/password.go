@@ -13,7 +13,7 @@ var (
 )
 
 // Change changes user's password
-func (p *Password) Change(c echo.Context, userID int, oldPass, newPass string) error {
+func (p Password) Change(c echo.Context, userID int, oldPass, newPass string) error {
 	if err := p.rbac.EnforceUser(c, userID); err != nil {
 		return err
 	}

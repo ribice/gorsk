@@ -14,7 +14,7 @@ import (
 
 func TestList(t *testing.T) {
 	type args struct {
-		user *gorsk.AuthUser
+		user gorsk.AuthUser
 	}
 	cases := []struct {
 		name     string
@@ -24,13 +24,13 @@ func TestList(t *testing.T) {
 	}{
 		{
 			name: "Super admin user",
-			args: args{user: &gorsk.AuthUser{
+			args: args{user: gorsk.AuthUser{
 				Role: gorsk.SuperAdminRole,
 			}},
 		},
 		{
 			name: "Company admin user",
-			args: args{user: &gorsk.AuthUser{
+			args: args{user: gorsk.AuthUser{
 				Role:      gorsk.CompanyAdminRole,
 				CompanyID: 1,
 			}},
@@ -40,7 +40,7 @@ func TestList(t *testing.T) {
 		},
 		{
 			name: "Location admin user",
-			args: args{user: &gorsk.AuthUser{
+			args: args{user: gorsk.AuthUser{
 				Role:       gorsk.LocationAdminRole,
 				CompanyID:  1,
 				LocationID: 2,
@@ -51,7 +51,7 @@ func TestList(t *testing.T) {
 		},
 		{
 			name: "Normal user",
-			args: args{user: &gorsk.AuthUser{
+			args: args{user: gorsk.AuthUser{
 				Role: gorsk.UserRole,
 			}},
 			wantErr: echo.ErrForbidden,

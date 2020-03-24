@@ -26,7 +26,7 @@ type LogService struct {
 const name = "auth"
 
 // Authenticate logging
-func (ls *LogService) Authenticate(c echo.Context, user, password string) (resp *gorsk.AuthToken, err error) {
+func (ls *LogService) Authenticate(c echo.Context, user, password string) (resp gorsk.AuthToken, err error) {
 	defer func(begin time.Time) {
 		ls.logger.Log(
 			c,
@@ -41,14 +41,14 @@ func (ls *LogService) Authenticate(c echo.Context, user, password string) (resp 
 }
 
 // Refresh logging
-func (ls *LogService) Refresh(c echo.Context, req string) (resp *gorsk.RefreshToken, err error) {
+func (ls *LogService) Refresh(c echo.Context, req string) (token string, err error) {
 	defer func(begin time.Time) {
 		ls.logger.Log(
 			c,
 			name, "Refresh request", err,
 			map[string]interface{}{
 				"req":  req,
-				"resp": resp,
+				"resp": token,
 				"took": time.Since(begin),
 			},
 		)
@@ -57,7 +57,7 @@ func (ls *LogService) Refresh(c echo.Context, req string) (resp *gorsk.RefreshTo
 }
 
 // Me logging
-func (ls *LogService) Me(c echo.Context) (resp *gorsk.User, err error) {
+func (ls *LogService) Me(c echo.Context) (resp gorsk.User, err error) {
 	defer func(begin time.Time) {
 		ls.logger.Log(
 			c,

@@ -16,7 +16,7 @@ func TestUser(t *testing.T) {
 	ctx := mock.EchoCtxWithKeys([]string{
 		"id", "company_id", "location_id", "username", "email", "role"},
 		9, 15, 52, "ribice", "ribice@gmail.com", gorsk.SuperAdminRole)
-	wantUser := &gorsk.AuthUser{
+	wantUser := gorsk.AuthUser{
 		ID:         9,
 		Username:   "ribice",
 		CompanyID:  15,
@@ -24,7 +24,7 @@ func TestUser(t *testing.T) {
 		Email:      "ribice@gmail.com",
 		Role:       gorsk.SuperAdminRole,
 	}
-	rbacSvc := rbac.New()
+	rbacSvc := rbac.Service{}
 	assert.Equal(t, wantUser, rbacSvc.User(ctx))
 }
 
@@ -51,7 +51,7 @@ func TestEnforceRole(t *testing.T) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			rbacSvc := rbac.New()
+			rbacSvc := rbac.Service{}
 			res := rbacSvc.EnforceRole(tt.args.ctx, tt.args.role)
 			assert.Equal(t, tt.wantErr, res == echo.ErrForbidden)
 		})
@@ -86,7 +86,7 @@ func TestEnforceUser(t *testing.T) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			rbacSvc := rbac.New()
+			rbacSvc := rbac.Service{}
 			res := rbacSvc.EnforceUser(tt.args.ctx, tt.args.id)
 			assert.Equal(t, tt.wantErr, res == echo.ErrForbidden)
 		})
@@ -126,7 +126,7 @@ func TestEnforceCompany(t *testing.T) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			rbacSvc := rbac.New()
+			rbacSvc := rbac.Service{}
 			res := rbacSvc.EnforceCompany(tt.args.ctx, tt.args.id)
 			assert.Equal(t, tt.wantErr, res == echo.ErrForbidden)
 		})
@@ -166,7 +166,7 @@ func TestEnforceLocation(t *testing.T) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			rbacSvc := rbac.New()
+			rbacSvc := rbac.Service{}
 			res := rbacSvc.EnforceLocation(tt.args.ctx, tt.args.id)
 			assert.Equal(t, tt.wantErr, res == echo.ErrForbidden)
 		})
@@ -218,7 +218,7 @@ func TestAccountCreate(t *testing.T) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			rbacSvc := rbac.New()
+			rbacSvc := rbac.Service{}
 			res := rbacSvc.AccountCreate(tt.args.ctx, tt.args.roleID, tt.args.companyID, tt.args.locationID)
 			assert.Equal(t, tt.wantErr, res == echo.ErrForbidden)
 		})
@@ -227,7 +227,7 @@ func TestAccountCreate(t *testing.T) {
 
 func TestIsLowerRole(t *testing.T) {
 	ctx := mock.EchoCtxWithKeys([]string{"role"}, gorsk.CompanyAdminRole)
-	rbacSvc := rbac.New()
+	rbacSvc := rbac.Service{}
 	if rbacSvc.IsLowerRole(ctx, gorsk.LocationAdminRole) != nil {
 		t.Error("The requested user is higher role than the user requesting it")
 	}

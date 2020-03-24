@@ -13,7 +13,7 @@ type PaginationReq struct {
 }
 
 // Transform checks and converts http pagination into database pagination model
-func (p *PaginationReq) Transform() *Pagination {
+func (p PaginationReq) Transform() Pagination {
 	if p.Limit < 1 {
 		p.Limit = paginationDefaultLimit
 	}
@@ -22,10 +22,10 @@ func (p *PaginationReq) Transform() *Pagination {
 		p.Limit = paginationMaxLimit
 	}
 
-	return &Pagination{Limit: p.Limit, Offset: p.Page * p.Limit}
+	return Pagination{Limit: p.Limit, Offset: p.Page * p.Limit}
 }
 
-// Pagination holds paginations data
+// Pagination data
 type Pagination struct {
 	Limit  int `json:"limit,omitempty"`
 	Offset int `json:"offset,omitempty"`

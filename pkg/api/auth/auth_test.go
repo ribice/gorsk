@@ -22,7 +22,7 @@ func TestAuthenticate(t *testing.T) {
 	cases := []struct {
 		name     string
 		args     args
-		wantData *gorsk.AuthToken
+		wantData gorsk.AuthToken
 		wantErr  bool
 		udb      *mockdb.User
 		jwt      *mock.JWT
@@ -33,8 +33,8 @@ func TestAuthenticate(t *testing.T) {
 			args:    args{user: "juzernejm"},
 			wantErr: true,
 			udb: &mockdb.User{
-				FindByUsernameFn: func(db orm.DB, user string) (*gorsk.User, error) {
-					return nil, gorsk.ErrGeneric
+				FindByUsernameFn: func(db orm.DB, user string) (gorsk.User, error) {
+					return gorsk.User{}, gorsk.ErrGeneric
 				},
 			},
 		},
@@ -43,10 +43,8 @@ func TestAuthenticate(t *testing.T) {
 			args:    args{user: "juzernejm", pass: "notHashedPassword"},
 			wantErr: true,
 			udb: &mockdb.User{
-				FindByUsernameFn: func(db orm.DB, user string) (*gorsk.User, error) {
-					return &gorsk.User{
-						Username: user,
-					}, nil
+				FindByUsernameFn: func(db orm.DB, user string) (gorsk.User, error) {
+					return gorsk.User{Username: user}, nil
 				},
 			},
 			sec: &mock.Secure{
@@ -60,8 +58,8 @@ func TestAuthenticate(t *testing.T) {
 			args:    args{user: "juzernejm", pass: "pass"},
 			wantErr: true,
 			udb: &mockdb.User{
-				FindByUsernameFn: func(db orm.DB, user string) (*gorsk.User, error) {
-					return &gorsk.User{
+				FindByUsernameFn: func(db orm.DB, user string) (gorsk.User, error) {
+					return gorsk.User{
 						Username: user,
 						Password: "pass",
 						Active:   false,
@@ -79,8 +77,8 @@ func TestAuthenticate(t *testing.T) {
 			args:    args{user: "juzernejm", pass: "pass"},
 			wantErr: true,
 			udb: &mockdb.User{
-				FindByUsernameFn: func(db orm.DB, user string) (*gorsk.User, error) {
-					return &gorsk.User{
+				FindByUsernameFn: func(db orm.DB, user string) (gorsk.User, error) {
+					return gorsk.User{
 						Username: user,
 						Password: "pass",
 						Active:   true,
@@ -93,7 +91,7 @@ func TestAuthenticate(t *testing.T) {
 				},
 			},
 			jwt: &mock.JWT{
-				GenerateTokenFn: func(u *gorsk.User) (string, error) {
+				GenerateTokenFn: func(u gorsk.User) (string, error) {
 					return "", gorsk.ErrGeneric
 				},
 			},
@@ -103,14 +101,14 @@ func TestAuthenticate(t *testing.T) {
 			args:    args{user: "juzernejm", pass: "pass"},
 			wantErr: true,
 			udb: &mockdb.User{
-				FindByUsernameFn: func(db orm.DB, user string) (*gorsk.User, error) {
-					return &gorsk.User{
+				FindByUsernameFn: func(db orm.DB, user string) (gorsk.User, error) {
+					return gorsk.User{
 						Username: user,
 						Password: "pass",
 						Active:   true,
 					}, nil
 				},
-				UpdateFn: func(db orm.DB, u *gorsk.User) error {
+				UpdateFn: func(db orm.DB, u gorsk.User) error {
 					return gorsk.ErrGeneric
 				},
 			},
@@ -123,7 +121,7 @@ func TestAuthenticate(t *testing.T) {
 				},
 			},
 			jwt: &mock.JWT{
-				GenerateTokenFn: func(u *gorsk.User) (string, error) {
+				GenerateTokenFn: func(u gorsk.User) (string, error) {
 					return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9", nil
 				},
 			},
@@ -132,19 +130,19 @@ func TestAuthenticate(t *testing.T) {
 			name: "Success",
 			args: args{user: "juzernejm", pass: "pass"},
 			udb: &mockdb.User{
-				FindByUsernameFn: func(db orm.DB, user string) (*gorsk.User, error) {
-					return &gorsk.User{
+				FindByUsernameFn: func(db orm.DB, user string) (gorsk.User, error) {
+					return gorsk.User{
 						Username: user,
 						Password: "password",
 						Active:   true,
 					}, nil
 				},
-				UpdateFn: func(db orm.DB, u *gorsk.User) error {
+				UpdateFn: func(db orm.DB, u gorsk.User) error {
 					return nil
 				},
 			},
 			jwt: &mock.JWT{
-				GenerateTokenFn: func(u *gorsk.User) (string, error) {
+				GenerateTokenFn: func(u gorsk.User) (string, error) {
 					return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9", nil
 				},
 			},
@@ -156,7 +154,7 @@ func TestAuthenticate(t *testing.T) {
 					return "refreshtoken"
 				},
 			},
-			wantData: &gorsk.AuthToken{
+			wantData: gorsk.AuthToken{
 				Token:        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
 				RefreshToken: "refreshtoken",
 			},
@@ -166,7 +164,7 @@ func TestAuthenticate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			s := auth.New(nil, tt.udb, tt.jwt, tt.sec, nil)
 			token, err := s.Authenticate(nil, tt.args.user, tt.args.pass)
-			if tt.wantData != nil {
+			if tt.wantData.RefreshToken != "" {
 				tt.wantData.RefreshToken = token.RefreshToken
 				assert.Equal(t, tt.wantData, token)
 			}
@@ -182,7 +180,7 @@ func TestRefresh(t *testing.T) {
 	cases := []struct {
 		name     string
 		args     args
-		wantData *gorsk.RefreshToken
+		wantData string
 		wantErr  bool
 		udb      *mockdb.User
 		jwt      *mock.JWT
@@ -192,8 +190,8 @@ func TestRefresh(t *testing.T) {
 			args:    args{token: "refreshtoken"},
 			wantErr: true,
 			udb: &mockdb.User{
-				FindByTokenFn: func(db orm.DB, token string) (*gorsk.User, error) {
-					return nil, gorsk.ErrGeneric
+				FindByTokenFn: func(db orm.DB, token string) (gorsk.User, error) {
+					return gorsk.User{}, gorsk.ErrGeneric
 				},
 			},
 		},
@@ -202,8 +200,8 @@ func TestRefresh(t *testing.T) {
 			args:    args{token: "refreshtoken"},
 			wantErr: true,
 			udb: &mockdb.User{
-				FindByTokenFn: func(db orm.DB, token string) (*gorsk.User, error) {
-					return &gorsk.User{
+				FindByTokenFn: func(db orm.DB, token string) (gorsk.User, error) {
+					return gorsk.User{
 						Username: "username",
 						Password: "password",
 						Active:   true,
@@ -212,7 +210,7 @@ func TestRefresh(t *testing.T) {
 				},
 			},
 			jwt: &mock.JWT{
-				GenerateTokenFn: func(u *gorsk.User) (string, error) {
+				GenerateTokenFn: func(u gorsk.User) (string, error) {
 					return "", gorsk.ErrGeneric
 				},
 			},
@@ -221,8 +219,8 @@ func TestRefresh(t *testing.T) {
 			name: "Success",
 			args: args{token: "refreshtoken"},
 			udb: &mockdb.User{
-				FindByTokenFn: func(db orm.DB, token string) (*gorsk.User, error) {
-					return &gorsk.User{
+				FindByTokenFn: func(db orm.DB, token string) (gorsk.User, error) {
+					return gorsk.User{
 						Username: "username",
 						Password: "password",
 						Active:   true,
@@ -231,13 +229,11 @@ func TestRefresh(t *testing.T) {
 				},
 			},
 			jwt: &mock.JWT{
-				GenerateTokenFn: func(u *gorsk.User) (string, error) {
+				GenerateTokenFn: func(u gorsk.User) (string, error) {
 					return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9", nil
 				},
 			},
-			wantData: &gorsk.RefreshToken{
-				Token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
-			},
+			wantData: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
 		},
 	}
 	for _, tt := range cases {
@@ -253,7 +249,7 @@ func TestRefresh(t *testing.T) {
 func TestMe(t *testing.T) {
 	cases := []struct {
 		name     string
-		wantData *gorsk.User
+		wantData gorsk.User
 		udb      *mockdb.User
 		rbac     *mock.RBAC
 		wantErr  bool
@@ -261,13 +257,13 @@ func TestMe(t *testing.T) {
 		{
 			name: "Success",
 			rbac: &mock.RBAC{
-				UserFn: func(echo.Context) *gorsk.AuthUser {
-					return &gorsk.AuthUser{ID: 9}
+				UserFn: func(echo.Context) gorsk.AuthUser {
+					return gorsk.AuthUser{ID: 9}
 				},
 			},
 			udb: &mockdb.User{
-				ViewFn: func(db orm.DB, id int) (*gorsk.User, error) {
-					return &gorsk.User{
+				ViewFn: func(db orm.DB, id int) (gorsk.User, error) {
+					return gorsk.User{
 						Base: gorsk.Base{
 							ID:        id,
 							CreatedAt: mock.TestTime(1999),
@@ -281,7 +277,7 @@ func TestMe(t *testing.T) {
 					}, nil
 				},
 			},
-			wantData: &gorsk.User{
+			wantData: gorsk.User{
 				Base: gorsk.Base{
 					ID:        9,
 					CreatedAt: mock.TestTime(1999),
@@ -302,12 +298,5 @@ func TestMe(t *testing.T) {
 			assert.Equal(t, tt.wantData, user)
 			assert.Equal(t, tt.wantErr, err != nil)
 		})
-	}
-}
-
-func TestInitialize(t *testing.T) {
-	a := auth.Initialize(nil, nil, nil, nil)
-	if a == nil {
-		t.Error("auth service not initialized")
 	}
 }
