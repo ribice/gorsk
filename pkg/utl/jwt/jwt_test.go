@@ -1,8 +1,6 @@
 package jwt_test
 
 import (
-	"fmt"
-	"os"
 	"strings"
 	"testing"
 
@@ -62,17 +60,12 @@ func TestGenerateToken(t *testing.T) {
 
 	for name, tt := range cases {
 		t.Run(name, func(t *testing.T) {
-			if tt.secret != "" {
-				os.Setenv("JWT_SECRET", tt.secret)
-			}
-			jwtSvc, err := jwt.New(tt.algo, 60, tt.minSecretLen)
-			fmt.Println("error is: ", name, err)
+			jwtSvc, err := jwt.New(tt.algo, tt.secret, 60, tt.minSecretLen)
 			assert.Equal(t, tt.wantErr, err != nil)
 			if err == nil {
 				token, _ := jwtSvc.GenerateToken(tt.req)
 				assert.Equal(t, tt.want, strings.Split(token, ".")[0])
 			}
-
 		})
 	}
 }

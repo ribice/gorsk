@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"github.com/labstack/echo"
@@ -230,8 +229,7 @@ func TestMe(t *testing.T) {
 	}
 
 	client := &http.Client{}
-	os.Setenv("JWT_SECRET", "jwtsecret123")
-	jwt, err := jwt.New("HS256", 60, 4)
+	jwt, err := jwt.New("HS256", "jwtsecret123", 60, 4)
 	if err != nil {
 		t.Fatal(err)
 	}

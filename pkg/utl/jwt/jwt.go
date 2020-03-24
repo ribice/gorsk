@@ -2,7 +2,6 @@ package jwt
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -14,12 +13,11 @@ import (
 var minSecretLen = 128
 
 // New generates new JWT service necessary for auth middleware
-func New(algo string, ttlMinutes, minSecretLength int) (Service, error) {
+func New(algo, secret string, ttlMinutes, minSecretLength int) (Service, error) {
 	signingMethod := jwt.GetSigningMethod(algo)
 	if signingMethod == nil {
 		return Service{}, fmt.Errorf("invalid jwt signing method: %s", algo)
 	}
-	secret := os.Getenv("JWT_SECRET")
 	if minSecretLength > 0 {
 		minSecretLen = minSecretLength
 	}

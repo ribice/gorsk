@@ -1,7 +1,6 @@
 package pgsql_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/ribice/gorsk"
@@ -199,7 +198,6 @@ func TestFindByToken(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			user, err := udb.FindByToken(db, tt.token)
 			assert.Equal(t, tt.wantErr, err != nil)
-			fmt.Println("User: ", user, "error", err)
 			if tt.wantData.ID != 0 {
 				tt.wantData.CreatedAt = user.CreatedAt
 				tt.wantData.UpdatedAt = user.UpdatedAt

@@ -33,6 +33,8 @@ package api
 
 import (
 	"crypto/sha1"
+	"log"
+	"os"
 
 	"github.com/ribice/gorsk/pkg/utl/zlog"
 
@@ -64,7 +66,11 @@ func Start(cfg *config.Configuration) error {
 
 	sec := secure.New(cfg.App.MinPasswordStr, sha1.New())
 	rbac := rbac.Service{}
-	jwt, err := jwt.New(cfg.JWT.SigningAlgorithm, cfg.JWT.DurationMinutes, cfg.JWT.MinSecretLength)
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		log.Fatal("JWT_SECRET not set but is mandatory")
+	}
+	jwt, err := jwt.New(cfg.JWT.SigningAlgorithm, secret, cfg.JWT.DurationMinutes, cfg.JWT.MinSecretLength)
 	if err != nil {
 		return err
 	}
