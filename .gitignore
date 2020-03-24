@@ -1,3 +1,5 @@
 profile.out
 coverage.txt
 cmd/api/config/files/config.dev.yaml
+.idea/
+.DS_Store

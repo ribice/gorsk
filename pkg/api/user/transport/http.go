@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	gorsk2 "github.com/ribice/gorsk"
+	"github.com/ribice/gorsk"
 	"github.com/ribice/gorsk/pkg/api/user"
 
 	"github.com/labstack/echo"
@@ -150,9 +150,9 @@ type createReq struct {
 	PasswordConfirm string `json:"password_confirm" validate:"required"`
 	Email           string `json:"email" validate:"required,email"`
 
-	CompanyID  int               `json:"company_id" validate:"required"`
-	LocationID int               `json:"location_id" validate:"required"`
-	RoleID     gorsk2.AccessRole `json:"role_id" validate:"required"`
+	CompanyID  int              `json:"company_id" validate:"required"`
+	LocationID int              `json:"location_id" validate:"required"`
+	RoleID     gorsk.AccessRole `json:"role_id" validate:"required"`
 }
 
 func (h *HTTP) create(c echo.Context) error {
@@ -167,11 +167,11 @@ func (h *HTTP) create(c echo.Context) error {
 		return ErrPasswordsNotMaching
 	}
 
-	if r.RoleID < gorsk2.SuperAdminRole || r.RoleID > gorsk2.UserRole {
-		return gorsk2.ErrBadRequest
+	if r.RoleID < gorsk.SuperAdminRole || r.RoleID > gorsk.UserRole {
+		return gorsk.ErrBadRequest
 	}
 
-	usr, err := h.svc.Create(c, gorsk2.User{
+	usr, err := h.svc.Create(c, gorsk.User{
 		Username:   r.Username,
 		Password:   r.Password,
 		Email:      r.Email,
@@ -190,12 +190,12 @@ func (h *HTTP) create(c echo.Context) error {
 }
 
 type listResponse struct {
-	Users []gorsk2.User `json:"users"`
-	Page  int           `json:"page"`
+	Users []gorsk.User `json:"users"`
+	Page  int          `json:"page"`
 }
 
 func (h *HTTP) list(c echo.Context) error {
-	p := new(gorsk2.PaginationReq)
+	p := new(gorsk.PaginationReq)
 	if err := c.Bind(p); err != nil {
 		return err
 	}
@@ -212,7 +212,7 @@ func (h *HTTP) list(c echo.Context) error {
 func (h *HTTP) view(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return gorsk2.ErrBadRequest
+		return gorsk.ErrBadRequest
 	}
 
 	result, err := h.svc.View(c, id)
@@ -237,7 +237,7 @@ type updateReq struct {
 func (h *HTTP) update(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return gorsk2.ErrBadRequest
+		return gorsk.ErrBadRequest
 	}
 
 	req := new(updateReq)
@@ -264,7 +264,7 @@ func (h *HTTP) update(c echo.Context) error {
 func (h *HTTP) delete(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return gorsk2.ErrBadRequest
+		return gorsk.ErrBadRequest
 	}
 
 	if err := h.svc.Delete(c, id); err != nil {

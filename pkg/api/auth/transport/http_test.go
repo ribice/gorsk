@@ -231,7 +231,10 @@ func TestMe(t *testing.T) {
 
 	client := &http.Client{}
 	os.Setenv("JWT_SECRET", "jwtsecret123")
-	jwt, _ := jwt.New("HS256", 60, 4)
+	jwt, err := jwt.New("HS256", 60, 4)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {

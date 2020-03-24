@@ -6,11 +6,11 @@ import (
 	"strconv"
 	"time"
 
-	zxcvbn "github.com/nbutton23/zxcvbn-go"
+	"github.com/nbutton23/zxcvbn-go"
 	"golang.org/x/crypto/bcrypt"
 )
 
-// New initalizes security service
+// New initializes security service
 func New(minPWStr int, h hash.Hash) *Service {
 	return &Service{minPWStr: minPWStr, h: h}
 }

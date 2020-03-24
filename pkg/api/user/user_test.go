@@ -6,7 +6,7 @@ import (
 	"github.com/go-pg/pg/orm"
 	"github.com/labstack/echo"
 
-	gorsk2 "github.com/ribice/gorsk"
+	"github.com/ribice/gorsk"
 	"github.com/ribice/gorsk/pkg/api/user"
 	"github.com/ribice/gorsk/pkg/utl/mock"
 	"github.com/ribice/gorsk/pkg/utl/mock/mockdb"
@@ -17,24 +17,24 @@ import (
 func TestCreate(t *testing.T) {
 	type args struct {
 		c   echo.Context
-		req gorsk2.User
+		req gorsk.User
 	}
 	cases := []struct {
 		name     string
 		args     args
 		wantErr  bool
-		wantData *gorsk2.User
+		wantData *gorsk.User
 		udb      *mockdb.User
 		rbac     *mock.RBAC
 		sec      *mock.Secure
 	}{{
 		name: "Fail on is lower role",
 		rbac: &mock.RBAC{
-			AccountCreateFn: func(echo.Context, gorsk2.AccessRole, int, int) error {
-				return gorsk2.ErrGeneric
+			AccountCreateFn: func(echo.Context, gorsk.AccessRole, int, int) error {
+				return gorsk.ErrGeneric
 			}},
 		wantErr: true,
-		args: args{req: gorsk2.User{
+		args: args{req: gorsk.User{
 			FirstName: "John",
 			LastName:  "Doe",
 			Username:  "JohnDoe",
@@ -44,7 +44,7 @@ func TestCreate(t *testing.T) {
 	},
 		{
 			name: "Success",
-			args: args{req: gorsk2.User{
+			args: args{req: gorsk.User{
 				FirstName: "John",
 				LastName:  "Doe",
 				Username:  "JohnDoe",
@@ -52,7 +52,7 @@ func TestCreate(t *testing.T) {
 				Password:  "Thranduil8822",
 			}},
 			udb: &mockdb.User{
-				CreateFn: func(db orm.DB, u gorsk2.User) (*gorsk2.User, error) {
+				CreateFn: func(db orm.DB, u gorsk.User) (*gorsk.User, error) {
 					u.CreatedAt = mock.TestTime(2000)
 					u.UpdatedAt = mock.TestTime(2000)
 					u.Base.ID = 1
@@ -60,7 +60,7 @@ func TestCreate(t *testing.T) {
 				},
 			},
 			rbac: &mock.RBAC{
-				AccountCreateFn: func(echo.Context, gorsk2.AccessRole, int, int) error {
+				AccountCreateFn: func(echo.Context, gorsk.AccessRole, int, int) error {
 					return nil
 				}},
 			sec: &mock.Secure{
@@ -68,8 +68,8 @@ func TestCreate(t *testing.T) {
 					return "h4$h3d"
 				},
 			},
-			wantData: &gorsk2.User{
-				Base: gorsk2.Base{
+			wantData: &gorsk.User{
+				Base: gorsk.Base{
 					ID:        1,
 					CreatedAt: mock.TestTime(2000),
 					UpdatedAt: mock.TestTime(2000),
@@ -98,7 +98,7 @@ func TestView(t *testing.T) {
 	cases := []struct {
 		name     string
 		args     args
-		wantData *gorsk2.User
+		wantData *gorsk.User
 		wantErr  error
 		udb      *mockdb.User
 		rbac     *mock.RBAC
@@ -108,15 +108,15 @@ func TestView(t *testing.T) {
 			args: args{id: 5},
 			rbac: &mock.RBAC{
 				EnforceUserFn: func(c echo.Context, id int) error {
-					return gorsk2.ErrGeneric
+					return gorsk.ErrGeneric
 				}},
-			wantErr: gorsk2.ErrGeneric,
+			wantErr: gorsk.ErrGeneric,
 		},
 		{
 			name: "Success",
 			args: args{id: 1},
-			wantData: &gorsk2.User{
-				Base: gorsk2.Base{
+			wantData: &gorsk.User{
+				Base: gorsk.Base{
 					ID:        1,
 					CreatedAt: mock.TestTime(2000),
 					UpdatedAt: mock.TestTime(2000),
@@ -130,10 +130,10 @@ func TestView(t *testing.T) {
 					return nil
 				}},
 			udb: &mockdb.User{
-				ViewFn: func(db orm.DB, id int) (*gorsk2.User, error) {
+				ViewFn: func(db orm.DB, id int) (*gorsk.User, error) {
 					if id == 1 {
-						return &gorsk2.User{
-							Base: gorsk2.Base{
+						return &gorsk.User{
+							Base: gorsk.Base{
 								ID:        1,
 								CreatedAt: mock.TestTime(2000),
 								UpdatedAt: mock.TestTime(2000),
@@ -160,52 +160,52 @@ func TestView(t *testing.T) {
 func TestList(t *testing.T) {
 	type args struct {
 		c   echo.Context
-		pgn *gorsk2.Pagination
+		pgn *gorsk.Pagination
 	}
 	cases := []struct {
 		name     string
 		args     args
-		wantData []gorsk2.User
+		wantData []gorsk.User
 		wantErr  bool
 		udb      *mockdb.User
 		rbac     *mock.RBAC
 	}{
 		{
 			name: "Fail on query List",
-			args: args{c: nil, pgn: &gorsk2.Pagination{
+			args: args{c: nil, pgn: &gorsk.Pagination{
 				Limit:  100,
 				Offset: 200,
 			}},
 			wantErr: true,
 			rbac: &mock.RBAC{
-				UserFn: func(c echo.Context) *gorsk2.AuthUser {
-					return &gorsk2.AuthUser{
+				UserFn: func(c echo.Context) *gorsk.AuthUser {
+					return &gorsk.AuthUser{
 						ID:         1,
 						CompanyID:  2,
 						LocationID: 3,
-						Role:       gorsk2.UserRole,
+						Role:       gorsk.UserRole,
 					}
 				}}},
 		{
 			name: "Success",
-			args: args{c: nil, pgn: &gorsk2.Pagination{
+			args: args{c: nil, pgn: &gorsk.Pagination{
 				Limit:  100,
 				Offset: 200,
 			}},
 			rbac: &mock.RBAC{
-				UserFn: func(c echo.Context) *gorsk2.AuthUser {
-					return &gorsk2.AuthUser{
+				UserFn: func(c echo.Context) *gorsk.AuthUser {
+					return &gorsk.AuthUser{
 						ID:         1,
 						CompanyID:  2,
 						LocationID: 3,
-						Role:       gorsk2.AdminRole,
+						Role:       gorsk.AdminRole,
 					}
 				}},
 			udb: &mockdb.User{
-				ListFn: func(orm.DB, *gorsk2.ListQuery, *gorsk2.Pagination) ([]gorsk2.User, error) {
-					return []gorsk2.User{
+				ListFn: func(orm.DB, *gorsk.ListQuery, *gorsk.Pagination) ([]gorsk.User, error) {
+					return []gorsk.User{
 						{
-							Base: gorsk2.Base{
+							Base: gorsk.Base{
 								ID:        1,
 								CreatedAt: mock.TestTime(1999),
 								UpdatedAt: mock.TestTime(2000),
@@ -216,7 +216,7 @@ func TestList(t *testing.T) {
 							Username:  "johndoe",
 						},
 						{
-							Base: gorsk2.Base{
+							Base: gorsk.Base{
 								ID:        2,
 								CreatedAt: mock.TestTime(2001),
 								UpdatedAt: mock.TestTime(2002),
@@ -228,9 +228,9 @@ func TestList(t *testing.T) {
 						},
 					}, nil
 				}},
-			wantData: []gorsk2.User{
+			wantData: []gorsk.User{
 				{
-					Base: gorsk2.Base{
+					Base: gorsk.Base{
 						ID:        1,
 						CreatedAt: mock.TestTime(1999),
 						UpdatedAt: mock.TestTime(2000),
@@ -241,7 +241,7 @@ func TestList(t *testing.T) {
 					Username:  "johndoe",
 				},
 				{
-					Base: gorsk2.Base{
+					Base: gorsk.Base{
 						ID:        2,
 						CreatedAt: mock.TestTime(2001),
 						UpdatedAt: mock.TestTime(2002),
@@ -279,13 +279,13 @@ func TestDelete(t *testing.T) {
 		{
 			name:    "Fail on ViewUser",
 			args:    args{id: 1},
-			wantErr: gorsk2.ErrGeneric,
+			wantErr: gorsk.ErrGeneric,
 			udb: &mockdb.User{
-				ViewFn: func(db orm.DB, id int) (*gorsk2.User, error) {
+				ViewFn: func(db orm.DB, id int) (*gorsk.User, error) {
 					if id != 1 {
 						return nil, nil
 					}
-					return nil, gorsk2.ErrGeneric
+					return nil, gorsk.ErrGeneric
 				},
 			},
 		},
@@ -293,53 +293,53 @@ func TestDelete(t *testing.T) {
 			name: "Fail on RBAC",
 			args: args{id: 1},
 			udb: &mockdb.User{
-				ViewFn: func(db orm.DB, id int) (*gorsk2.User, error) {
-					return &gorsk2.User{
-						Base: gorsk2.Base{
+				ViewFn: func(db orm.DB, id int) (*gorsk.User, error) {
+					return &gorsk.User{
+						Base: gorsk.Base{
 							ID:        id,
 							CreatedAt: mock.TestTime(1999),
 							UpdatedAt: mock.TestTime(2000),
 						},
 						FirstName: "John",
 						LastName:  "Doe",
-						Role: &gorsk2.Role{
-							AccessLevel: gorsk2.UserRole,
+						Role: &gorsk.Role{
+							AccessLevel: gorsk.UserRole,
 						},
 					}, nil
 				},
 			},
 			rbac: &mock.RBAC{
-				IsLowerRoleFn: func(echo.Context, gorsk2.AccessRole) error {
-					return gorsk2.ErrGeneric
+				IsLowerRoleFn: func(echo.Context, gorsk.AccessRole) error {
+					return gorsk.ErrGeneric
 				}},
-			wantErr: gorsk2.ErrGeneric,
+			wantErr: gorsk.ErrGeneric,
 		},
 		{
 			name: "Success",
 			args: args{id: 1},
 			udb: &mockdb.User{
-				ViewFn: func(db orm.DB, id int) (*gorsk2.User, error) {
-					return &gorsk2.User{
-						Base: gorsk2.Base{
+				ViewFn: func(db orm.DB, id int) (*gorsk.User, error) {
+					return &gorsk.User{
+						Base: gorsk.Base{
 							ID:        id,
 							CreatedAt: mock.TestTime(1999),
 							UpdatedAt: mock.TestTime(2000),
 						},
 						FirstName: "John",
 						LastName:  "Doe",
-						Role: &gorsk2.Role{
-							AccessLevel: gorsk2.AdminRole,
+						Role: &gorsk.Role{
+							AccessLevel: gorsk.AdminRole,
 							ID:          2,
 							Name:        "Admin",
 						},
 					}, nil
 				},
-				DeleteFn: func(db orm.DB, usr *gorsk2.User) error {
+				DeleteFn: func(db orm.DB, usr *gorsk.User) error {
 					return nil
 				},
 			},
 			rbac: &mock.RBAC{
-				IsLowerRoleFn: func(echo.Context, gorsk2.AccessRole) error {
+				IsLowerRoleFn: func(echo.Context, gorsk.AccessRole) error {
 					return nil
 				}},
 		},
@@ -363,7 +363,7 @@ func TestUpdate(t *testing.T) {
 	cases := []struct {
 		name     string
 		args     args
-		wantData *gorsk2.User
+		wantData *gorsk.User
 		wantErr  error
 		udb      *mockdb.User
 		rbac     *mock.RBAC
@@ -375,9 +375,9 @@ func TestUpdate(t *testing.T) {
 			}},
 			rbac: &mock.RBAC{
 				EnforceUserFn: func(c echo.Context, id int) error {
-					return gorsk2.ErrGeneric
+					return gorsk.ErrGeneric
 				}},
-			wantErr: gorsk2.ErrGeneric,
+			wantErr: gorsk.ErrGeneric,
 		},
 		{
 			name: "Fail on Update",
@@ -388,11 +388,11 @@ func TestUpdate(t *testing.T) {
 				EnforceUserFn: func(c echo.Context, id int) error {
 					return nil
 				}},
-			wantErr: gorsk2.ErrGeneric,
+			wantErr: gorsk.ErrGeneric,
 			udb: &mockdb.User{
-				ViewFn: func(db orm.DB, id int) (*gorsk2.User, error) {
-					return &gorsk2.User{
-						Base: gorsk2.Base{
+				ViewFn: func(db orm.DB, id int) (*gorsk.User, error) {
+					return &gorsk.User{
+						Base: gorsk.Base{
 							ID:        1,
 							CreatedAt: mock.TestTime(1990),
 							UpdatedAt: mock.TestTime(1991),
@@ -408,8 +408,8 @@ func TestUpdate(t *testing.T) {
 						Email:      "golang@go.org",
 					}, nil
 				},
-				UpdateFn: func(db orm.DB, usr *gorsk2.User) error {
-					return gorsk2.ErrGeneric
+				UpdateFn: func(db orm.DB, usr *gorsk.User) error {
+					return gorsk.ErrGeneric
 				},
 			},
 		},
@@ -426,8 +426,8 @@ func TestUpdate(t *testing.T) {
 				EnforceUserFn: func(c echo.Context, id int) error {
 					return nil
 				}},
-			wantData: &gorsk2.User{
-				Base: gorsk2.Base{
+			wantData: &gorsk.User{
+				Base: gorsk.Base{
 					ID:        1,
 					CreatedAt: mock.TestTime(1990),
 					UpdatedAt: mock.TestTime(2000),
@@ -443,9 +443,9 @@ func TestUpdate(t *testing.T) {
 				Email:      "golang@go.org",
 			},
 			udb: &mockdb.User{
-				ViewFn: func(db orm.DB, id int) (*gorsk2.User, error) {
-					return &gorsk2.User{
-						Base: gorsk2.Base{
+				ViewFn: func(db orm.DB, id int) (*gorsk.User, error) {
+					return &gorsk.User{
+						Base: gorsk.Base{
 							ID:        1,
 							CreatedAt: mock.TestTime(1990),
 							UpdatedAt: mock.TestTime(2000),
@@ -461,7 +461,7 @@ func TestUpdate(t *testing.T) {
 						Email:      "golang@go.org",
 					}, nil
 				},
-				UpdateFn: func(db orm.DB, usr *gorsk2.User) error {
+				UpdateFn: func(db orm.DB, usr *gorsk.User) error {
 					usr.UpdatedAt = mock.TestTime(2000)
 					return nil
 				},

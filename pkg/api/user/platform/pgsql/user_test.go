@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	gorsk2 "github.com/ribice/gorsk"
+	"github.com/ribice/gorsk"
 
 	"github.com/ribice/gorsk/pkg/api/user/platform/pgsql"
 	"github.com/ribice/gorsk/pkg/utl/mock"
@@ -15,13 +15,13 @@ func TestCreate(t *testing.T) {
 	cases := []struct {
 		name     string
 		wantErr  bool
-		req      gorsk2.User
-		wantData *gorsk2.User
+		req      gorsk.User
+		wantData *gorsk.User
 	}{
 		{
 			name:    "Fail on insert duplicate ID",
 			wantErr: true,
-			req: gorsk2.User{
+			req: gorsk.User{
 				Email:      "tomjones@mail.com",
 				FirstName:  "Tom",
 				LastName:   "Jones",
@@ -30,14 +30,14 @@ func TestCreate(t *testing.T) {
 				CompanyID:  1,
 				LocationID: 1,
 				Password:   "pass",
-				Base: gorsk2.Base{
+				Base: gorsk.Base{
 					ID: 1,
 				},
 			},
 		},
 		{
 			name: "Success",
-			req: gorsk2.User{
+			req: gorsk.User{
 				Email:      "newtomjones@mail.com",
 				FirstName:  "Tom",
 				LastName:   "Jones",
@@ -46,11 +46,11 @@ func TestCreate(t *testing.T) {
 				CompanyID:  1,
 				LocationID: 1,
 				Password:   "pass",
-				Base: gorsk2.Base{
+				Base: gorsk.Base{
 					ID: 2,
 				},
 			},
-			wantData: &gorsk2.User{
+			wantData: &gorsk.User{
 				Email:      "newtomjones@mail.com",
 				FirstName:  "Tom",
 				LastName:   "Jones",
@@ -59,7 +59,7 @@ func TestCreate(t *testing.T) {
 				CompanyID:  1,
 				LocationID: 1,
 				Password:   "pass",
-				Base: gorsk2.Base{
+				Base: gorsk.Base{
 					ID: 2,
 				},
 			},
@@ -67,7 +67,7 @@ func TestCreate(t *testing.T) {
 		{
 			name:    "User already exists",
 			wantErr: true,
-			req: gorsk2.User{
+			req: gorsk.User{
 				Email:    "newtomjones@mail.com",
 				Username: "newtomjones",
 			},
@@ -77,18 +77,18 @@ func TestCreate(t *testing.T) {
 	dbCon := mock.NewPGContainer(t)
 	defer dbCon.Shutdown()
 
-	db := mock.NewDB(t, dbCon, &gorsk2.Role{}, &gorsk2.User{})
+	db := mock.NewDB(t, dbCon, &gorsk.Role{}, &gorsk.User{})
 
 	err := mock.InsertMultiple(db,
-		&gorsk2.Role{
+		&gorsk.Role{
 			ID:          1,
 			AccessLevel: 1,
 			Name:        "SUPER_ADMIN",
 		},
-		&gorsk2.User{
+		&gorsk.User{
 			Email:    "nottomjones@mail.com",
 			Username: "nottomjones",
-			Base: gorsk2.Base{
+			Base: gorsk.Base{
 				ID: 1,
 			},
 		})
@@ -120,7 +120,7 @@ func TestView(t *testing.T) {
 		name     string
 		wantErr  bool
 		id       int
-		wantData *gorsk2.User
+		wantData *gorsk.User
 	}{
 		{
 			name:    "User does not exist",
@@ -130,7 +130,7 @@ func TestView(t *testing.T) {
 		{
 			name: "Success",
 			id:   2,
-			wantData: &gorsk2.User{
+			wantData: &gorsk.User{
 				Email:      "tomjones@mail.com",
 				FirstName:  "Tom",
 				LastName:   "Jones",
@@ -139,10 +139,10 @@ func TestView(t *testing.T) {
 				CompanyID:  1,
 				LocationID: 1,
 				Password:   "newPass",
-				Base: gorsk2.Base{
+				Base: gorsk.Base{
 					ID: 2,
 				},
-				Role: &gorsk2.Role{
+				Role: &gorsk.Role{
 					ID:          1,
 					AccessLevel: 1,
 					Name:        "SUPER_ADMIN",
@@ -154,9 +154,9 @@ func TestView(t *testing.T) {
 	dbCon := mock.NewPGContainer(t)
 	defer dbCon.Shutdown()
 
-	db := mock.NewDB(t, dbCon, &gorsk2.Role{}, &gorsk2.User{})
+	db := mock.NewDB(t, dbCon, &gorsk.Role{}, &gorsk.User{})
 
-	if err := mock.InsertMultiple(db, &gorsk2.Role{
+	if err := mock.InsertMultiple(db, &gorsk.Role{
 		ID:          1,
 		AccessLevel: 1,
 		Name:        "SUPER_ADMIN"}, cases[1].wantData); err != nil {
@@ -186,13 +186,13 @@ func TestUpdate(t *testing.T) {
 	cases := []struct {
 		name     string
 		wantErr  bool
-		usr      *gorsk2.User
-		wantData *gorsk2.User
+		usr      *gorsk.User
+		wantData *gorsk.User
 	}{
 		{
 			name: "Success",
-			usr: &gorsk2.User{
-				Base: gorsk2.Base{
+			usr: &gorsk.User{
+				Base: gorsk.Base{
 					ID: 2,
 				},
 				FirstName: "Z",
@@ -202,7 +202,7 @@ func TestUpdate(t *testing.T) {
 				Mobile:    "345678",
 				Username:  "newUsername",
 			},
-			wantData: &gorsk2.User{
+			wantData: &gorsk.User{
 				Email:      "tomjones@mail.com",
 				FirstName:  "Z",
 				LastName:   "Freak",
@@ -214,7 +214,7 @@ func TestUpdate(t *testing.T) {
 				Address:    "Address",
 				Phone:      "123456",
 				Mobile:     "345678",
-				Base: gorsk2.Base{
+				Base: gorsk.Base{
 					ID: 2,
 				},
 			},
@@ -224,9 +224,9 @@ func TestUpdate(t *testing.T) {
 	dbCon := mock.NewPGContainer(t)
 	defer dbCon.Shutdown()
 
-	db := mock.NewDB(t, dbCon, &gorsk2.Role{}, &gorsk2.User{})
+	db := mock.NewDB(t, dbCon, &gorsk.Role{}, &gorsk.User{})
 
-	if err := mock.InsertMultiple(db, &gorsk2.Role{
+	if err := mock.InsertMultiple(db, &gorsk.Role{
 		ID:          1,
 		AccessLevel: 1,
 		Name:        "SUPER_ADMIN"}, cases[0].usr); err != nil {
@@ -240,8 +240,8 @@ func TestUpdate(t *testing.T) {
 			err := udb.Update(db, tt.wantData)
 			assert.Equal(t, tt.wantErr, err != nil)
 			if tt.wantData != nil {
-				user := &gorsk2.User{
-					Base: gorsk2.Base{
+				user := &gorsk.User{
+					Base: gorsk.Base{
 						ID: tt.usr.ID,
 					},
 				}
@@ -262,28 +262,28 @@ func TestList(t *testing.T) {
 	cases := []struct {
 		name     string
 		wantErr  bool
-		qp       *gorsk2.ListQuery
-		pg       *gorsk2.Pagination
-		wantData []gorsk2.User
+		qp       *gorsk.ListQuery
+		pg       *gorsk.Pagination
+		wantData []gorsk.User
 	}{
 		{
 			name:    "Invalid pagination values",
 			wantErr: true,
-			pg: &gorsk2.Pagination{
+			pg: &gorsk.Pagination{
 				Limit: -100,
 			},
 		},
 		{
 			name: "Success",
-			pg: &gorsk2.Pagination{
+			pg: &gorsk.Pagination{
 				Limit:  100,
 				Offset: 0,
 			},
-			qp: &gorsk2.ListQuery{
+			qp: &gorsk.ListQuery{
 				ID:    1,
 				Query: "company_id = ?",
 			},
-			wantData: []gorsk2.User{
+			wantData: []gorsk.User{
 				{
 					Email:      "tomjones@mail.com",
 					FirstName:  "Tom",
@@ -293,10 +293,10 @@ func TestList(t *testing.T) {
 					CompanyID:  1,
 					LocationID: 1,
 					Password:   "newPass",
-					Base: gorsk2.Base{
+					Base: gorsk.Base{
 						ID: 2,
 					},
-					Role: &gorsk2.Role{
+					Role: &gorsk.Role{
 						ID:          1,
 						AccessLevel: 1,
 						Name:        "SUPER_ADMIN",
@@ -311,10 +311,10 @@ func TestList(t *testing.T) {
 					CompanyID:  1,
 					LocationID: 1,
 					Password:   "hunter2",
-					Base: gorsk2.Base{
+					Base: gorsk.Base{
 						ID: 1,
 					},
-					Role: &gorsk2.Role{
+					Role: &gorsk.Role{
 						ID:          1,
 						AccessLevel: 1,
 						Name:        "SUPER_ADMIN",
@@ -328,9 +328,9 @@ func TestList(t *testing.T) {
 	dbCon := mock.NewPGContainer(t)
 	defer dbCon.Shutdown()
 
-	db := mock.NewDB(t, dbCon, &gorsk2.Role{}, &gorsk2.User{})
+	db := mock.NewDB(t, dbCon, &gorsk.Role{}, &gorsk.User{})
 
-	if err := mock.InsertMultiple(db, &gorsk2.Role{
+	if err := mock.InsertMultiple(db, &gorsk.Role{
 		ID:          1,
 		AccessLevel: 1,
 		Name:        "SUPER_ADMIN"}, &cases[1].wantData); err != nil {
@@ -358,18 +358,18 @@ func TestDelete(t *testing.T) {
 	cases := []struct {
 		name     string
 		wantErr  bool
-		usr      *gorsk2.User
-		wantData *gorsk2.User
+		usr      *gorsk.User
+		wantData *gorsk.User
 	}{
 		{
 			name: "Success",
-			usr: &gorsk2.User{
-				Base: gorsk2.Base{
+			usr: &gorsk.User{
+				Base: gorsk.Base{
 					ID:        2,
 					DeletedAt: mock.TestTime(2018),
 				},
 			},
-			wantData: &gorsk2.User{
+			wantData: &gorsk.User{
 				Email:      "tomjones@mail.com",
 				FirstName:  "Tom",
 				LastName:   "Jones",
@@ -378,7 +378,7 @@ func TestDelete(t *testing.T) {
 				CompanyID:  1,
 				LocationID: 1,
 				Password:   "newPass",
-				Base: gorsk2.Base{
+				Base: gorsk.Base{
 					ID: 2,
 				},
 			},
@@ -388,9 +388,9 @@ func TestDelete(t *testing.T) {
 	dbCon := mock.NewPGContainer(t)
 	defer dbCon.Shutdown()
 
-	db := mock.NewDB(t, dbCon, &gorsk2.Role{}, &gorsk2.User{})
+	db := mock.NewDB(t, dbCon, &gorsk.Role{}, &gorsk.User{})
 
-	if err := mock.InsertMultiple(db, &gorsk2.Role{
+	if err := mock.InsertMultiple(db, &gorsk.Role{
 		ID:          1,
 		AccessLevel: 1,
 		Name:        "SUPER_ADMIN"}, cases[0].wantData); err != nil {

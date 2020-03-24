@@ -8,7 +8,7 @@ import (
 
 	"github.com/ribice/gorsk"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go"
 )
 
 var minSecretLen = 128

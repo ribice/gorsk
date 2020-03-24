@@ -76,7 +76,7 @@ func (s *Service) EnforceLocation(c echo.Context, ID int) error {
 	if err := s.EnforceRole(c, gorsk.LocationAdminRole); err != nil {
 		return err
 	}
-	return checkBool((c.Get("location_id").(int) == ID))
+	return checkBool(c.Get("location_id").(int) == ID)
 }
 
 func (s *Service) isAdmin(c echo.Context) bool {
