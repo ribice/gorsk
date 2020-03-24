@@ -21,7 +21,7 @@ func TestNew(t *testing.T) {
 		}
 
 		return db.Ping()
-	})
+	}, "-e", "POSTGRES_PASSWORD=postgres", "-e", "POSTGRES_USER=postgres")
 	defer container.Shutdown()
 	if err != nil {
 		t.Fatalf("could not start postgres, %s", err)
