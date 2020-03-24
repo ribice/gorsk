@@ -2,7 +2,6 @@ package jwt
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -14,17 +13,16 @@ import (
 var minSecretLen = 128
 
 // New generates new JWT service necessary for auth middleware
-func New(algo string, ttlMinutes, minSecretLength int) (Service, error) {
+func New(algo, secret string, ttlMinutes, minSecretLength int) (Service, error) {
 	signingMethod := jwt.GetSigningMethod(algo)
 	if signingMethod == nil {
 		return Service{}, fmt.Errorf("invalid jwt signing method: %s", algo)
 	}
-	secret := os.Getenv("JWT_SECRET")
 	if minSecretLength > 0 {
 		minSecretLen = minSecretLength
 	}
 	if len(secret) < minSecretLen {
-		return Service{}, fmt.Errorf("jwt secret length is %v, which is less required %v", len(secret), minSecretLength)
+		return Service{}, fmt.Errorf("jwt secret length is %v, which is less than required %v", len(secret), minSecretLen)
 	}
 	return Service{
 		key:  []byte(secret),
@@ -62,7 +60,7 @@ func (s Service) ParseToken(authHeader string) (*jwt.Token, error) {
 }
 
 // GenerateToken generates new JWT token and populates it with user data
-func (s Service) GenerateToken(u *gorsk.User) (string, error) {
+func (s Service) GenerateToken(u gorsk.User) (string, error) {
 	return jwt.NewWithClaims(s.algo, jwt.MapClaims{
 		"id":  u.Base.ID,
 		"u":   u.Username,

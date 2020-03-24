@@ -15,8 +15,8 @@ type Service interface {
 }
 
 // New creates new password application service
-func New(db *pg.DB, udb UserDB, rbac RBAC, sec Securer) *Password {
-	return &Password{
+func New(db *pg.DB, udb UserDB, rbac RBAC, sec Securer) Password {
+	return Password{
 		db:   db,
 		udb:  udb,
 		rbac: rbac,
@@ -25,8 +25,8 @@ func New(db *pg.DB, udb UserDB, rbac RBAC, sec Securer) *Password {
 }
 
 // Initialize initalizes password application service with defaults
-func Initialize(db *pg.DB, rbac RBAC, sec Securer) *Password {
-	return New(db, pgsql.NewUser(), rbac, sec)
+func Initialize(db *pg.DB, rbac RBAC, sec Securer) Password {
+	return New(db, pgsql.User{}, rbac, sec)
 }
 
 // Password represents password application service
@@ -39,8 +39,8 @@ type Password struct {
 
 // UserDB represents user repository interface
 type UserDB interface {
-	View(orm.DB, int) (*gorsk.User, error)
-	Update(orm.DB, *gorsk.User) error
+	View(orm.DB, int) (gorsk.User, error)
+	Update(orm.DB, gorsk.User) error
 }
 
 // Securer represents security interface

@@ -47,11 +47,11 @@ func TestChange(t *testing.T) {
 					return nil
 				}},
 			udb: &mockdb.User{
-				ViewFn: func(db orm.DB, id int) (*gorsk.User, error) {
+				ViewFn: func(db orm.DB, id int) (gorsk.User, error) {
 					if id != 1 {
-						return nil, nil
+						return gorsk.User{}, nil
 					}
-					return nil, gorsk.ErrGeneric
+					return gorsk.User{}, gorsk.ErrGeneric
 				},
 			},
 		},
@@ -64,8 +64,8 @@ func TestChange(t *testing.T) {
 				}},
 			wantErr: true,
 			udb: &mockdb.User{
-				ViewFn: func(db orm.DB, id int) (*gorsk.User, error) {
-					return &gorsk.User{
+				ViewFn: func(db orm.DB, id int) (gorsk.User, error) {
+					return gorsk.User{
 						Password: "HashedPassword",
 					}, nil
 				},
@@ -85,8 +85,8 @@ func TestChange(t *testing.T) {
 				}},
 			wantErr: true,
 			udb: &mockdb.User{
-				ViewFn: func(db orm.DB, id int) (*gorsk.User, error) {
-					return &gorsk.User{
+				ViewFn: func(db orm.DB, id int) (gorsk.User, error) {
+					return gorsk.User{
 						Password: "HashedPassword",
 					}, nil
 				},
@@ -108,12 +108,12 @@ func TestChange(t *testing.T) {
 					return nil
 				}},
 			udb: &mockdb.User{
-				ViewFn: func(db orm.DB, id int) (*gorsk.User, error) {
-					return &gorsk.User{
+				ViewFn: func(db orm.DB, id int) (gorsk.User, error) {
+					return gorsk.User{
 						Password: "$2a$10$udRBroNGBeOYwSWCVzf6Lulg98uAoRCIi4t75VZg84xgw6EJbFNsG",
 					}, nil
 				},
-				UpdateFn: func(orm.DB, *gorsk.User) error {
+				UpdateFn: func(orm.DB, gorsk.User) error {
 					return nil
 				},
 			},
@@ -137,12 +137,5 @@ func TestChange(t *testing.T) {
 			assert.Equal(t, tt.wantErr, err != nil)
 			// Check whether password was changed
 		})
-	}
-}
-
-func TestInitialize(t *testing.T) {
-	p := password.Initialize(nil, nil, nil)
-	if p == nil {
-		t.Error("password service not initialized")
 	}
 }

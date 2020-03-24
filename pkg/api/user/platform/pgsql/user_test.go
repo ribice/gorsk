@@ -16,7 +16,7 @@ func TestCreate(t *testing.T) {
 		name     string
 		wantErr  bool
 		req      gorsk.User
-		wantData *gorsk.User
+		wantData gorsk.User
 	}{
 		{
 			name:    "Fail on insert duplicate ID",
@@ -50,7 +50,7 @@ func TestCreate(t *testing.T) {
 					ID: 2,
 				},
 			},
-			wantData: &gorsk.User{
+			wantData: gorsk.User{
 				Email:      "newtomjones@mail.com",
 				FirstName:  "Tom",
 				LastName:   "Jones",
@@ -96,15 +96,15 @@ func TestCreate(t *testing.T) {
 		t.Error(err)
 	}
 
-	udb := pgsql.NewUser()
+	udb := pgsql.User{}
 
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			resp, err := udb.Create(db, tt.req)
 			assert.Equal(t, tt.wantErr, err != nil)
-			if tt.wantData != nil {
-				if resp == nil {
-					t.Error("Expected data, but received nil.")
+			if tt.wantData.ID != 0 {
+				if resp.ID == 0 {
+					t.Error("expected data, but got empty struct.")
 					return
 				}
 				tt.wantData.CreatedAt = resp.CreatedAt
@@ -120,7 +120,7 @@ func TestView(t *testing.T) {
 		name     string
 		wantErr  bool
 		id       int
-		wantData *gorsk.User
+		wantData gorsk.User
 	}{
 		{
 			name:    "User does not exist",
@@ -130,7 +130,7 @@ func TestView(t *testing.T) {
 		{
 			name: "Success",
 			id:   2,
-			wantData: &gorsk.User{
+			wantData: gorsk.User{
 				Email:      "tomjones@mail.com",
 				FirstName:  "Tom",
 				LastName:   "Jones",
@@ -159,19 +159,19 @@ func TestView(t *testing.T) {
 	if err := mock.InsertMultiple(db, &gorsk.Role{
 		ID:          1,
 		AccessLevel: 1,
-		Name:        "SUPER_ADMIN"}, cases[1].wantData); err != nil {
+		Name:        "SUPER_ADMIN"}, &cases[1].wantData); err != nil {
 		t.Error(err)
 	}
 
-	udb := pgsql.NewUser()
+	udb := pgsql.User{}
 
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			user, err := udb.View(db, tt.id)
 			assert.Equal(t, tt.wantErr, err != nil)
-			if tt.wantData != nil {
-				if user == nil {
-					t.Errorf("response was nil due to: %v", err)
+			if tt.wantData.ID != 0 {
+				if user.ID == 0 {
+					t.Errorf("response was empty due to: %v", err)
 				} else {
 					tt.wantData.CreatedAt = user.CreatedAt
 					tt.wantData.UpdatedAt = user.UpdatedAt
@@ -186,12 +186,12 @@ func TestUpdate(t *testing.T) {
 	cases := []struct {
 		name     string
 		wantErr  bool
-		usr      *gorsk.User
-		wantData *gorsk.User
+		usr      gorsk.User
+		wantData gorsk.User
 	}{
 		{
 			name: "Success",
-			usr: &gorsk.User{
+			usr: gorsk.User{
 				Base: gorsk.Base{
 					ID: 2,
 				},
@@ -202,7 +202,7 @@ func TestUpdate(t *testing.T) {
 				Mobile:    "345678",
 				Username:  "newUsername",
 			},
-			wantData: &gorsk.User{
+			wantData: gorsk.User{
 				Email:      "tomjones@mail.com",
 				FirstName:  "Z",
 				LastName:   "Freak",
@@ -229,23 +229,23 @@ func TestUpdate(t *testing.T) {
 	if err := mock.InsertMultiple(db, &gorsk.Role{
 		ID:          1,
 		AccessLevel: 1,
-		Name:        "SUPER_ADMIN"}, cases[0].usr); err != nil {
+		Name:        "SUPER_ADMIN"}, &cases[0].usr); err != nil {
 		t.Error(err)
 	}
 
-	udb := pgsql.NewUser()
+	udb := pgsql.User{}
 
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			err := udb.Update(db, tt.wantData)
 			assert.Equal(t, tt.wantErr, err != nil)
-			if tt.wantData != nil {
-				user := &gorsk.User{
+			if tt.wantData.ID != 0 {
+				user := gorsk.User{
 					Base: gorsk.Base{
 						ID: tt.usr.ID,
 					},
 				}
-				if err := db.Select(user); err != nil {
+				if err := db.Select(&user); err != nil {
 					t.Error(err)
 				}
 				tt.wantData.UpdatedAt = user.UpdatedAt
@@ -263,19 +263,19 @@ func TestList(t *testing.T) {
 		name     string
 		wantErr  bool
 		qp       *gorsk.ListQuery
-		pg       *gorsk.Pagination
+		pg       gorsk.Pagination
 		wantData []gorsk.User
 	}{
 		{
 			name:    "Invalid pagination values",
 			wantErr: true,
-			pg: &gorsk.Pagination{
+			pg: gorsk.Pagination{
 				Limit: -100,
 			},
 		},
 		{
 			name: "Success",
-			pg: &gorsk.Pagination{
+			pg: gorsk.Pagination{
 				Limit:  100,
 				Offset: 0,
 			},
@@ -337,7 +337,7 @@ func TestList(t *testing.T) {
 		t.Error(err)
 	}
 
-	udb := pgsql.NewUser()
+	udb := pgsql.User{}
 
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
@@ -358,18 +358,18 @@ func TestDelete(t *testing.T) {
 	cases := []struct {
 		name     string
 		wantErr  bool
-		usr      *gorsk.User
-		wantData *gorsk.User
+		usr      gorsk.User
+		wantData gorsk.User
 	}{
 		{
 			name: "Success",
-			usr: &gorsk.User{
+			usr: gorsk.User{
 				Base: gorsk.Base{
 					ID:        2,
 					DeletedAt: mock.TestTime(2018),
 				},
 			},
-			wantData: &gorsk.User{
+			wantData: gorsk.User{
 				Email:      "tomjones@mail.com",
 				FirstName:  "Tom",
 				LastName:   "Jones",
@@ -393,11 +393,11 @@ func TestDelete(t *testing.T) {
 	if err := mock.InsertMultiple(db, &gorsk.Role{
 		ID:          1,
 		AccessLevel: 1,
-		Name:        "SUPER_ADMIN"}, cases[0].wantData); err != nil {
+		Name:        "SUPER_ADMIN"}, &cases[0].wantData); err != nil {
 		t.Error(err)
 	}
 
-	udb := pgsql.NewUser()
+	udb := pgsql.User{}
 
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {

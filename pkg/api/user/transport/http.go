@@ -16,9 +16,9 @@ type HTTP struct {
 }
 
 // NewHTTP creates new user http service
-func NewHTTP(svc user.Service, er *echo.Group) {
+func NewHTTP(svc user.Service, r *echo.Group) {
 	h := HTTP{svc}
-	ur := er.Group("/users")
+	ur := r.Group("/users")
 	// swagger:route POST /v1/users users userCreate
 	// Creates new user account.
 	// responses:
@@ -155,7 +155,7 @@ type createReq struct {
 	RoleID     gorsk.AccessRole `json:"role_id" validate:"required"`
 }
 
-func (h *HTTP) create(c echo.Context) error {
+func (h HTTP) create(c echo.Context) error {
 	r := new(createReq)
 
 	if err := c.Bind(r); err != nil {
@@ -194,22 +194,22 @@ type listResponse struct {
 	Page  int          `json:"page"`
 }
 
-func (h *HTTP) list(c echo.Context) error {
-	p := new(gorsk.PaginationReq)
-	if err := c.Bind(p); err != nil {
+func (h HTTP) list(c echo.Context) error {
+	var req gorsk.PaginationReq
+	if err := c.Bind(&req); err != nil {
 		return err
 	}
 
-	result, err := h.svc.List(c, p.Transform())
+	result, err := h.svc.List(c, req.Transform())
 
 	if err != nil {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, listResponse{result, p.Page})
+	return c.JSON(http.StatusOK, listResponse{result, req.Page})
 }
 
-func (h *HTTP) view(c echo.Context) error {
+func (h HTTP) view(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		return gorsk.ErrBadRequest
@@ -234,7 +234,7 @@ type updateReq struct {
 	Address   string `json:"address,omitempty"`
 }
 
-func (h *HTTP) update(c echo.Context) error {
+func (h HTTP) update(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		return gorsk.ErrBadRequest
@@ -245,7 +245,7 @@ func (h *HTTP) update(c echo.Context) error {
 		return err
 	}
 
-	usr, err := h.svc.Update(c, &user.Update{
+	usr, err := h.svc.Update(c, user.Update{
 		ID:        id,
 		FirstName: req.FirstName,
 		LastName:  req.LastName,
@@ -261,7 +261,7 @@ func (h *HTTP) update(c echo.Context) error {
 	return c.JSON(http.StatusOK, usr)
 }
 
-func (h *HTTP) delete(c echo.Context) error {
+func (h HTTP) delete(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		return gorsk.ErrBadRequest

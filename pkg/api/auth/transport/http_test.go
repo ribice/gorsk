@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"github.com/labstack/echo"
@@ -43,8 +42,8 @@ func TestLogin(t *testing.T) {
 			req:        `{"username":"juzernejm","password":"hunter123"}`,
 			wantStatus: http.StatusInternalServerError,
 			udb: &mockdb.User{
-				FindByUsernameFn: func(orm.DB, string) (*gorsk.User, error) {
-					return nil, gorsk.ErrGeneric
+				FindByUsernameFn: func(orm.DB, string) (gorsk.User, error) {
+					return gorsk.User{}, gorsk.ErrGeneric
 				},
 			},
 		},
@@ -53,18 +52,18 @@ func TestLogin(t *testing.T) {
 			req:        `{"username":"juzernejm","password":"hunter123"}`,
 			wantStatus: http.StatusOK,
 			udb: &mockdb.User{
-				FindByUsernameFn: func(orm.DB, string) (*gorsk.User, error) {
-					return &gorsk.User{
+				FindByUsernameFn: func(orm.DB, string) (gorsk.User, error) {
+					return gorsk.User{
 						Password: "hunter123",
 						Active:   true,
 					}, nil
 				},
-				UpdateFn: func(db orm.DB, u *gorsk.User) error {
+				UpdateFn: func(db orm.DB, u gorsk.User) error {
 					return nil
 				},
 			},
 			jwt: &mock.JWT{
-				GenerateTokenFn: func(*gorsk.User) (string, error) {
+				GenerateTokenFn: func(gorsk.User) (string, error) {
 					return "jwttokenstring", nil
 				},
 			},
@@ -119,8 +118,8 @@ func TestRefresh(t *testing.T) {
 			req:        "refreshtoken",
 			wantStatus: http.StatusInternalServerError,
 			udb: &mockdb.User{
-				FindByTokenFn: func(orm.DB, string) (*gorsk.User, error) {
-					return nil, gorsk.ErrGeneric
+				FindByTokenFn: func(orm.DB, string) (gorsk.User, error) {
+					return gorsk.User{}, gorsk.ErrGeneric
 				},
 			},
 		},
@@ -129,15 +128,15 @@ func TestRefresh(t *testing.T) {
 			req:        "refreshtoken",
 			wantStatus: http.StatusOK,
 			udb: &mockdb.User{
-				FindByTokenFn: func(orm.DB, string) (*gorsk.User, error) {
-					return &gorsk.User{
+				FindByTokenFn: func(orm.DB, string) (gorsk.User, error) {
+					return gorsk.User{
 						Username: "johndoe",
 						Active:   true,
 					}, nil
 				},
 			},
 			jwt: &mock.JWT{
-				GenerateTokenFn: func(*gorsk.User) (string, error) {
+				GenerateTokenFn: func(gorsk.User) (string, error) {
 					return "jwttokenstring", nil
 				},
 			},
@@ -173,7 +172,7 @@ func TestMe(t *testing.T) {
 	cases := []struct {
 		name       string
 		wantStatus int
-		wantResp   *gorsk.User
+		wantResp   gorsk.User
 		header     string
 		udb        *mockdb.User
 		rbac       *mock.RBAC
@@ -182,13 +181,13 @@ func TestMe(t *testing.T) {
 			name:       "Fail on user view",
 			wantStatus: http.StatusInternalServerError,
 			udb: &mockdb.User{
-				ViewFn: func(orm.DB, int) (*gorsk.User, error) {
-					return nil, gorsk.ErrGeneric
+				ViewFn: func(orm.DB, int) (gorsk.User, error) {
+					return gorsk.User{}, gorsk.ErrGeneric
 				},
 			},
 			rbac: &mock.RBAC{
-				UserFn: func(echo.Context) *gorsk.AuthUser {
-					return &gorsk.AuthUser{ID: 1}
+				UserFn: func(echo.Context) gorsk.AuthUser {
+					return gorsk.AuthUser{ID: 1}
 				},
 			},
 			header: mock.HeaderValid(),
@@ -197,8 +196,8 @@ func TestMe(t *testing.T) {
 			name:       "Success",
 			wantStatus: http.StatusOK,
 			udb: &mockdb.User{
-				ViewFn: func(db orm.DB, i int) (*gorsk.User, error) {
-					return &gorsk.User{
+				ViewFn: func(db orm.DB, i int) (gorsk.User, error) {
+					return gorsk.User{
 						Base: gorsk.Base{
 							ID: i,
 						},
@@ -211,12 +210,12 @@ func TestMe(t *testing.T) {
 				},
 			},
 			rbac: &mock.RBAC{
-				UserFn: func(echo.Context) *gorsk.AuthUser {
-					return &gorsk.AuthUser{ID: 1}
+				UserFn: func(echo.Context) gorsk.AuthUser {
+					return gorsk.AuthUser{ID: 1}
 				},
 			},
 			header: mock.HeaderValid(),
-			wantResp: &gorsk.User{
+			wantResp: gorsk.User{
 				Base: gorsk.Base{
 					ID: 1,
 				},
@@ -230,8 +229,7 @@ func TestMe(t *testing.T) {
 	}
 
 	client := &http.Client{}
-	os.Setenv("JWT_SECRET", "jwtsecret123")
-	jwt, err := jwt.New("HS256", 60, 4)
+	jwt, err := jwt.New("HS256", "jwtsecret123", 60, 4)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -253,9 +251,9 @@ func TestMe(t *testing.T) {
 				t.Fatal(err)
 			}
 			defer res.Body.Close()
-			if tt.wantResp != nil {
-				response := new(gorsk.User)
-				if err := json.NewDecoder(res.Body).Decode(response); err != nil {
+			if tt.wantResp.ID != 0 {
+				var response gorsk.User
+				if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
 					t.Fatal(err)
 				}
 				assert.Equal(t, tt.wantResp, response)

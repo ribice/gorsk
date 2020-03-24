@@ -1,7 +1,6 @@
 package jwt_test
 
 import (
-	"os"
 	"strings"
 	"testing"
 
@@ -16,7 +15,7 @@ func TestGenerateToken(t *testing.T) {
 		algo         string
 		secret       string
 		minSecretLen int
-		req          *gorsk.User
+		req          gorsk.User
 		wantErr      bool
 		want         string
 	}{
@@ -43,7 +42,7 @@ func TestGenerateToken(t *testing.T) {
 			algo:         "HS256",
 			secret:       "g0r$kt3$t1ng",
 			minSecretLen: 1,
-			req: &gorsk.User{
+			req: gorsk.User{
 				Base: gorsk.Base{
 					ID: 1,
 				},
@@ -61,16 +60,12 @@ func TestGenerateToken(t *testing.T) {
 
 	for name, tt := range cases {
 		t.Run(name, func(t *testing.T) {
-			if tt.secret != "" {
-				os.Setenv("JWT_SECRET", tt.secret)
-			}
-			jwtSvc, err := jwt.New(tt.algo, 60, tt.minSecretLen)
+			jwtSvc, err := jwt.New(tt.algo, tt.secret, 60, tt.minSecretLen)
 			assert.Equal(t, tt.wantErr, err != nil)
 			if err == nil {
 				token, _ := jwtSvc.GenerateToken(tt.req)
 				assert.Equal(t, tt.want, strings.Split(token, ".")[0])
 			}
-
 		})
 	}
 }

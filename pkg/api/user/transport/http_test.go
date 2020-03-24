@@ -70,11 +70,11 @@ func TestCreate(t *testing.T) {
 				},
 			},
 			udb: &mockdb.User{
-				CreateFn: func(db orm.DB, usr gorsk.User) (*gorsk.User, error) {
+				CreateFn: func(db orm.DB, usr gorsk.User) (gorsk.User, error) {
 					usr.ID = 1
 					usr.CreatedAt = mock.TestTime(2018)
 					usr.UpdatedAt = mock.TestTime(2018)
-					return &usr, nil
+					return usr, nil
 				},
 			},
 			sec: &mock.Secure{
@@ -147,8 +147,8 @@ func TestList(t *testing.T) {
 			name: "Fail on query list",
 			req:  `?limit=100&page=1`,
 			rbac: &mock.RBAC{
-				UserFn: func(c echo.Context) *gorsk.AuthUser {
-					return &gorsk.AuthUser{
+				UserFn: func(c echo.Context) gorsk.AuthUser {
+					return gorsk.AuthUser{
 						ID:         1,
 						CompanyID:  2,
 						LocationID: 3,
@@ -162,8 +162,8 @@ func TestList(t *testing.T) {
 			name: "Success",
 			req:  `?limit=100&page=1`,
 			rbac: &mock.RBAC{
-				UserFn: func(c echo.Context) *gorsk.AuthUser {
-					return &gorsk.AuthUser{
+				UserFn: func(c echo.Context) gorsk.AuthUser {
+					return gorsk.AuthUser{
 						ID:         1,
 						CompanyID:  2,
 						LocationID: 3,
@@ -172,7 +172,7 @@ func TestList(t *testing.T) {
 					}
 				}},
 			udb: &mockdb.User{
-				ListFn: func(db orm.DB, q *gorsk.ListQuery, p *gorsk.Pagination) ([]gorsk.User, error) {
+				ListFn: func(db orm.DB, q *gorsk.ListQuery, p gorsk.Pagination) ([]gorsk.User, error) {
 					if p.Limit == 100 && p.Offset == 100 {
 						return []gorsk.User{
 							{
@@ -285,7 +285,7 @@ func TestView(t *testing.T) {
 		name       string
 		req        string
 		wantStatus int
-		wantResp   *gorsk.User
+		wantResp   gorsk.User
 		udb        *mockdb.User
 		rbac       *mock.RBAC
 		sec        *mock.Secure
@@ -314,8 +314,8 @@ func TestView(t *testing.T) {
 				},
 			},
 			udb: &mockdb.User{
-				ViewFn: func(db orm.DB, id int) (*gorsk.User, error) {
-					return &gorsk.User{
+				ViewFn: func(db orm.DB, id int) (gorsk.User, error) {
+					return gorsk.User{
 						Base: gorsk.Base{
 							ID:        1,
 							CreatedAt: mock.TestTime(2000),
@@ -328,7 +328,7 @@ func TestView(t *testing.T) {
 				},
 			},
 			wantStatus: http.StatusOK,
-			wantResp: &gorsk.User{
+			wantResp: gorsk.User{
 				Base: gorsk.Base{
 					ID:        1,
 					CreatedAt: mock.TestTime(2000),
@@ -354,12 +354,12 @@ func TestView(t *testing.T) {
 				t.Fatal(err)
 			}
 			defer res.Body.Close()
-			if tt.wantResp != nil {
+			if tt.wantResp.ID != 0 {
 				response := new(gorsk.User)
 				if err := json.NewDecoder(res.Body).Decode(response); err != nil {
 					t.Fatal(err)
 				}
-				assert.Equal(t, tt.wantResp, response)
+				assert.Equal(t, &tt.wantResp, response)
 			}
 			assert.Equal(t, tt.wantStatus, res.StatusCode)
 		})
@@ -372,7 +372,7 @@ func TestUpdate(t *testing.T) {
 		req        string
 		id         string
 		wantStatus int
-		wantResp   *gorsk.User
+		wantResp   gorsk.User
 		udb        *mockdb.User
 		rbac       *mock.RBAC
 		sec        *mock.Secure
@@ -409,8 +409,8 @@ func TestUpdate(t *testing.T) {
 				},
 			},
 			udb: &mockdb.User{
-				ViewFn: func(db orm.DB, id int) (*gorsk.User, error) {
-					return &gorsk.User{
+				ViewFn: func(db orm.DB, id int) (gorsk.User, error) {
+					return gorsk.User{
 						Base: gorsk.Base{
 							ID:        1,
 							CreatedAt: mock.TestTime(2000),
@@ -424,14 +424,14 @@ func TestUpdate(t *testing.T) {
 						Mobile:    "991991",
 					}, nil
 				},
-				UpdateFn: func(db orm.DB, usr *gorsk.User) error {
+				UpdateFn: func(db orm.DB, usr gorsk.User) error {
 					usr.UpdatedAt = mock.TestTime(2010)
 					usr.Mobile = "991991"
 					return nil
 				},
 			},
 			wantStatus: http.StatusOK,
-			wantResp: &gorsk.User{
+			wantResp: gorsk.User{
 				Base: gorsk.Base{
 					ID:        1,
 					CreatedAt: mock.TestTime(2000),
@@ -464,12 +464,12 @@ func TestUpdate(t *testing.T) {
 				t.Fatal(err)
 			}
 			defer res.Body.Close()
-			if tt.wantResp != nil {
+			if tt.wantResp.ID != 0 {
 				response := new(gorsk.User)
 				if err := json.NewDecoder(res.Body).Decode(response); err != nil {
 					t.Fatal(err)
 				}
-				assert.Equal(t, tt.wantResp, response)
+				assert.Equal(t, &tt.wantResp, response)
 			}
 			assert.Equal(t, tt.wantStatus, res.StatusCode)
 		})
@@ -494,8 +494,8 @@ func TestDelete(t *testing.T) {
 			name: "Fail on RBAC",
 			id:   `1`,
 			udb: &mockdb.User{
-				ViewFn: func(db orm.DB, id int) (*gorsk.User, error) {
-					return &gorsk.User{
+				ViewFn: func(db orm.DB, id int) (gorsk.User, error) {
+					return gorsk.User{
 						Role: &gorsk.Role{
 							AccessLevel: gorsk.CompanyAdminRole,
 						},
@@ -513,14 +513,14 @@ func TestDelete(t *testing.T) {
 			name: "Success",
 			id:   `1`,
 			udb: &mockdb.User{
-				ViewFn: func(db orm.DB, id int) (*gorsk.User, error) {
-					return &gorsk.User{
+				ViewFn: func(db orm.DB, id int) (gorsk.User, error) {
+					return gorsk.User{
 						Role: &gorsk.Role{
 							AccessLevel: gorsk.CompanyAdminRole,
 						},
 					}, nil
 				},
-				DeleteFn: func(orm.DB, *gorsk.User) error {
+				DeleteFn: func(orm.DB, gorsk.User) error {
 					return nil
 				},
 			},

@@ -73,11 +73,13 @@ func (h *HTTP) login(c echo.Context) error {
 }
 
 func (h *HTTP) refresh(c echo.Context) error {
-	r, err := h.svc.Refresh(c, c.Param("token"))
+	token, err := h.svc.Refresh(c, c.Param("token"))
 	if err != nil {
 		return err
 	}
-	return c.JSON(http.StatusOK, r)
+	return c.JSON(http.StatusOK, map[string]string{
+		"token": token,
+	})
 }
 
 func (h *HTTP) me(c echo.Context) error {
