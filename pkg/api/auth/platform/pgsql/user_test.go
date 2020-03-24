@@ -3,8 +3,7 @@ package pgsql_test
 import (
 	"testing"
 
-	"github.com/ribice/gorsk/pkg/utl/model"
-
+	"github.com/ribice/gorsk"
 	"github.com/ribice/gorsk/pkg/utl/mock"
 
 	"github.com/ribice/gorsk/pkg/api/auth/platform/pgsql"

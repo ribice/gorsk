@@ -1,7 +1,7 @@
 package transport
 
 import (
-	"github.com/ribice/gorsk/pkg/utl/model"
+	"github.com/ribice/gorsk"
 )
 
 // User model response

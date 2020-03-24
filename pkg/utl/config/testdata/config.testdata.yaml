@@ -10,7 +10,7 @@ server:
   write_timeout_seconds: 20
 
 jwt:
-  secret: testing # Change this value
+  min_secret_length: 128
   duration_minutes: 10
   refresh_duration_minutes: 10
   max_refresh_minutes: 144

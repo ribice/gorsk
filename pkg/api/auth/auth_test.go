@@ -2,15 +2,14 @@ package auth_test
 
 import (
 	"testing"
-	"time"
-
-	"github.com/ribice/gorsk/pkg/api/auth"
-	"github.com/ribice/gorsk/pkg/utl/mock"
-	"github.com/ribice/gorsk/pkg/utl/mock/mockdb"
-	"github.com/ribice/gorsk/pkg/utl/model"
 
 	"github.com/go-pg/pg/orm"
 	"github.com/labstack/echo"
+
+	"github.com/ribice/gorsk"
+	"github.com/ribice/gorsk/pkg/api/auth"
+	"github.com/ribice/gorsk/pkg/utl/mock"
+	"github.com/ribice/gorsk/pkg/utl/mock/mockdb"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -94,8 +93,8 @@ func TestAuthenticate(t *testing.T) {
 				},
 			},
 			jwt: &mock.JWT{
-				GenerateTokenFn: func(u *gorsk.User) (string, string, error) {
-					return "", "", gorsk.ErrGeneric
+				GenerateTokenFn: func(u *gorsk.User) (string, error) {
+					return "", gorsk.ErrGeneric
 				},
 			},
 		},
@@ -124,8 +123,8 @@ func TestAuthenticate(t *testing.T) {
 				},
 			},
 			jwt: &mock.JWT{
-				GenerateTokenFn: func(u *gorsk.User) (string, string, error) {
-					return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9", mock.TestTime(2000).Format(time.RFC3339), nil
+				GenerateTokenFn: func(u *gorsk.User) (string, error) {
+					return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9", nil
 				},
 			},
 		},
@@ -145,8 +144,8 @@ func TestAuthenticate(t *testing.T) {
 				},
 			},
 			jwt: &mock.JWT{
-				GenerateTokenFn: func(u *gorsk.User) (string, string, error) {
-					return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9", mock.TestTime(2000).Format(time.RFC3339), nil
+				GenerateTokenFn: func(u *gorsk.User) (string, error) {
+					return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9", nil
 				},
 			},
 			sec: &mock.Secure{
@@ -159,7 +158,6 @@ func TestAuthenticate(t *testing.T) {
 			},
 			wantData: &gorsk.AuthToken{
 				Token:        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
-				Expires:      mock.TestTime(2000).Format(time.RFC3339),
 				RefreshToken: "refreshtoken",
 			},
 		},
@@ -214,8 +212,8 @@ func TestRefresh(t *testing.T) {
 				},
 			},
 			jwt: &mock.JWT{
-				GenerateTokenFn: func(u *gorsk.User) (string, string, error) {
-					return "", "", gorsk.ErrGeneric
+				GenerateTokenFn: func(u *gorsk.User) (string, error) {
+					return "", gorsk.ErrGeneric
 				},
 			},
 		},
@@ -233,13 +231,12 @@ func TestRefresh(t *testing.T) {
 				},
 			},
 			jwt: &mock.JWT{
-				GenerateTokenFn: func(u *gorsk.User) (string, string, error) {
-					return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9", mock.TestTime(2000).Format(time.RFC3339), nil
+				GenerateTokenFn: func(u *gorsk.User) (string, error) {
+					return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9", nil
 				},
 			},
 			wantData: &gorsk.RefreshToken{
-				Token:   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
-				Expires: mock.TestTime(2000).Format(time.RFC3339),
+				Token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
 			},
 		},
 	}

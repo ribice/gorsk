@@ -3,13 +3,13 @@ package user_test
 import (
 	"testing"
 
+	"github.com/go-pg/pg/orm"
+	"github.com/labstack/echo"
+
+	"github.com/ribice/gorsk"
 	"github.com/ribice/gorsk/pkg/api/user"
 	"github.com/ribice/gorsk/pkg/utl/mock"
 	"github.com/ribice/gorsk/pkg/utl/mock/mockdb"
-	gorsk "github.com/ribice/gorsk/pkg/utl/model"
-
-	"github.com/go-pg/pg/orm"
-	"github.com/labstack/echo"
 
 	"github.com/stretchr/testify/assert"
 )

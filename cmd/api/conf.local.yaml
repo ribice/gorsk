@@ -10,11 +10,11 @@ server:
   write_timeout_seconds: 5
 
 jwt:
-  secret: jwtrealm # Change this value
   duration_minutes: 15
   refresh_duration_minutes: 15
   max_refresh_minutes: 1440
   signing_algorithm: HS256
+  min_secret_length: 64
 
 application:
   min_password_strength: 1

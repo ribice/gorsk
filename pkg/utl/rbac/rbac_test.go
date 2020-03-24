@@ -3,8 +3,7 @@ package rbac_test
 import (
 	"testing"
 
-	"github.com/ribice/gorsk/pkg/utl/model"
-
+	"github.com/ribice/gorsk"
 	"github.com/ribice/gorsk/pkg/utl/mock"
 	"github.com/ribice/gorsk/pkg/utl/rbac"
 
@@ -176,10 +175,10 @@ func TestEnforceLocation(t *testing.T) {
 
 func TestAccountCreate(t *testing.T) {
 	type args struct {
-		ctx         echo.Context
-		roleID      gorsk.AccessRole
-		company_id  int
-		location_id int
+		ctx        echo.Context
+		roleID     gorsk.AccessRole
+		companyID  int
+		locationID int
 	}
 	cases := []struct {
 		name    string
@@ -188,39 +187,39 @@ func TestAccountCreate(t *testing.T) {
 	}{
 		{
 			name:    "Different location, company, creating user role, not an admin",
-			args:    args{ctx: mock.EchoCtxWithKeys([]string{"company_id", "location_id", "role"}, 2, 3, gorsk.UserRole), roleID: 500, company_id: 7, location_id: 8},
+			args:    args{ctx: mock.EchoCtxWithKeys([]string{"company_id", "location_id", "role"}, 2, 3, gorsk.UserRole), roleID: 500, companyID: 7, locationID: 8},
 			wantErr: true,
 		},
 		{
 			name:    "Same location, not company, creating user role, not an admin",
-			args:    args{ctx: mock.EchoCtxWithKeys([]string{"company_id", "location_id", "role"}, 2, 3, gorsk.UserRole), roleID: 500, company_id: 2, location_id: 8},
+			args:    args{ctx: mock.EchoCtxWithKeys([]string{"company_id", "location_id", "role"}, 2, 3, gorsk.UserRole), roleID: 500, companyID: 2, locationID: 8},
 			wantErr: true,
 		},
 		{
 			name:    "Different location, company, creating user role, not an admin",
-			args:    args{ctx: mock.EchoCtxWithKeys([]string{"company_id", "location_id", "role"}, 2, 3, gorsk.CompanyAdminRole), roleID: 400, company_id: 2, location_id: 4},
+			args:    args{ctx: mock.EchoCtxWithKeys([]string{"company_id", "location_id", "role"}, 2, 3, gorsk.CompanyAdminRole), roleID: 400, companyID: 2, locationID: 4},
 			wantErr: false,
 		},
 		{
 			name:    "Same location, company, creating user role, not an admin",
-			args:    args{ctx: mock.EchoCtxWithKeys([]string{"company_id", "location_id", "role"}, 2, 3, gorsk.CompanyAdminRole), roleID: 500, company_id: 2, location_id: 3},
+			args:    args{ctx: mock.EchoCtxWithKeys([]string{"company_id", "location_id", "role"}, 2, 3, gorsk.CompanyAdminRole), roleID: 500, companyID: 2, locationID: 3},
 			wantErr: false,
 		},
 		{
 			name:    "Same location, company, creating user role, admin",
-			args:    args{ctx: mock.EchoCtxWithKeys([]string{"company_id", "location_id", "role"}, 2, 3, gorsk.CompanyAdminRole), roleID: 500, company_id: 2, location_id: 3},
+			args:    args{ctx: mock.EchoCtxWithKeys([]string{"company_id", "location_id", "role"}, 2, 3, gorsk.CompanyAdminRole), roleID: 500, companyID: 2, locationID: 3},
 			wantErr: false,
 		},
 		{
 			name:    "Different everything, admin",
-			args:    args{ctx: mock.EchoCtxWithKeys([]string{"company_id", "location_id", "role"}, 2, 3, gorsk.AdminRole), roleID: 200, company_id: 7, location_id: 4},
+			args:    args{ctx: mock.EchoCtxWithKeys([]string{"company_id", "location_id", "role"}, 2, 3, gorsk.AdminRole), roleID: 200, companyID: 7, locationID: 4},
 			wantErr: false,
 		},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			rbacSvc := rbac.New()
-			res := rbacSvc.AccountCreate(tt.args.ctx, tt.args.roleID, tt.args.company_id, tt.args.location_id)
+			res := rbacSvc.AccountCreate(tt.args.ctx, tt.args.roleID, tt.args.companyID, tt.args.locationID)
 			assert.Equal(t, tt.wantErr, res == echo.ErrForbidden)
 		})
 	}

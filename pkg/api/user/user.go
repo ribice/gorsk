@@ -3,7 +3,8 @@ package user
 
 import (
 	"github.com/labstack/echo"
-	gorsk "github.com/ribice/gorsk/pkg/utl/model"
+
+	"github.com/ribice/gorsk"
 	"github.com/ribice/gorsk/pkg/utl/query"
 )
 

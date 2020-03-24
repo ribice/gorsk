@@ -5,17 +5,18 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
-	"time"
 
 	"github.com/labstack/echo"
 
+	"github.com/ribice/gorsk"
 	"github.com/ribice/gorsk/pkg/api/auth"
 	"github.com/ribice/gorsk/pkg/api/auth/transport"
-	"github.com/ribice/gorsk/pkg/utl/middleware/jwt"
+	"github.com/ribice/gorsk/pkg/utl/jwt"
+	authMw "github.com/ribice/gorsk/pkg/utl/middleware/auth"
 	"github.com/ribice/gorsk/pkg/utl/mock"
 	"github.com/ribice/gorsk/pkg/utl/mock/mockdb"
-	"github.com/ribice/gorsk/pkg/utl/model"
 	"github.com/ribice/gorsk/pkg/utl/server"
 
 	"github.com/go-pg/pg/orm"
@@ -63,8 +64,8 @@ func TestLogin(t *testing.T) {
 				},
 			},
 			jwt: &mock.JWT{
-				GenerateTokenFn: func(*gorsk.User) (string, string, error) {
-					return "jwttokenstring", mock.TestTime(2018).Format(time.RFC3339), nil
+				GenerateTokenFn: func(*gorsk.User) (string, error) {
+					return "jwttokenstring", nil
 				},
 			},
 			sec: &mock.Secure{
@@ -75,7 +76,7 @@ func TestLogin(t *testing.T) {
 					return "refreshtoken"
 				},
 			},
-			wantResp: &gorsk.AuthToken{Token: "jwttokenstring", Expires: mock.TestTime(2018).Format(time.RFC3339), RefreshToken: "refreshtoken"},
+			wantResp: &gorsk.AuthToken{Token: "jwttokenstring", RefreshToken: "refreshtoken"},
 		},
 	}
 
@@ -136,11 +137,11 @@ func TestRefresh(t *testing.T) {
 				},
 			},
 			jwt: &mock.JWT{
-				GenerateTokenFn: func(*gorsk.User) (string, string, error) {
-					return "jwttokenstring", mock.TestTime(2018).Format(time.RFC3339), nil
+				GenerateTokenFn: func(*gorsk.User) (string, error) {
+					return "jwttokenstring", nil
 				},
 			},
-			wantResp: &gorsk.RefreshToken{Token: "jwttokenstring", Expires: mock.TestTime(2018).Format(time.RFC3339)},
+			wantResp: &gorsk.RefreshToken{Token: "jwttokenstring"},
 		},
 	}
 
@@ -229,12 +230,16 @@ func TestMe(t *testing.T) {
 	}
 
 	client := &http.Client{}
-	jwtMW := jwt.New("jwtsecret", "HS256", 60)
+	os.Setenv("JWT_SECRET", "jwtsecret123")
+	jwt, err := jwt.New("HS256", 60, 4)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			r := server.New()
-			transport.NewHTTP(auth.New(nil, tt.udb, nil, nil, tt.rbac), r, jwtMW.MWFunc())
+			transport.NewHTTP(auth.New(nil, tt.udb, nil, nil, tt.rbac), r, authMw.Middleware(jwt))
 			ts := httptest.NewServer(r)
 			defer ts.Close()
 			path := ts.URL + "/me"

@@ -7,8 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	gorsk "github.com/ribice/gorsk/pkg/utl/model"
-
+	"github.com/ribice/gorsk"
 	"github.com/ribice/gorsk/pkg/api/user"
 	"github.com/ribice/gorsk/pkg/api/user/transport"
 

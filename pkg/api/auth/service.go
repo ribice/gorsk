@@ -4,8 +4,9 @@ import (
 	"github.com/go-pg/pg"
 	"github.com/go-pg/pg/orm"
 	"github.com/labstack/echo"
+
+	"github.com/ribice/gorsk"
 	"github.com/ribice/gorsk/pkg/api/auth/platform/pgsql"
-	"github.com/ribice/gorsk/pkg/utl/model"
 )
 
 // New creates new iam service
@@ -50,7 +51,7 @@ type UserDB interface {
 
 // TokenGenerator represents token generator (jwt) interface
 type TokenGenerator interface {
-	GenerateToken(*gorsk.User) (string, string, error)
+	GenerateToken(*gorsk.User) (string, error)
 }
 
 // Securer represents security interface

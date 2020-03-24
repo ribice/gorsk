@@ -3,11 +3,11 @@ package pgsql_test
 import (
 	"testing"
 
-	"github.com/ribice/gorsk/pkg/utl/model"
+	"github.com/stretchr/testify/assert"
 
+	"github.com/ribice/gorsk"
 	"github.com/ribice/gorsk/pkg/api/password/platform/pgsql"
 	"github.com/ribice/gorsk/pkg/utl/mock"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestView(t *testing.T) {

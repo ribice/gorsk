@@ -3,9 +3,9 @@ package auth
 import (
 	"net/http"
 
-	"github.com/ribice/gorsk/pkg/utl/model"
-
 	"github.com/labstack/echo"
+
+	"github.com/ribice/gorsk"
 )
 
 // Custom errors
@@ -28,7 +28,7 @@ func (a *Auth) Authenticate(c echo.Context, user, pass string) (*gorsk.AuthToken
 		return nil, gorsk.ErrUnauthorized
 	}
 
-	token, expire, err := a.tg.GenerateToken(u)
+	token, err := a.tg.GenerateToken(u)
 	if err != nil {
 		return nil, gorsk.ErrUnauthorized
 	}
@@ -39,20 +39,20 @@ func (a *Auth) Authenticate(c echo.Context, user, pass string) (*gorsk.AuthToken
 		return nil, err
 	}
 
-	return &gorsk.AuthToken{Token: token, Expires: expire, RefreshToken: u.Token}, nil
+	return &gorsk.AuthToken{Token: token, RefreshToken: u.Token}, nil
 }
 
 // Refresh refreshes jwt token and puts new claims inside
-func (a *Auth) Refresh(c echo.Context, token string) (*gorsk.RefreshToken, error) {
-	user, err := a.udb.FindByToken(a.db, token)
+func (a *Auth) Refresh(c echo.Context, refreshToken string) (*gorsk.RefreshToken, error) {
+	user, err := a.udb.FindByToken(a.db, refreshToken)
 	if err != nil {
 		return nil, err
 	}
-	token, expire, err := a.tg.GenerateToken(user)
+	token, err := a.tg.GenerateToken(user)
 	if err != nil {
 		return nil, err
 	}
-	return &gorsk.RefreshToken{Token: token, Expires: expire}, nil
+	return &gorsk.RefreshToken{Token: token}, nil
 }
 
 // Me returns info about currently logged user
