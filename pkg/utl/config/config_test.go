@@ -29,7 +29,6 @@ func TestLoad(t *testing.T) {
 			path: "testdata/config.testdata.yaml",
 			wantData: &config.Configuration{
 				DB: &config.Database{
-					PSN:        "postgres://postgres:postgres@postgres",
 					LogQueries: true,
 					Timeout:    20,
 				},

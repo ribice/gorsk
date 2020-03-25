@@ -1,6 +1,7 @@
 package gorsk_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/ribice/gorsk"
@@ -11,7 +12,7 @@ func TestBeforeInsert(t *testing.T) {
 	base := &gorsk.Base{
 		ID: 1,
 	}
-	base.BeforeInsert(nil, nil)
+	base.BeforeInsert(context.TODO())
 	if base.CreatedAt.IsZero() {
 		t.Error("CreatedAt was not changed")
 	}
@@ -25,7 +26,7 @@ func TestBeforeUpdate(t *testing.T) {
 		ID:        1,
 		CreatedAt: mock.TestTime(2000),
 	}
-	base.BeforeUpdate(nil, nil)
+	base.BeforeUpdate(context.TODO())
 	if base.UpdatedAt == mock.TestTime(2001) {
 		t.Error("UpdatedAt was not changed")
 	}

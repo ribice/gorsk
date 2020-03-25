@@ -1,7 +1,6 @@
 database:
   log_queries: true
   timeout_seconds: 20
-  psn: postgres://postgres:postgres@postgres
 
 server:
   port: :8080

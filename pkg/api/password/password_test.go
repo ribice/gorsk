@@ -6,7 +6,7 @@ import (
 	"github.com/ribice/gorsk"
 	"github.com/ribice/gorsk/pkg/api/password"
 
-	"github.com/go-pg/pg/orm"
+	"github.com/go-pg/pg/v9/orm"
 	"github.com/labstack/echo"
 
 	"github.com/ribice/gorsk/pkg/utl/mock"

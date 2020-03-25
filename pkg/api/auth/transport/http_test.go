@@ -18,7 +18,7 @@ import (
 	"github.com/ribice/gorsk/pkg/utl/mock/mockdb"
 	"github.com/ribice/gorsk/pkg/utl/server"
 
-	"github.com/go-pg/pg/orm"
+	"github.com/go-pg/pg/v9/orm"
 	"github.com/stretchr/testify/assert"
 )
 
