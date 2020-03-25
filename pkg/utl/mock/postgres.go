@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/go-pg/pg/orm"
+	"github.com/go-pg/pg/v9/orm"
 
-	"github.com/go-pg/pg"
+	"github.com/go-pg/pg/v9"
 
 	"github.com/ribice/gorsk/pkg/utl/postgres"
 

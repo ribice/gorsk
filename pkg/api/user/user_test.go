@@ -3,7 +3,7 @@ package user_test
 import (
 	"testing"
 
-	"github.com/go-pg/pg/orm"
+	"github.com/go-pg/pg/v9/orm"
 	"github.com/labstack/echo"
 
 	"github.com/ribice/gorsk"

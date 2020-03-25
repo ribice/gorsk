@@ -62,7 +62,7 @@ func TestGenerateToken(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			jwtSvc, err := jwt.New(tt.algo, tt.secret, 60, tt.minSecretLen)
 			assert.Equal(t, tt.wantErr, err != nil)
-			if err == nil {
+			if err == nil && !tt.wantErr {
 				token, _ := jwtSvc.GenerateToken(tt.req)
 				assert.Equal(t, tt.want, strings.Split(token, ".")[0])
 			}

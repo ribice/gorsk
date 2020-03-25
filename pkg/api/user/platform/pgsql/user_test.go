@@ -1,6 +1,7 @@
 package pgsql_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -238,6 +239,9 @@ func TestUpdate(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			err := udb.Update(db, tt.wantData)
+			if tt.wantErr != (err != nil) {
+				fmt.Println(tt.wantErr, err)
+			}
 			assert.Equal(t, tt.wantErr, err != nil)
 			if tt.wantData.ID != 0 {
 				user := gorsk.User{

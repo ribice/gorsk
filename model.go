@@ -3,8 +3,6 @@ package gorsk
 import (
 	"context"
 	"time"
-
-	"github.com/go-pg/pg/orm"
 )
 
 // Base contains common fields for all tables
@@ -22,15 +20,15 @@ type ListQuery struct {
 }
 
 // BeforeInsert hooks into insert operations, setting createdAt and updatedAt to current time
-func (b *Base) BeforeInsert(_ context.Context, _ orm.DB) error {
+func (b *Base) BeforeInsert(ctx context.Context) (context.Context, error) {
 	now := time.Now()
 	b.CreatedAt = now
 	b.UpdatedAt = now
-	return nil
+	return ctx, nil
 }
 
 // BeforeUpdate hooks into update operations, setting updatedAt to current time
-func (b *Base) BeforeUpdate(_ context.Context, _ orm.DB) error {
+func (b *Base) BeforeUpdate(ctx context.Context) (context.Context, error) {
 	b.UpdatedAt = time.Now()
-	return nil
+	return ctx, nil
 }

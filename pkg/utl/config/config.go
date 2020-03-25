@@ -30,9 +30,8 @@ type Configuration struct {
 
 // Database holds data necessary for database configuration
 type Database struct {
-	PSN        string `yaml:"psn,omitempty"`
-	LogQueries bool   `yaml:"log_queries,omitempty"`
-	Timeout    int    `yaml:"timeout_seconds,omitempty"`
+	LogQueries bool `yaml:"log_queries,omitempty"`
+	Timeout    int  `yaml:"timeout_seconds,omitempty"`
 }
 
 // Server holds data necessary for server configuration

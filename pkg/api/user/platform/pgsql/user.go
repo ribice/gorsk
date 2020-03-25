@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/go-pg/pg"
+	"github.com/go-pg/pg/v9"
 
-	"github.com/go-pg/pg/orm"
+	"github.com/go-pg/pg/v9/orm"
 	"github.com/labstack/echo"
 
 	"github.com/ribice/gorsk"
@@ -45,14 +45,14 @@ func (u User) View(db orm.DB, id int) (gorsk.User, error) {
 
 // Update updates user's contact info
 func (u User) Update(db orm.DB, user gorsk.User) error {
-	_, err := db.Model(&user).UpdateNotNull()
+	_, err := db.Model(&user).WherePK().UpdateNotZero()
 	return err
 }
 
 // List returns list of all users retrievable for the current user, depending on role
 func (u User) List(db orm.DB, qp *gorsk.ListQuery, p gorsk.Pagination) ([]gorsk.User, error) {
 	var users []gorsk.User
-	q := db.Model(&users).Column("user.*", "Role").Limit(p.Limit).Offset(p.Offset).Where("deleted_at is null").Order("user.id desc")
+	q := db.Model(&users).Relation("Role").Limit(p.Limit).Offset(p.Offset).Where("deleted_at is null").Order("user.id desc")
 	if qp != nil {
 		q.Where(qp.Query, qp.ID)
 	}

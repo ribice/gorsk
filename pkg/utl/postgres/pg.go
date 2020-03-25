@@ -1,20 +1,27 @@
 package postgres
 
 import (
-	"log"
+	"context"
+	"fmt"
 	"time"
 
-	"github.com/go-pg/pg"
+	"github.com/go-pg/pg/v9"
 	// DB adapter
 	_ "github.com/lib/pq"
 )
 
 type dbLogger struct{}
 
-func (d dbLogger) BeforeQuery(pg *pg.QueryEvent) {}
+// BeforeQuery hooks before pg queries
+func (d dbLogger) BeforeQuery(c context.Context, q *pg.QueryEvent) (context.Context, error) {
+	return c, nil
+}
 
-func (d dbLogger) AfterQuery(q *pg.QueryEvent) {
-	log.Printf(q.FormattedQuery())
+// AfterQuery hooks after pg queries
+func (d dbLogger) AfterQuery(c context.Context, q *pg.QueryEvent) error {
+	query, err := q.FormattedQuery()
+	fmt.Println(query)
+	return err
 }
 
 // New creates new database connection to a postgres database
@@ -32,7 +39,7 @@ func New(psn string, timeout int, enableLog bool) (*pg.DB, error) {
 	}
 
 	if timeout > 0 {
-		db.WithTimeout(time.Second * time.Duration(timeout))
+		db = db.WithTimeout(time.Second * time.Duration(timeout))
 	}
 
 	if enableLog {

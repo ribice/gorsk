@@ -1,7 +1,7 @@
 package pgsql
 
 import (
-	"github.com/go-pg/pg/orm"
+	"github.com/go-pg/pg/v9/orm"
 
 	"github.com/ribice/gorsk"
 )
