@@ -5,7 +5,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/ribice/gorsk)](https://goreportcard.com/report/github.com/ribice/gorsk)
 [![Maintainability](https://api.codeclimate.com/v1/badges/c3cb09dbc0bc43186464/maintainability)](https://codeclimate.com/github/ribice/gorsk/maintainability)
 
-**[Gorsk V2 is released - read more about it](https://www.ribice.ba/refactoring-gorsk/)**
+**[Gorsk V2 is released - read more about it](https://www.dev.ribic.ba/refactoring-gorsk/)**
 
 Gorsk is a Golang starter kit for developing RESTful services. It is designed to help you kickstart your project, skipping the 'setting-up part' and jumping straight to writing business logic.
 
@@ -159,4 +159,4 @@ gorsk is licensed under the MIT license. Check the [LICENSE](LICENSE) file for d
 
 ## Author
 
-[Emir Ribic](https://ribice.ba)
+[Emir Ribic](https://dev.ribic.ba)
